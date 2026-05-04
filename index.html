@@ -1,24 +1,73 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Firebase FID Tracker</title>
+    <title>M2 Edison Preview - Coming Soon</title>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #f4f4f9; }
-        .card { background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
-        #fid-display { font-weight: bold; color: #0366d6; word-break: break-all; margin-top: 10px; }
+        /* تنسيقات الصفحة الأساسية - خلفية سوداء ونصف أبيض */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #000000; /* خلفية سوداء تماماً */
+            color: #ffffff; /* نص أبيض */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+
+        .container {
+            padding: 2rem;
+        }
+
+        /* تنسيق شعار القرد (باستخدام الإيموجي كشعار سريع) */
+        .monkey-logo {
+            font-size: 80px; /* حجم الشعار */
+            margin-bottom: 20px;
+        }
+
+        /* تنسيق النص الإنجليزي */
+        .coming-soon-text {
+            font-size: 3rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+        }
+
+        /* تنسيق منطقة الـ FID (جعلناها صغيرة وغير ملفتة للحفاظ على التصميم) */
+        #fid-section {
+            font-size: 0.8rem;
+            color: #444; /* لون رمادي غامق جداً ليكون شبه مخفي */
+            margin-top: 50px;
+            border-top: 1px solid #222;
+            padding-top: 10px;
+        }
+        #fid-display {
+            font-family: monospace;
+            word-break: break-all;
+        }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h2>مستخرج معرف Firebase (FID)</h2>
-        <p>يتم الآن استخراج المعرف الخاص بمتصفحك...</p>
-        <div id="fid-display">جاري التحميل...</div>
-        <p style="font-size: 0.8rem; color: #666;">افتح Console المتصفح (F12) لمزيد من التفاصيل.</p>
+
+    <div class="container">
+        <!-- شعار القرد (إيموجي) -->
+        <div class="monkey-logo">🐒</div>
+        
+        <!-- النص الإنجليزي (انتظرونا) -->
+        <div class="coming-soon-text">Coming Soon</div>
     </div>
 
-    <!-- استدعاء ملف الجافا سكريبت كـ Module -->
+    <!-- منطقة الـ FID (ستظل تعمل في الخلفية وستظهر هنا بشكل خافت) -->
+    <div id="fid-section">
+        FID: <span id="fid-display">Loading...</span>
+    </div>
+
+    <!-- استدعاء ملف الجافا سكريبت (لا تغير هذا السطر) -->
     <script type="module" src="./app.js"></script>
 </body>
 </html>
