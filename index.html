@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>M2 Edison Preview - Coming Soon</title>
     <style>
-        /* تنسيقات الصفحة الأساسية - خلفية سوداء ونصف أبيض */
+        /* تصميم الواجهة الاحترافي */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #000000; /* خلفية سوداء تماماً */
+            background-color: #000000; /* خلفية سوداء */
             color: #ffffff; /* نص أبيض */
             display: flex;
             flex-direction: column;
@@ -16,58 +16,47 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            text-align: center;
+            overflow: hidden; /* لمنع التمرير */
         }
 
         .container {
-            padding: 2rem;
+            text-align: center;
         }
 
-        /* تنسيق شعار القرد (باستخدام الإيموجي كشعار سريع) */
+        /* شعار القرد */
         .monkey-logo {
-            font-size: 80px; /* حجم الشعار */
+            font-size: 100px;
             margin-bottom: 20px;
+            display: block;
         }
 
-        /* تنسيق النص الإنجليزي */
+        /* نص الانتظار */
         .coming-soon-text {
-            font-size: 3rem;
-            font-weight: bold;
-            letter-spacing: 2px;
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: 5px;
             text-transform: uppercase;
-            margin-bottom: 30px;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
         }
 
-        /* تنسيق منطقة الـ FID (جعلناها صغيرة وغير ملفتة للحفاظ على التصميم) */
-        #fid-section {
-            font-size: 0.8rem;
-            color: #444; /* لون رمادي غامق جداً ليكون شبه مخفي */
-            margin-top: 50px;
-            border-top: 1px solid #222;
-            padding-top: 10px;
-        }
+        /* إخفاء عنصر الـ FID تماماً عن العين */
         #fid-display {
-            font-family: monospace;
-            word-break: break-all;
+            display: none;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <!-- شعار القرد (إيموجي) -->
         <div class="monkey-logo">🐒</div>
-        
-        <!-- النص الإنجليزي (انتظرونا) -->
         <div class="coming-soon-text">Coming Soon</div>
     </div>
 
-    <!-- منطقة الـ FID (ستظل تعمل في الخلفية وستظهر هنا بشكل خافت) -->
-    <div id="fid-section">
-        FID: <span id="fid-display">Loading...</span>
-    </div>
+    <!-- هذا العنصر موجود لكي يعمل الكود البرمجي لكنه مخفي تماماً -->
+    <div id="fid-display"></div>
 
-    <!-- استدعاء ملف الجافا سكريبت (لا تغير هذا السطر) -->
+    <!-- استدعاء المنطق البرمجي في الخلفية -->
     <script type="module" src="./app.js"></script>
 </body>
 </html>
