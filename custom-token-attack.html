@@ -677,10 +677,41 @@
         const IDENTITY_TOOLKIT_BASE = 'https://identitytoolkit.googleapis.com/v1';
         const SECURE_TOKEN_BASE = 'https://securetoken.googleapis.com/v1';
 
-        // Known API keys to test
+        // Known API keys - ALL 3 Firebase environments discovered in ODK client JS
         const KNOWN_API_KEYS = [
-            { name: 'Otherside ODK (Primary)', key: 'AIzaSyCB5Y3pwcctj-d9CkW2UGEzrExsXZFScis', source: 'Discovered from Otherside web app' },
-            { name: 'Our Project Key', key: 'AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0', source: 'Our Firebase project' },
+            { name: 'Otherside Main/Local (reasonably-sound-marmot)', key: 'AIzaSyCB5Y3pwcctj-d9CkW2UGEzrExsXZFScis', source: 'ODK _app.js bundle - Main environment', projectId: 'reasonably-sound-marmot', bucket: 'reasonably-sound-marmot.appspot.com', rtdb: 'https://reasonably-sound-marmot-default-rtdb.europe-west1.firebasedatabase.app' },
+            { name: 'Otherside Staging (primarily-endless-elephant)', key: 'AIzaSyBQbSILg49HPwSBsw4TTV5fw1ZhkRvgCKU', source: 'ODK _app.js bundle - Staging environment', projectId: 'primarily-endless-elephant', bucket: 'primarily-endless-elephant.appspot.com', rtdb: 'https://primarily-endless-elephant-default-rtdb.firebaseio.com' },
+            { name: 'Otherside Production (scarcely-calm-lark)', key: 'AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0', source: 'ODK _app.js bundle - Production environment', projectId: 'scarcely-calm-lark', bucket: 'scarcely-calm-lark.appspot.com', rtdb: '' },
+        ];
+
+        // Exposed secrets from ODK API (no auth required!)
+        const EXPOSED_SECRETS = {
+            pubnub: { publishKey: 'pub-c-0b70dc8a-e642-440c-8012-93a986cdd7a2', subscribeKey: 'sub-c-0a731161-a567-46b7-bdf7-4dcb6e0749ab' },
+            organization: { name: 'Otherside', id: 'fine-houses-deny-595464', tenantId: 'hound-j8zaz' },
+            featuredEventId: 'smart-zebras-roll-995590',
+            defaultProject: 'open-roses-send-489062',
+            defaultWorld: 'lucky-emus-argue-215273',
+            sentry: { dsn: '5e036176fc5f7bc42c30344dd9f68802', org: '918428', release: 'ede42efb47badd8adfba9e489745a53d4b9a7439' },
+            datadog: { rumToken: 'pub1eb3fb836bfcc44d328f083449b7b1aa' },
+            cloudflare: { accessTeam: 'yugalabs.cloudflareaccess.com' },
+            websocket: 'wss://indexer.yuga.com',
+            authProviders: ['google.com', 'twitter.com', 'oidc.otherside'],
+        };
+
+        // Discovered admin routes (from _buildManifest.js)
+        const ADMIN_ROUTES = [
+            '/admin', '/admin/access', '/admin/api-keys', '/admin/external-urls',
+            '/admin/fastplay', '/admin/insights', '/admin/insights/analytics',
+            '/admin/insights/monitoring', '/admin/projects', '/admin/steam-access',
+            '/admin/streaming', '/admin/theming', '/admin/usage', '/admin/usage/daily',
+            '/admin/usage/monthly', '/admin/usage/per-world', '/admin/world-defaults', '/admin/worlds'
+        ];
+
+        // Open API endpoints (no auth required - return data)
+        const OPEN_ENDPOINTS = [
+            '/organizations/current', '/organizations/members', '/organizations/roles',
+            '/organizations/audit', '/organizations/features', '/organizations/pubnub',
+            '/organizations/providers', '/organizations/config', '/organizations/settings'
         ];
 
         let currentUser = null;
