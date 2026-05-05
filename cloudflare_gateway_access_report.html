@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تقرير تحليل القدرة على الوصول إلى Cloudflare Gateway</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700;800&family=Cairo:wght@400;600;700;800&display=swap');
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    margin: 0; padding: 0;
+    width: 210mm; min-height: 297mm;
+    font-family: 'Cairo', 'Noto Sans Arabic', sans-serif;
+    direction: rtl; text-align: right;
+    background: #0a0e17; color: #e0e0e0;
+    line-height: 1.8; font-size: 11pt;
+  }
+  .page {
+    width: 210mm; min-height: 297mm;
+    padding: 20mm 22mm 25mm 22mm;
+    position: relative;
+    page-break-after: always;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  /* Cover Page */
+  .cover {
+    background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #0d0d2b 100%);
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    text-align: center; color: #ffffff;
+    position: relative; overflow: hidden;
+  }
+  .cover::before {
+    content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(ellipse at 20% 50%, rgba(230,57,70,0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 30%, rgba(0,210,255,0.08) 0%, transparent 50%);
+    z-index: 0;
+  }
+  .cover * { position: relative; z-index: 1; }
+  .cover-classified {
+    display: inline-block; border: 2px solid #ff3333; color: #ff3333;
+    padding: 6px 30px; font-size: 13pt; font-weight: 700;
+    letter-spacing: 6px; margin-bottom: 30px;
+  }
+  .cover h1 { font-size: 26pt; font-weight: 900; line-height: 1.4; margin-bottom: 16px; color: #00d2ff; }
+  .cover h2 { font-size: 14pt; font-weight: 400; color: #aaaacc; margin-bottom: 40px; line-height: 1.6; }
+  .cover-meta { font-size: 10pt; color: #666688; line-height: 2.2; }
+  .cover-meta span { color: #8888aa; }
+  .cover-line { width: 60%; height: 1px; background: linear-gradient(90deg, transparent, #e94560, transparent); margin: 25px auto; }
+
+  /* Body Pages */
+  .body-page { background: #0d1117; }
+
+  h1 {
+    font-size: 18pt; font-weight: 800; color: #00d2ff;
+    border-bottom: 3px solid #e94560; padding-bottom: 8px; margin: 28px 0 16px 0;
+  }
+  h2 {
+    font-size: 14pt; font-weight: 700; color: #4ade80;
+    margin: 22px 0 10px 0; border-right: 4px solid #00d2ff; padding-right: 12px;
+  }
+  h3 { font-size: 12pt; font-weight: 600; color: #fbbf24; margin: 16px 0 8px 0; }
+  p { margin-bottom: 10px; text-align: right; line-height: 1.85; color: #c8d6e5; }
+
+  .alert-critical {
+    background: #1a0a0a; border: 2px solid #e94560; border-right: 6px solid #e94560;
+    padding: 14px 16px; margin: 14px 0; border-radius: 6px;
+  }
+  .alert-critical .alert-title { color: #e94560; font-weight: 800; font-size: 11pt; margin-bottom: 6px; }
+  .alert-warning {
+    background: #1a1a0a; border: 2px solid #fbbf24; border-right: 6px solid #fbbf24;
+    padding: 14px 16px; margin: 14px 0; border-radius: 6px;
+  }
+  .alert-warning .alert-title { color: #fbbf24; font-weight: 800; font-size: 11pt; margin-bottom: 6px; }
+  .alert-safe {
+    background: #0a1a0a; border: 2px solid #22c55e; border-right: 6px solid #22c55e;
+    padding: 14px 16px; margin: 14px 0; border-radius: 6px;
+  }
+  .alert-safe .alert-title { color: #22c55e; font-weight: 800; font-size: 11pt; margin-bottom: 6px; }
+  .alert-info {
+    background: #0a0a1a; border: 2px solid #00d2ff; border-right: 6px solid #00d2ff;
+    padding: 14px 16px; margin: 14px 0; border-radius: 6px;
+  }
+  .alert-info .alert-title { color: #00d2ff; font-weight: 800; font-size: 11pt; margin-bottom: 6px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 9.5pt; direction: rtl; }
+  th { background: #1b263b; color: #00d2ff; font-weight: 700; padding: 8px 10px; text-align: right; border: 1px solid #2a3a5c; }
+  td { padding: 7px 10px; text-align: right; border: 1px solid #1f2937; vertical-align: top; color: #c8d6e5; }
+  tr:nth-child(even) { background: #0d1117; }
+  tr:nth-child(odd) { background: #111827; }
+
+  code, .code {
+    font-family: 'Sarasa Mono SC', 'Courier New', monospace;
+    background: #1a1a2e; color: #4ade80; padding: 1px 5px;
+    border-radius: 3px; font-size: 9pt; direction: ltr; text-align: left;
+    display: inline-block; word-break: break-all;
+  }
+  .code-block {
+    background: #0d0d1a; color: #c8d6e5; padding: 14px; border-radius: 6px;
+    font-family: 'Sarasa Mono SC', 'Courier New', monospace;
+    font-size: 8.5pt; line-height: 1.55; direction: ltr; text-align: left;
+    overflow-x: auto; margin: 10px 0; border: 1px solid #2a2a4e;
+    white-space: pre-wrap; word-wrap: break-word;
+  }
+
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 9pt; font-weight: 700; }
+  .badge-red { background: #e94560; color: #fff; }
+  .badge-yellow { background: #fbbf24; color: #000; }
+  .badge-green { background: #22c55e; color: #fff; }
+  .badge-blue { background: #00d2ff; color: #000; }
+
+  .verdict { display: inline-block; padding: 3px 14px; border-radius: 14px; font-weight: 700; font-size: 9pt; }
+  .verdict-red { background: #3a0a0a; color: #e94560; border: 1px solid #e94560; }
+  .verdict-orange { background: #3a2a0a; color: #fbbf24; border: 1px solid #fbbf24; }
+  .verdict-green { background: #0a3a0a; color: #22c55e; border: 1px solid #22c55e; }
+
+  .summary-box {
+    background: linear-gradient(135deg, #111827, #1b263b);
+    border: 2px solid #00d2ff; border-radius: 10px;
+    padding: 20px; margin: 20px 0;
+  }
+  .summary-box h3 { color: #00d2ff; margin-top: 0; }
+
+  .flow-diagram {
+    background: #111827; border: 2px solid #1f2937; border-radius: 8px;
+    padding: 16px; margin: 14px 0; text-align: center; direction: ltr;
+  }
+  .flow-step {
+    display: inline-block; background: #1b263b; color: #ffffff;
+    padding: 6px 12px; border-radius: 6px; font-size: 9pt; font-weight: 600; margin: 3px;
+  }
+  .flow-step.danger { background: #e94560; }
+  .flow-step.warn { background: #c49000; color: #000; }
+  .flow-step.safe { background: #22c55e; }
+  .flow-step.info { background: #00d2ff; color: #000; }
+  .flow-arrow { display: inline-block; color: #e94560; font-size: 14pt; font-weight: 900; margin: 0 3px; vertical-align: middle; }
+
+  ul, ol { padding-right: 22px; margin-bottom: 10px; }
+  li { margin-bottom: 5px; line-height: 1.7; color: #c8d6e5; }
+
+  .note { background: #1f2937; padding: 10px; border-radius: 6px; margin: 8px 0; font-size: 10pt; border-right: 3px solid #fbbf24; }
+
+  .matrix-table td.critical-cell { background: #3a0a0a; color: #e94560; font-weight: 700; text-align: center; }
+  .matrix-table td.high-cell { background: #3a2a0a; color: #fbbf24; font-weight: 700; text-align: center; }
+  .matrix-table td.medium-cell { background: #1a1a0a; color: #aaaa00; font-weight: 600; text-align: center; }
+  .matrix-table td.low-cell { background: #0a1a0a; color: #22c55e; font-weight: 600; text-align: center; }
+
+  @media screen {
+    html, body { background: #0a0e17; }
+    .page { box-shadow: 0 0 30px rgba(0,0,0,0.5); margin: 20px auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ======================== COVER PAGE ======================== -->
+<div class="page cover">
+  <div class="cover-classified">SECRET - CLASSIFIED</div>
+  <h1>تقرير تحليل القدرة على<br>الوصول إلى Cloudflare Gateway</h1>
+  <div class="cover-line"></div>
+  <h2>Yuga Labs Ecosystem - Cloudflare Access Security Assessment<br>otherside.xyz | yuga.com | yugalabs.cloudflareaccess.com</h2>
+  <div class="cover-meta">
+    <div>المنظمة: Yuga Labs</div>
+    <div>التاريخ: 3 مايو 2026</div>
+    <div>التصنيف: <span style="color:#ff3333;">سري للغاية</span></div>
+    <div>المنهجية: تحليل جنائي + فحص فعلي + عصف ذهني شامل</div>
+    <div>المصادر: 9 تقارير أمنية | 110 نطاقات فرعية | 16 اختبار فعلي</div>
+  </div>
+</div>
+
+<!-- ======================== PAGE 2: EXECUTIVE SUMMARY ======================== -->
+<div class="page body-page">
+
+<h1>1. الملخص التنفيذي</h1>
+
+<p>يقدم هذا التقرير تحليلاً شاملاً للقدرة على الوصول إلى بوابة Cloudflare Access Gateway الخاصة بمنظمة Yuga Labs، بناءً على البيانات المجمعة من 9 تقارير أمنية تشمل تحليل DNS، وتسريبات التوكنات، وتفكيك الكود المصدري، وفحص البنية التحتية. تم تنفيذ 16 اختباراً فعلياً على الخوادم للتحقق من كل نقطة وصول بشكل مباشر.</p>
+
+<div class="summary-box">
+<h3>النتيجة الرئيسية</h3>
+<p>يمكن <b>الوصول إلى بوابة Cloudflare Access</b> (yugalabs.cloudflareaccess.com) بشكل كامل - البوابة <span class="verdict verdict-green">حيّة ومستجيبة</span> وتعمل بشكل صحيح. لكن <b>المصادقة مطلوبة</b> للوصول إلى التطبيقات المحمية. حالة المصادقة لجميع التطبيقات الثلاثة المحمية هي <span class="badge badge-red">NONE</span> (لم تتم المصادقة)، مما يعني أن البوابة تعيد توجيه المستخدمين غير المصادقين إلى صفحة تسجيل الدخول بشكل صحيح.</p>
+</div>
+
+<div class="flow-diagram">
+  <div style="margin-bottom:8px; font-weight:700; font-size:10pt; color:#00d2ff;">مسار الوصول إلى Cloudflare Access Gateway</div>
+  <div class="flow-step">مستخدم<br>غير مصادق</div>
+  <div class="flow-arrow">&larr;</div>
+  <div class="flow-step info">staging/sandbox/<br>api.sandbox.otherside.xyz</div>
+  <div class="flow-arrow">&larr;</div>
+  <div class="flow-step warn">302 Redirect<br>إلى CF Access</div>
+  <div class="flow-arrow">&larr;</div>
+  <div class="flow-step">yugalabs.<br>cloudflareaccess.com</div>
+  <div class="flow-arrow">&larr;</div>
+  <div class="flow-step safe">صفحة<br>تسجيل الدخول</div>
+</div>
+
+<h2>1.1 مؤشرات الوصول المكتشفة</h2>
+
+<table>
+  <tr><th>المؤشر</th><th>الحالة</th><th>التفاصيل</th></tr>
+  <tr><td>Team Domain</td><td><span class="verdict verdict-green">مؤكد حيّ</span></td><td>yugalabs.cloudflareaccess.com - App Launcher يعمل</td></tr>
+  <tr><td>JWKS Endpoint</td><td><span class="verdict verdict-green">مؤكد</span></td><td>/cdn-cgi/access/certs - يعيد المفاتيح العامة</td></tr>
+  <tr><td>OpenID Config</td><td><span class="verdict verdict-green">مؤكد</span></td><td>/.well-known/openid-configuration متاح</td></tr>
+  <tr><td>تطبيقات محمية</td><td><span class="verdict verdict-green">3 تطبيقات</span></td><td>staging + sandbox + api.sandbox</td></tr>
+  <tr><td>إعادة التوجيه 302</td><td><span class="verdict verdict-green">يعمل</span></td><td>يعيد توجيه غير المصادقين لصفحة الدخول</td></tr>
+  <tr><td>CF_AppSession Cookie</td><td><span class="verdict verdict-green">يُنشأ</span></td><td>Secure + HttpOnly - آمن</td></tr>
+  <tr><td>المصادقة الفعلية</td><td><span class="verdict verdict-red">غير متاحة</span></td><td>حالة Auth = NONE - تتطلب بيانات دخول صالحة</td></tr>
+</table>
+
+</div>
+
+<!-- ======================== PAGE 3: CLOUDFLARE ACCESS INFRASTRUCTURE ======================== -->
+<div class="page body-page">
+
+<h1>2. البنية التحتية لـ Cloudflare Access</h1>
+
+<h2>2.1 معلومات فريق Cloudflare Access</h2>
+
+<table>
+  <tr><th>العنصر</th><th>القيمة</th><th>الأهمية</th></tr>
+  <tr><td>Team Domain</td><td><span class="code">yugalabs.cloudflareaccess.com</span></td><td>معرف الفريق الرئيسي - النقطة المركزية للوصول</td></tr>
+  <tr><td>JWKS URI</td><td><span class="code">https://yugalabs.cloudflareaccess.com/cdn-cgi/access/certs</span></td><td>نقطة نهاية المفاتيح العامة - مفتوحة للعامة حسب التصميم</td></tr>
+  <tr><td>Issuer</td><td><span class="code">https://yugalabs.cloudflareaccess.com</span></td><td>مُصدِر JWT - يظهر في كل رمز مصادقة</td></tr>
+  <tr><td>OpenID Config</td><td><span class="code">https://yugalabs.cloudflareaccess.com/.well-known/openid-configuration</span></td><td>تكوين OIDC - يكشف عن قدرات المصادقة</td></tr>
+</table>
+
+<div class="alert-info">
+<div class="alert-title">ملاحظة تحليلية مهمة</div>
+<p>نقطة JWKS URI والشهادات العامة متاحة للعامة <b>حسب التصميم</b> - هذا ليس ثغرة أمنية بحد ذاته. هذه المعايير ضرورية للتحقق من توقيعات JWT التي يصدرها Cloudflare Access. المفتاح العام لا يمكن استخدامه لتزوير التوكنات - ذلك يتطلب المفتاح الخاص الذي لا يمكن الوصول إليه.</p>
+</div>
+
+<h2>2.2 التطبيقات المحمية بـ Cloudflare Access</h2>
+
+<p>تم اكتشاف <b>3 تطبيقات</b> محمية بـ Cloudflare Access، جميعها على نطاق otherside.xyz:</p>
+
+<table>
+  <tr><th>التطبيق</th><th>Application ID</th><th>عنوان IP</th><th>CF_AppSession</th><th>حالة المصادقة</th></tr>
+  <tr>
+    <td><b>staging.otherside.xyz</b></td>
+    <td><span class="code">6365a99a3baa9357...9779ff1</span></td>
+    <td>172.66.43.111 / 172.66.40.145</td>
+    <td><span class="code">f81e860a31c06908</span></td>
+    <td><span class="badge badge-red">NONE</span></td>
+  </tr>
+  <tr>
+    <td><b>sandbox.otherside.xyz</b></td>
+    <td><span class="code">559574f278d6e60d...bbfd17b</span></td>
+    <td>104.18.16.205 / 104.18.17.205</td>
+    <td><span class="code">d6a6b03c2dba89d1</span></td>
+    <td><span class="badge badge-red">NONE</span></td>
+  </tr>
+  <tr>
+    <td><b>api.sandbox.otherside.xyz</b></td>
+    <td><span class="code">bba535e222cb5f06...5bac94</span></td>
+    <td>104.18.17.205 / 104.18.16.205</td>
+    <td><span class="code">a8a07a9ac2ce4eae</span></td>
+    <td><span class="badge badge-red">NONE</span></td>
+  </tr>
+</table>
+
+<div class="alert-safe">
+<div class="alert-title">سلوك حماية صحيح</div>
+<p>جميع التطبيقات الثلاثة تعيد توجيه المستخدمين غير المصادقين عبر <b>302 redirect</b> إلى <code>yugalabs.cloudflareaccess.com</code> وتضع كوكي <code>CF_AppSession</code> بخصائص <b>Secure + HttpOnly</b>. هذا يعني أن البوابة تعمل كحارس وصول (Gateway) بشكل صحيح - تمنع الوصول غير المصرح به وتتطلب المصادقة أولاً.</p>
+</div>
+
+<h2>2.3 مفاتيح التوقيع والشهادات العامة</h2>
+
+<h3>مفتاح التوقيع الفعال (Active)</h3>
+<table>
+  <tr><th>الحقل</th><th>القيمة</th></tr>
+  <tr><td>KID</td><td><span class="code">1941b5b71e6ccca3604b38ec3852bd0aef38b8bfccc426b634dbe83d93292e72</span></td></tr>
+  <tr><td>الخوارزمية</td><td>RS256</td></tr>
+  <tr><td>صلاحية الشهادة</td><td>2026-04-26 إلى 2027-05-10</td></tr>
+</table>
+
+<h3>مفتاح التوقيع السابق (Previous)</h3>
+<table>
+  <tr><th>الحقل</th><th>القيمة</th></tr>
+  <tr><td>KID</td><td><span class="code">abceaa8c9777940f80ef8a25c99912704bd8c6dbdc6f371d20e4a2d128489117</span></td></tr>
+  <tr><td>الخوارزمية</td><td>RS256</td></tr>
+</table>
+
+<p>الشهادة X.509 العامة الصادرة عن Cloudflare تكشف عن تفاصيل التنظيم والموقع الجغرافي (أوستن، تكساس)، وهي معلومات عامة لا تُعتبر ثغرة أمنية. الشهادة صالحة لمدة عام واحد وسيتم تجديدها تلقائياً بواسطة Cloudflare.</p>
+
+</div>
+
+<!-- ======================== PAGE 4: ACCESS ANALYSIS ======================== -->
+<div class="page body-page">
+
+<h1>3. تحليل القدرة على الوصول</h1>
+
+<h2>3.1 ما يمكن الوصول إليه فعلياً</h2>
+
+<div class="alert-safe">
+<div class="alert-title">عناصر يمكن الوصول إليها بدون مصادقة</div>
+<p>التالي متاح للعامة ويمكن فحصه بدون أي بيانات مصادقة:</p>
+<ul>
+  <li><b>Team Domain App Launcher</b>: yugalabs.cloudflareaccess.com - صفحة تطبيقات الفريق</li>
+  <li><b>JWKS Endpoint</b>: يعيد المفاتيح العامة لتوقيع JWT</li>
+  <li><b>OpenID Configuration</b>: يكشف عن قدرات OIDC للفريق</li>
+  <li><b>صفحات إعادة التوجيه</b>: 302 redirect إلى صفحة تسجيل الدخول</li>
+  <li><b>CF_AppSession Cookies</b>: كوكيات جلسة مؤقتة (تتغير مع كل طلب)</li>
+  <li><b>JWT Headers</b>: معلومات رأس JWT غير مشفرة</li>
+</ul>
+</div>
+
+<h2>3.2 ما لا يمكن الوصول إليه بدون مصادقة</h2>
+
+<div class="alert-critical">
+<div class="alert-title">عناصر محمية تتطلب مصادقة صالحة</div>
+<p>التالي <b>لا يمكن الوصول إليه</b> بدون بيانات مصادقة صالحة (Okta SSO، بريد إلكتروني مع OTP، إلخ):</p>
+<ul>
+  <li><b>staging.otherside.xyz</b> - بيئة الاختبار (محتوى حقيقي قد يحتوي بيانات حساسة)</li>
+  <li><b>sandbox.otherside.xyz</b> - بيئة التجريب</li>
+  <li><b>api.sandbox.otherside.xyz</b> - واجهة برمجة التطبيقات التجريبية</li>
+  <li><b>JWT Payload</b> - الحمولة الكاملة لرمز المصادقة (تحتوي على هوية المستخدم)</li>
+  <li><b>موارد التطبيقات الداخلية</b> - أي بيانات أو خدمات خلف البوابة</li>
+</ul>
+</div>
+
+<h2>3.3 مصفوفة الوصول التفصيلية</h2>
+
+<table class="matrix-table">
+  <tr>
+    <th>النطاق الفرعي</th>
+    <th>نوع الحماية</th>
+    <th>إمكانية الوصول</th>
+    <th>مستوى الخطر</th>
+    <th>ملاحظات</th>
+  </tr>
+  <tr>
+    <td>otherside.xyz</td>
+    <td>عام</td>
+    <td class="low-cell">كامل</td>
+    <td class="low-cell">منخفض</td>
+    <td>الموقع الرسمي - مصمم للوصول العام</td>
+  </tr>
+  <tr>
+    <td>www.otherside.xyz</td>
+    <td>عام (Vercel)</td>
+    <td class="low-cell">كامل</td>
+    <td class="low-cell">منخفض</td>
+    <td>مستضاف على Vercel - لا حماية CF Access</td>
+  </tr>
+  <tr>
+    <td>staging.otherside.xyz</td>
+    <td><span class="badge badge-blue">CF Access</span></td>
+    <td class="medium-cell">302 redirect فقط</td>
+    <td class="high-cell">عالي</td>
+    <td>محمي لكن Application ID مكشوف</td>
+  </tr>
+  <tr>
+    <td>sandbox.otherside.xyz</td>
+    <td><span class="badge badge-blue">CF Access</span></td>
+    <td class="medium-cell">302 redirect فقط</td>
+    <td class="high-cell">عالي</td>
+    <td>نفس حماية staging</td>
+  </tr>
+  <tr>
+    <td>api.sandbox.otherside.xyz</td>
+    <td><span class="badge badge-blue">CF Access</span></td>
+    <td class="medium-cell">302 redirect فقط</td>
+    <td class="high-cell">عالي</td>
+    <td>واجهة API - قد تكون هدف أتمتة</td>
+  </tr>
+  <tr>
+    <td>api.otherside.xyz</td>
+    <td>S3/CloudFront</td>
+    <td class="medium-cell">AccessDenied + CORS *</td>
+    <td class="critical-cell">حرج</td>
+    <td>غير محمي بـ CF Access - CORS مفتوح</td>
+  </tr>
+  <tr>
+    <td>assets.otherside.xyz</td>
+    <td>S3/CloudFront</td>
+    <td class="medium-cell">AccessDenied + CORS *</td>
+    <td class="critical-cell">حرج</td>
+    <td>غير محمي - CORS مفتوح بالكامل</td>
+  </tr>
+  <tr>
+    <td>media.sandbox.otherside.xyz</td>
+    <td>CloudFront/S3</td>
+    <td class="medium-cell">403 Forbidden</td>
+    <td class="medium-cell">متوسط</td>
+    <td>حاوية موجودة لكن القائمة مرفوضة</td>
+  </tr>
+  <tr>
+    <td>yuga.com</td>
+    <td>Cloudflare/Nuxt.js</td>
+    <td class="low-cell">كامل</td>
+    <td class="medium-cell">متوسط</td>
+    <td>CORS * على النطاق الرئيسي</td>
+  </tr>
+  <tr>
+    <td>support.yuga.com</td>
+    <td><span class="badge badge-blue">CF Access</span> + Zendesk</td>
+    <td class="medium-cell">مُعاد توجيهه</td>
+    <td class="medium-cell">متوسط</td>
+    <td>يوجه إلى yugalabs.zendesk.com</td>
+  </tr>
+</table>
+
+</div>
+
+<!-- ======================== PAGE 5: JWT ANALYSIS ======================== -->
+<div class="page body-page">
+
+<h1>4. تحليل JWT مكشوفة من Cloudflare Access</h1>
+
+<h2>4.1 بنية JWT المكتشفة</h2>
+
+<p>تمكنّا من استخراج رؤوس JWT (Header فقط) من الاستجابات الأولية لـ Cloudflare Access. هذه الرؤوس تحتوي على معلومات التعريف بالمفتاح والخوارزمية المستخدمة، لكنها <b>لا تحتوي على حمولة المصادقة</b> (Payload) لأنه لم تتم المصادقة.</p>
+
+<div class="code-block">{
+  "typ": "JWT",
+  "alg": "RS256",
+  "kid": "1941b5b71e6ccca3604b38ec3852bd0aef38b8bfccc426b634dbe83d93292e72"
+}</div>
+
+<h2>4.2 التوكنات الثابتة مقابل الديناميكية</h2>
+
+<h3>التوكنات الثابتة (لا تتغير - قابلة للاستغلال النظري)</h3>
+<table>
+  <tr><th>العنصر</th><th>القيمة</th><th>الخطر</th></tr>
+  <tr>
+    <td>Application ID (staging)</td>
+    <td><span class="code">6365a99a3baa9357e93b79286377fdddb13497c27b93c9d079421d7ae9779ff1</span></td>
+    <td><span class="badge badge-yellow">متوسط</span> - معرف التطبيق ثابت لكنه لا يمنح وصولاً</td>
+  </tr>
+  <tr>
+    <td>Application ID (sandbox)</td>
+    <td><span class="code">559574f278d6e60d7690ed89e512fad872ecf04aba45880aa42125879bbfd17b</span></td>
+    <td><span class="badge badge-yellow">متوسط</span></td>
+  </tr>
+  <tr>
+    <td>Application ID (api.sandbox)</td>
+    <td><span class="code">bba535e222cb5f06bb11fd2251e79876f32c32be7baf9d97d392ca6b815bac94</span></td>
+    <td><span class="badge badge-yellow">متوسط</span></td>
+  </tr>
+  <tr>
+    <td>Active Signing Key KID</td>
+    <td><span class="code">1941b5b7...93292e72</span></td>
+    <td><span class="badge badge-green">منخفض</span> - معرف المفتاح العام فقط</td>
+  </tr>
+  <tr>
+    <td>Team Domain</td>
+    <td><span class="code">yugalabs.cloudflareaccess.com</span></td>
+    <td><span class="badge badge-green">منخفض</span> - معلومة عامة</td>
+  </tr>
+</table>
+
+<h3>التوكنات الديناميكية (تتغير مع كل طلب - لا قيمة استغلالية)</h3>
+<table>
+  <tr><th>العنصر</th><th>صلاحية</th><th>الخطر</th></tr>
+  <tr>
+    <td>CF_AppSession Cookies</td>
+    <td>24 ساعة</td>
+    <td><span class="badge badge-green">منخفض</span> - تتغير مع كل طلب، Secure + HttpOnly</td>
+  </tr>
+  <tr>
+    <td>app_session_hash</td>
+    <td>جلسة واحدة</td>
+    <td><span class="badge badge-green">منخفض</span> - SHA-256 يتغير مع كل زيارة</td>
+  </tr>
+  <tr>
+    <td>JWT Signatures</td>
+    <td>قصيرة</td>
+    <td><span class="badge badge-green">منخفض</span> - تتغير مع كل طلب</td>
+  </tr>
+  <tr>
+    <td>__cf_bm Cookies</td>
+    <td>30 دقيقة</td>
+    <td><span class="badge badge-green">منخفض</span> - إدارة البوتات فقط</td>
+  </tr>
+</table>
+
+<div class="alert-warning">
+<div class="alert-title">تقييم المخاطر: لا يمكن تزوير JWT بدون المفتاح الخاص</div>
+<p>رغم توفر المفتاح العام (RSA Modulus) ومُعرّف المفتاح (KID)، لا يمكن تزوير JWT صالحة لأن Cloudflare Access يستخدم خوارزمية <b>RS256</b> (توقيع غير متماثل). التزوير يتطلب المفتاح الخاص الذي يخزنه Cloudflare فقط ولا يمكن الوصول إليه عبر أي نقطة نهاية عامة. هذا يختلف عن الخوارزميات المتماثلة (HS256) حيث يمكن استخدام المفتاح العام للتزوير.</p>
+</div>
+
+</div>
+
+<!-- ======================== PAGE 6: ATTACK VECTORS ======================== -->
+<div class="page body-page">
+
+<h1>5. نواقل الهجوم المحتملة على البوابة</h1>
+
+<h2>5.1 سيناريوهات تجاوز Cloudflare Access</h2>
+
+<table class="matrix-table">
+  <tr>
+    <th>ناقل الهجوم</th>
+    <th>صعوبة التنفيذ</th>
+    <th>احتمال النجاح</th>
+    <th>التأثير</th>
+  </tr>
+  <tr>
+    <td><b>تزوير JWT مباشرة</b></td>
+    <td class="critical-cell">شبه مستحيل</td>
+    <td class="low-cell">0%</td>
+    <td class="critical-cell">حرج إن نجح</td>
+  </tr>
+  <tr>
+    <td><b>اختراق حساب Okta SSO</b></td>
+    <td class="high-cell">عالي</td>
+    <td class="medium-cell">متوسط</td>
+    <td class="critical-cell">حرج</td>
+  </tr>
+  <tr>
+    <td><b>سرقة جلسة مصادقة</b></td>
+    <td class="high-cell">عالي</td>
+    <td class="medium-cell">متوسط</td>
+    <td class="critical-cell">حرج</td>
+  </tr>
+  <tr>
+    <td><b>استغلال delegatedToken</b></td>
+    <td class="medium-cell">متوسط</td>
+    <td class="high-cell">عالي</td>
+    <td class="critical-cell">حرج</td>
+  </tr>
+  <tr>
+    <td><b>Token Replay Attack</b></td>
+    <td class="low-cell">منخفض</td>
+    <td class="medium-cell">متوسط</td>
+    <td class="high-cell">عالي</td>
+  </tr>
+  <tr>
+    <td><b>XSS عبر Plausible.io</b></td>
+    <td class="high-cell">عالي</td>
+    <td class="low-cell">منخفض</td>
+    <td class="critical-cell">حرج</td>
+  </tr>
+  <tr>
+    <td><b>Supply Chain Attack</b></td>
+    <td class="high-cell">عالي</td>
+    <td class="low-cell">منخفض</td>
+    <td class="critical-cell">حرج</td>
+  </tr>
+  <tr>
+    <td><b>CORS Exploitation</b></td>
+    <td class="low-cell">منخفض</td>
+    <td class="medium-cell">متوسط</td>
+    <td class="high-cell">عالي</td>
+  </tr>
+</table>
+
+<h2>5.2 التحليل التفصيلي لأخطر نواقل الهجوم</h2>
+
+<h3>ناقل #1: استغلال مسار delegatedToken (الخطر الأكبر)</h3>
+
+<div class="alert-critical">
+<div class="alert-title">مستوى الخطر: حرج | صعوبة التنفيذ: متوسطة</div>
+<p>تم تفكيك الكود المصدري الفعلي من <code>layout-9e5e982d526c9efb.js</code> (Module 7809) واكتشاف أن مسار <code>?delegatedToken=XXX</code> يمرر التوكن عبر Server Action يسمى <code>exchangeDelegatedTokenForPrivyTokens</code>. هذا المسار <b>يعمل خارج</b> حماية Cloudflare Access - لأنه جزء من الموقع العام (otherside.xyz) وليس ضمن التطبيقات المحمية.</p>
+<p>إذا تمكن مهاجم من اعتراض delegatedToken (عبر Referer header أو XSS أو سجل المتصفح)، يمكنه استخدامه للحصول على accessToken + refreshToken + identityToken من Privy، وبالتالي الوصول إلى محفظة المستخدم الرقمية بشكل كامل دون الحاجة للمرور عبر بوابة Cloudflare Access.</p>
+</div>
+
+<h3>ناقل #2: اختراق حساب Okta SSO</h3>
+
+<p>التقارير تكشف عن 6 حسابات Okta مؤكدة لفريق Yuga Labs، بما في ذلك حساب <code>admin@yuga.com</code> بصلاحيات إدارية. إذا تم اختراق أي حساب Okta عبر:</p>
+<ul>
+  <li>تصيد احتيالي (Phishing) مستهدف</li>
+  <li>هجوم SIM Swap لالتفاف 2FA</li>
+  <li>استغلال ثغرات Okta نفسها</li>
+  <li>سرقة بيانات الاعتماد من تسريبات أخرى</li>
+</ul>
+<p>فإن المهاجم يحصل على وصول كامل عبر Cloudflare Access إلى جميع التطبيقات المحمية، لأن Cloudflare Access يستخدم Okta كمزود هوية (IdP) رئيسي.</p>
+
+<h3>ناقل #3: CORS Misconfiguration على نقاط غير محمية</h3>
+
+<p>نقطتا <code>api.otherside.xyz</code> و<code>assets.otherside.xyz</code> ليستا محميتين بـ Cloudflare Access وتسمحان بـ <code>CORS: *</code>. رغم أنهما تعيدان AccessDenied حالياً، فإن إعدادات CORS المفتوحة تعني أن أي موقع ويب يمكنه إرسال طلبات إليهما. إذا تمت إضافة ملفات جديدة إلى حاوية S3 الخلفية، ستكون قابلة للوصول من أي مصدر.</p>
+
+</div>
+
+<!-- ======================== PAGE 7: DNS & INFRASTRUCTURE ======================== -->
+<div class="page body-page">
+
+<h1>6. البنية التحتية لـ DNS وارتباطها بـ Cloudflare</h1>
+
+<h2>6.1 خوادم DNS المشتركة</h2>
+
+<p>كلا النطاقين (yuga.com و otherside.xyz) يستخدمان <b>نفس خوادم Cloudflare DNS</b>، مما يؤكد أن البنية التحتية موحدة تحت حساب Cloudflare واحد:</p>
+
+<table>
+  <tr><th>النطاق</th><th>خوادم DNS</th><th>SOA MNAME</th></tr>
+  <tr><td>yuga.com</td><td><span class="code">poppy.ns.cloudflare.com</span><br><span class="code">rajeev.ns.cloudflare.com</span></td><td><span class="code">poppy.ns.cloudflare.com</span></td></tr>
+  <tr><td>otherside.xyz</td><td><span class="code">poppy.ns.cloudflare.com</span><br><span class="code">rajeev.ns.cloudflare.com</span></td><td><span class="code">poppy.ns.cloudflare.com</span></td></tr>
+</table>
+
+<h2>6.2 عناوين IP الخاصة بـ Cloudflare</h2>
+
+<p>جميع النطاقات الفرعية المحمية تستخدم عناوين IP خاصة بـ Cloudflare:</p>
+
+<table>
+  <tr><th>النطاق</th><th>عناوين IP</th><th>النطاق السحابي</th></tr>
+  <tr><td>yuga.com / www.yuga.com</td><td>172.66.40.107 / 172.66.43.149</td><td>Cloudflare (AS13335)</td></tr>
+  <tr><td>staging.otherside.xyz</td><td>172.66.43.111 / 172.66.40.145</td><td>Cloudflare</td></tr>
+  <tr><td>sandbox.otherside.xyz</td><td>104.18.16.205 / 104.18.17.205</td><td>Cloudflare</td></tr>
+  <tr><td>otherside.xyz</td><td>216.150.1.65 / 216.150.16.65</td><td>خارج Cloudflare</td></tr>
+</table>
+
+<div class="note">
+<strong>ملاحظة:</strong> النطاق الرئيسي otherside.xyz يستخدم عناوين IP خارج Cloudflare (216.150.x.x)، بينما جميع النطاقات الفرعية الحساسة محمية خلف Cloudflare. هذا يشير إلى تصميم أمني متعمد حيث المحتوى العام خارج الحماية والبنية الحساسة داخلها.
+</div>
+
+<h2>6.3 NEL Endpoints - تسريب معلومات عبر Cloudflare</h2>
+
+<p>تم اكتشاف نقاط نهاية NEL (Network Error Logging) تكشف عن معلومات إضافية:</p>
+
+<table>
+  <tr><th>النطاق</th><th>Report URL</th></tr>
+  <tr><td>yuga.com</td><td><span class="code">https://a.nel.cloudflare.com/report/v4?s=kyStpyaQaKq...</span></td></tr>
+  <tr><td>www.yuga.com</td><td><span class="code">https://a.nel.cloudflare.com/report/v4?s=PQ7UyOb6RygQ...</span></td></tr>
+</table>
+
+<p>هذه النقاط تكشف عن استخدام Cloudflare لخدمة NEL، وهي ليست ثغرة لكنها تؤكد سيطرة Cloudflare الكاملة على حركة المرور وتسجيل الأخطاء.</p>
+
+<h2>6.4 Security Headers الفعلية</h2>
+
+<table>
+  <tr><th>Header</th><th>القيمة الفعلية</th><th>الحالة</th></tr>
+  <tr><td>Strict-Transport-Security</td><td>max-age=63072000 (سنتان)</td><td><span class="badge badge-yellow">موجود لكن ناقص</span> - بدون includeSubDomains و preload</td></tr>
+  <tr><td>X-Frame-Options</td><td>DENY</td><td><span class="badge badge-green">جيد</span></td></tr>
+  <tr><td>Referrer-Policy</td><td>غير موجود</td><td><span class="badge badge-red">حرج</span> - يسمح بتسريب URL parameters</td></tr>
+  <tr><td>Content-Security-Policy</td><td>غير موجود</td><td><span class="badge badge-red">حرج</span> - لا حماية ضد XSS</td></tr>
+</table>
+
+</div>
+
+<!-- ======================== PAGE 8: CONCLUSIONS & RECOMMENDATIONS ======================== -->
+<div class="page body-page">
+
+<h1>7. الاستنتاجات والتوصيات</h1>
+
+<h2>7.1 الاستنتاج الرئيسي</h2>
+
+<div class="summary-box">
+<h3>هل يمكن الوصول إلى Cloudflare Gateway؟</h3>
+<p><b>الإجابة المختصرة: نعم، يمكن الوصول إلى البوابة، لكن لا يمكن تجاوزها.</b></p>
+<p>بوابة Cloudflare Access تعمل كحارس وصول (Zero Trust Gateway) بشكل صحيح وفعال. يمكن الوصول إلى واجهة البوابة (Team Domain، JWKS، OpenID Config) بدون مصادقة حسب التصميم، لكن جميع التطبيقات المحمية تتطلب مصادقة صالحة عبر Okta SSO أو طريقة مصادقة أخرى معتمدة. البوابة تعيد توجيه المستخدمين غير المصادقين بشكل صحيح عبر 302 redirect وتُنشئ كوكيات جلسة آمنة (Secure + HttpOnly).</p>
+</div>
+
+<h2>7.2 نقاط الضعف المكتشفة (خارج البوابة نفسها)</h2>
+
+<p>رغم أن البوابة نفسها تعمل بشكل صحيح، تم اكتشاف عدة نقاط ضعف في النظام البيئي المحيط التي يمكن أن تُستغل للوصول غير المباشر:</p>
+
+<table>
+  <tr><th>النقطة</th><th>الوصف</th><th>الخطورة</th></tr>
+  <tr>
+    <td><b>مسار delegatedToken</b></td>
+    <td>تمرير توكنات المصادقة في URL Parameters خارج حماية CF Access</td>
+    <td><span class="badge badge-red">حرج</span></td>
+  </tr>
+  <tr>
+    <td><b>غياب Referrer-Policy</b></td>
+    <td>يسمح بتسريب ?delegatedToken عبر Referer header</td>
+    <td><span class="badge badge-red">حرج</span></td>
+  </tr>
+  <tr>
+    <td><b>غياب CSP</b></td>
+    <td>لا حماية ضد XSS الذي يمكنه سرقة التوكنات</td>
+    <td><span class="badge badge-red">حرج</span></td>
+  </tr>
+  <tr>
+    <td><b>CORS * على API</b></td>
+    <td>api.otherside.xyz و assets.otherside.xyz يسمحان بطلبات من أي مصدر</td>
+    <td><span class="badge badge-yellow">عالي</span></td>
+  </tr>
+  <tr>
+    <td><b>Plausible.io بدون SRI</b></td>
+    <td>سكريبت خارجي بدون Subresource Integrity - قابل لاختراق سلسلة التوريد</td>
+    <td><span class="badge badge-yellow">عالي</span></td>
+  </tr>
+  <tr>
+    <td><b>HSTS ناقص</b></td>
+    <td>بدون includeSubDomains و preload</td>
+    <td><span class="badge badge-yellow">متوسط</span></td>
+  </tr>
+  <tr>
+    <td><b>8 رموز تحقق TXT مكشوفة</b></td>
+    <td>yuga.com تكشف عن علاقات مع 7 خدمات خارجية</td>
+    <td><span class="badge badge-yellow">متوسط</span></td>
+  </tr>
+  <tr>
+    <td><b>110 نطاق فرعي</b></td>
+    <td>مساحة هجوم هائلة مع نقاط دخول متعددة</td>
+    <td><span class="badge badge-yellow">متوسط</span></td>
+  </tr>
+</table>
+
+<h2>7.3 التوصيات العاجلة</h2>
+
+<ol>
+  <li><b>إزالة delegatedToken من URL</b>: استبدال ?delegatedToken= بـ POST body أو cookie مشفرة - هذا الخطر الأكبر لأنه يعمل <b>خارج</b> حماية Cloudflare Access</li>
+  <li><b>إضافة Referrer-Policy</b>: <code>strict-origin-when-cross-origin</code> لمنع تسريب URL parameters عبر Referer</li>
+  <li><b>إضافة CSP شامل</b>: Content-Security-Policy يمنع تنفيذ سكريبتات غير مصرح بها وسرقة التوكنات عبر XSS</li>
+  <li><b>إضافة SRI لسكريبت Plausible.io</b>: منع اختراق سلسلة التوريد</li>
+  <li><b>إصلاح HSTS</b>: إضافة includeSubDomains و preload</li>
+  <li><b>تقييد CORS</b>: على api.otherside.xyz و assets.otherside.xyz</li>
+  <li><b>تفعيل Token One-Time-Use</b>: كل delegatedToken يُستخدم مرة واحدة فقط</li>
+  <li><b>إضافة Token Binding</b>: ربط delegatedToken ببصمة الجلسة (IP + User-Agent)</li>
+</ol>
+
+<div class="alert-info">
+<div class="alert-title">الخلاصة النهائية</div>
+<p>بوابة Cloudflare Access نفسها <b>آمنة وتعمل بشكل صحيح</b> كحارس وصول Zero Trust. المشكلة الحقيقية ليست في البوابة، بل في <b>مسارات المصادقة البديلة</b> (delegatedToken و customAuth) التي تعمل <b>خارج</b> نطاق حماية البوابة. هذه المسارات تسمح للمستخدمين بتجاوز Cloudflare Access بالكامل للحصول على توكنات Privy المصادقة. يجب إغلاق هذه المسارات البديلة أو حمايتها بنفس مستوى حماية البوابة.</p>
+</div>
+
+</div>
+
+</body>
+</html>

