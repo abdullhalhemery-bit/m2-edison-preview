@@ -1243,7 +1243,7 @@
             const testPayloads = [
                 { name: 'Basic XSS marker', payload: 'xss_test_1337' },
                 { name: 'HTML injection', payload: '<h1>xss1337</h1>' },
-                { name: 'Script tag', payload: '<script>alert(1)</script>' },
+                { name: 'Script tag', payload: '<script>alert(1)<\/script>' },
                 { name: 'img onerror', payload: '<img src=x onerror="alert(1)">' },
                 { name: 'SVG onload', payload: '<svg onload="alert(1)">' },
                 { name: 'Double encoding', payload: '%3Cscript%3Ealert(1)%3C/script%3E' },
@@ -1316,7 +1316,7 @@
             log('xssLog', '[TEST] Testing error message reflection...', 'info');
             const errorEndpoints = [
                 `projects/999999`,
-                `organizations/<script>alert(1)</script>`,
+                `organizations/<script>alert(1)<\/script>`,
                 `users/<img src=x onerror=alert(1)>`,
             ];
 
@@ -1386,7 +1386,7 @@
                             { key: 'odk_username', val: '<img src=x onerror=alert(1)>' },
                             { key: 'odk_displayName', val: '<svg onload=alert(1)>' },
                             { key: 'odk_settings', val: '{"name":"<img src=x onerror=alert(1)>"}' },
-                            { key: 'user_preferences', val: '{"theme":"<script>alert(1)</script>"}' },
+                            { key: 'user_preferences', val: '{"theme":"<script>alert(1)<\/script>"}' },
                         ];
 
                         for (const k of xssKeys) {
