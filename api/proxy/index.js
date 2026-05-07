@@ -1,49 +1,81 @@
 export default async function handler(req, res) {
-  // Only allow POST requests
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed. Use POST.' });
-  }
+    // Allow CORS for cross-origin requests
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  const { endpoint, method, body, token } = req.body || {};
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
 
-  if (!endpoint || !method || !token) {
-    return res.status(400).json({ error: 'Missing required fields: endpoint, method, token' });
-  }
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method not allowed. Use POST.' });
+    }
 
-  const targetUrl = `https://odk.otherside.xyz/api/v0/${endpoint}`;
+    const { endpoint, method, body, token, extraHeaders, targetBase } = req.body || {};
 
-  try {
-    const fetchOptions = {
-      method: method,
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
+    if (!endpoint || !method) {
+        return res.status(400).json({ error: 'Missing required fields: endpoint, method' });
+    }
+
+    // Support multiple target bases
+    const bases = {
+        'odk': 'https://odk.otherside.xyz/api/v0/',
+        'otherside': 'https://www.otherside.xyz/',
+        'glyph': 'https://useglyph.io/',
+        'msquared': 'https://msquared.io/',
+        'identity': 'https://identitytoolkit.googleapis.com/v1/',
+        'default': 'https://odk.otherside.xyz/api/v0/',
     };
 
-    if (body && method !== 'GET' && method !== 'HEAD') {
-      fetchOptions.body = JSON.stringify(body);
+    const baseUrl = bases[targetBase] || bases['default'];
+    const targetUrl = `${baseUrl}${endpoint}`;
+
+    try {
+        const fetchOptions = {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'User-Agent': 'M2-ODK-SecurityResearch/2.0',
+            },
+        };
+
+        if (token) {
+            fetchOptions.headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        if (extraHeaders) {
+            Object.assign(fetchOptions.headers, extraHeaders);
+        }
+
+        if (body && method !== 'GET' && method !== 'HEAD') {
+            fetchOptions.body = JSON.stringify(body);
+        }
+
+        const response = await fetch(targetUrl, fetchOptions);
+
+        let data;
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            const text = await response.text();
+            try {
+                data = JSON.parse(text);
+            } catch {
+                data = text.substring(0, 5000); // Limit text response size
+            }
+        }
+
+        return res.status(200).json({
+            status: response.status,
+            statusText: response.statusText,
+            data: data,
+        });
+    } catch (error) {
+        return res.status(500).json({
+            error: 'Proxy request failed',
+            message: error.message,
+        });
     }
-
-    const response = await fetch(targetUrl, fetchOptions);
-
-    let data;
-    const contentType = response.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
-      data = await response.json();
-    } else {
-      data = await response.text();
-    }
-
-    return res.status(200).json({
-      status: response.status,
-      statusText: response.statusText,
-      data: data,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      error: 'Proxy request failed',
-      message: error.message,
-    });
-  }
 }
