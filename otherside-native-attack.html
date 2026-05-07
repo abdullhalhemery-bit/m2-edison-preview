@@ -1148,41 +1148,267 @@
                     <h4 style="color:#a78bfa;font-size:12px;margin-bottom:8px;">📋 Node.js Local Proxy Script (save as proxy.js and run with <code>node proxy.js</code>)</h4>
                     <div class="proxy-script" id="proxyScriptContent">const WebSocket = require('ws');
 const http = require('http');
+const https = require('https');
+const { URL } = require('url');
+
+// ============================================================
+// ENHANCED Otherside Local Proxy - v2.0
+// Captures: MSquared WS, Game Process Traffic, Firebase/Privy
+// tokens, ApeChain transactions
+// ============================================================
 
 const PORT = 8765;
+const API_PORT = 8766; // REST API port for dashboard queries
+
 const MSQUARED_WS = 'wss://gateway.msquared.io/v1/connect';
 const ODK_API = 'https://odk.otherside.xyz/api/v0';
 
-// Track captured tokens
-const capturedTokens = [];
+// Common game process ports to auto-detect
+const GAME_PORTS = [
+  { port: 7777, name: 'Unreal Engine Default' },
+  { port: 8080, name: 'HTTP Game Server' },
+  { port: 8443, name: 'HTTPS Game Server' },
+  { port: 9000, name: 'Pixel Streaming Signaling' },
+  { port: 8888, name: 'Morpheus Relay' },
+  { port: 3000, name: 'Game Dev Server' },
+  { port: 4000, name: 'GraphQL Game API' },
+  { port: 5000, name: 'Flask/Firebase Emulator' },
+  { port: 9222, name: 'Chrome DevTools (CEF)' },
+  { port: 3579, name: 'Unreal PixelStreaming' },
+];
 
-const server = http.createServer((req, res) => {
+// Enhanced token tracking with type classification
+const capturedTokens = [];
+const capturedPackets = [];
+let packetCounter = 0;
+let gameProcessDetected = null;
+const startTime = Date.now();
+
+// Active WebSocket connections to game services
+const activeConnections = new Map();
+
+// ---- Auto-detect game process on common ports ----
+function autoDetectGameProcess() {
+  console.log('[PROXY] Auto-detecting game process on common ports...');
+  let detected = [];
+
+  GAME_PORTS.forEach(({ port, name }) =&gt; {
+    const testSock = new WebSocket(`ws://localhost:${port}`);
+    const timeout = setTimeout(() =&gt; {
+      testSock.terminate();
+    }, 2000);
+
+    testSock.on('open', () =&gt; {
+      clearTimeout(timeout);
+      detected.push({ port, name, status: 'open' });
+      console.log(`[PROXY] Found open port ${port} (${name})`);
+      testSock.close();
+    });
+
+    testSock.on('error', () =&gt; {
+      clearTimeout(timeout);
+    });
+  });
+
+  // Also check HTTP ports
+  [8080, 3000, 5000, 8888].forEach(port =&gt; {
+    const req = http.get(`http://localhost:${port}/`, { timeout: 2000 }, (res) =&gt; {
+      detected.push({ port, name: `HTTP Server on ${port}`, status: 'http_responding' });
+      console.log(`[PROXY] HTTP response from port ${port}`);
+      res.resume();
+    });
+    req.on('error', () =&gt; {});
+    req.on('timeout', () =&gt; { req.destroy(); });
+  });
+
+  setTimeout(() =&gt; {
+    gameProcessDetected = detected;
+    console.log(`[PROXY] Auto-detection complete. Found ${detected.length} potential game endpoints.`);
+    // Broadcast detection results
+    broadcastToDashboards({
+      type: 'game_detection',
+      detected: detected,
+      timestamp: Date.now()
+    });
+  }, 3000);
+}
+
+// ---- Token extraction patterns ----
+const TOKEN_PATTERNS = {
+  firebase_jwt: /eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+/g,
+  firebase_refresh: /AIza[A-Za-z0-9_-]{35}/g,
+  privy_token: /privy-id-token[=:]\s*([^\s&amp;",]+)/g,
+  privy_access: /privy-access-token[=:]\s*([^\s&amp;",]+)/g,
+  apechain_tx: /0x[a-fA-F0-9]{64}/g,
+  wallet_addr: /0x[a-fA-F0-9]{40}/g,
+  api_key: /(?:api[_-]?key|apikey)[=:]\s*["']?([A-Za-z0-9_-]{20,})["']?/gi,
+  session_id: /(?:session[_-]?id|sid)[=:]\s*["']?([A-Za-z0-9_-]{16,})["']?/gi,
+  bearer: /Bearer\s+(eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+)/g,
+};
+
+function extractTokens(data, source) {
+  const found = [];
+  for (const [tokenType, pattern] of Object.entries(TOKEN_PATTERNS)) {
+    const regex = new RegExp(pattern.source, pattern.flags);
+    let match;
+    while ((match = regex.exec(data)) !== null) {
+      const value = match[1] || match[0];
+      // Dedup check
+      const isDup = capturedTokens.some(t =&gt; t.value === value &amp;&amp; t.type === tokenType);
+      if (!isDup) {
+        const entry = {
+          type: tokenType,
+          value: value,
+          source: source,
+          timestamp: new Date().toISOString(),
+          preview: value.substring(0, 60)
+        };
+        capturedTokens.push(entry);
+        found.push(entry);
+        console.log(`[PROXY] Token captured: type=${tokenType} from=${source}`);
+      }
+    }
+  }
+  return found;
+}
+
+// ---- Packet capture ----
+function capturePacket(direction, data, source) {
+  packetCounter++;
+  const packet = {
+    id: packetCounter,
+    direction: direction,
+    source: source,
+    size: typeof data === 'string' ? data.length : data.byteLength,
+    timestamp: new Date().toISOString(),
+    preview: typeof data === 'string' ? data.substring(0, 200) : '[binary]'
+  };
+  capturedPackets.push(packet);
+  // Keep last 500 packets
+  if (capturedPackets.length &gt; 500) capturedPackets.shift();
+  return packet;
+}
+
+// ---- Broadcast to connected dashboards ----
+const dashboardClients = new Set();
+
+function broadcastToDashboards(message) {
+  const msg = JSON.stringify(message);
+  dashboardClients.forEach(client =&gt; {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(msg);
+    }
+  });
+}
+
+// ---- REST API Server for dashboard queries ----
+const apiServer = http.createServer((req, res) =&gt; {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.url === '/status') {
-    res.end(JSON.stringify({
-      status: 'running',
-      capturedTokens: capturedTokens.length,
-      uptime: process.uptime()
-    }));
-  } else if (req.url === '/tokens') {
-    res.end(JSON.stringify(capturedTokens));
-  } else {
-    res.end(JSON.stringify({ error: 'Unknown endpoint' }));
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    return res.end();
   }
+
+  const parsedUrl = new URL(req.url, `http://localhost:${API_PORT}`);
+  const path = parsedUrl.pathname;
+
+  // GET /status - proxy health + stats
+  if (path === '/status' &amp;&amp; req.method === 'GET') {
+    return res.end(JSON.stringify({
+      status: 'running',
+      uptime: Math.floor((Date.now() - startTime) / 1000),
+      capturedTokens: capturedTokens.length,
+      capturedPackets: capturedPackets.length,
+      activeConnections: activeConnections.size,
+      gameProcessDetected: gameProcessDetected,
+      connectedDashboards: dashboardClients.size
+    }));
+  }
+
+  // GET /tokens - all captured tokens
+  if (path === '/tokens' &amp;&amp; req.method === 'GET') {
+    const typeFilter = parsedUrl.searchParams.get('type');
+    const sourceFilter = parsedUrl.searchParams.get('source');
+    let result = capturedTokens;
+    if (typeFilter) result = result.filter(t =&gt; t.type === typeFilter);
+    if (sourceFilter) result = result.filter(t =&gt; t.source === sourceFilter);
+    return res.end(JSON.stringify(result));
+  }
+
+  // GET /tokens/:type - tokens by type
+  const tokenTypeMatch = path.match(/^\/tokens\/([a-z_]+)$/);
+  if (tokenTypeMatch &amp;&amp; req.method === 'GET') {
+    const result = capturedTokens.filter(t =&gt; t.type === tokenTypeMatch[1]);
+    return res.end(JSON.stringify(result));
+  }
+
+  // GET /packets - captured packets (last N)
+  if (path === '/packets' &amp;&amp; req.method === 'GET') {
+    const limit = parseInt(parsedUrl.searchParams.get('limit') || '100');
+    return res.end(JSON.stringify(capturedPackets.slice(-limit)));
+  }
+
+  // GET /detection - game process detection results
+  if (path === '/detection' &amp;&amp; req.method === 'GET') {
+    return res.end(JSON.stringify({
+      detected: gameProcessDetected || [],
+      checkedPorts: GAME_PORTS
+    }));
+  }
+
+  // DELETE /tokens - clear captured tokens
+  if (path === '/tokens' &amp;&amp; req.method === 'DELETE') {
+    capturedTokens.length = 0;
+    broadcastToDashboards({ type: 'tokens_cleared', timestamp: Date.now() });
+    return res.end(JSON.stringify({ success: true, message: 'Tokens cleared' }));
+  }
+
+  // DELETE /packets - clear captured packets
+  if (path === '/packets' &amp;&amp; req.method === 'DELETE') {
+    capturedPackets.length = 0;
+    packetCounter = 0;
+    return res.end(JSON.stringify({ success: true, message: 'Packets cleared' }));
+  }
+
+  // POST /detect - trigger re-detection
+  if (path === '/detect' &amp;&amp; req.method === 'POST') {
+    autoDetectGameProcess();
+    return res.end(JSON.stringify({ success: true, message: 'Detection started' }));
+  }
+
+  res.writeHead(404);
+  res.end(JSON.stringify({ error: 'Unknown endpoint', available: [
+    'GET /status', 'GET /tokens', 'GET /tokens/:type',
+    'GET /packets', 'GET /detection', 'DELETE /tokens',
+    'DELETE /packets', 'POST /detect'
+  ]}));
 });
 
-const wss = new WebSocket.Server({ server });
+// ---- Main WebSocket proxy server ----
+const wss = new WebSocket.Server({ port: PORT });
 
-wss.on('connection', (dashboardWs) => {
+wss.on('connection', (dashboardWs) =&gt; {
   console.log('[PROXY] Dashboard connected');
+  dashboardClients.add(dashboardWs);
+
+  // Send initial status
+  dashboardWs.send(JSON.stringify({
+    type: 'proxy_status',
+    status: 'connected',
+    capturedTokens: capturedTokens.length,
+    capturedPackets: capturedPackets.length,
+    uptime: Math.floor((Date.now() - startTime) / 1000)
+  }));
 
   // Connect to MSquared infrastructure
   const msquaredWs = new WebSocket(MSQUARED_WS);
-  let authCaptured = false;
+  activeConnections.set('msquared', msquaredWs);
 
-  msquaredWs.on('open', () => {
+  msquaredWs.on('open', () =&gt; {
     console.log('[PROXY] Connected to MSquared');
     dashboardWs.send(JSON.stringify({
       type: 'proxy_status',
@@ -1190,20 +1416,15 @@ wss.on('connection', (dashboardWs) => {
     }));
   });
 
-  msquaredWs.on('message', (data) => {
+  msquaredWs.on('message', (data) =&gt; {
     const msg = data.toString();
+    const packet = capturePacket('IN', msg, 'msquared_ws');
+    const foundTokens = extractTokens(msg, 'msquared_ws');
 
-    // Capture any tokens in the traffic
-    const tokenMatch = msg.match(/eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+/);
-    if (tokenMatch &amp;&amp; !authCaptured) {
-      capturedTokens.push({
-        token: tokenMatch[0],
-        timestamp: new Date().toISOString(),
-        source: 'msquared_ws'
-      });
-      authCaptured = true;
-      console.log('[PROXY] Token captured!');
-    }
+    // Push captured tokens to dashboard in real-time
+    foundTokens.forEach(t =&gt; {
+      broadcastToDashboards({ type: 'token_captured', token: t });
+    });
 
     // Forward to dashboard
     if (dashboardWs.readyState === WebSocket.OPEN) {
@@ -1211,39 +1432,180 @@ wss.on('connection', (dashboardWs) => {
         type: 'server_message',
         data: msg,
         direction: 'IN',
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        packetId: packet.id,
+        tokensFound: foundTokens.length
       }));
     }
   });
 
+  // Also intercept game process traffic on detected ports
+  if (gameProcessDetected &amp;&amp; gameProcessDetected.length &gt; 0) {
+    gameProcessDetected.forEach(({ port, name }) =&gt; {
+      try {
+        const gameWs = new WebSocket(`ws://localhost:${port}`);
+        activeConnections.set(`game_${port}`, gameWs);
+
+        gameWs.on('open', () =&gt; {
+          console.log(`[PROXY] Connected to game process on port ${port}`);
+          broadcastToDashboards({
+            type: 'game_connected',
+            port: port,
+            name: name
+          });
+        });
+
+        gameWs.on('message', (data) =&gt; {
+          const msg = data.toString();
+          capturePacket('IN', msg, `game_port_${port}`);
+          const foundTokens = extractTokens(msg, `game_port_${port}`);
+          foundTokens.forEach(t =&gt; {
+            broadcastToDashboards({ type: 'token_captured', token: t });
+          });
+          if (dashboardWs.readyState === WebSocket.OPEN) {
+            dashboardWs.send(JSON.stringify({
+              type: 'game_message',
+              data: msg.substring(0, 500),
+              port: port,
+              direction: 'IN',
+              timestamp: Date.now()
+            }));
+          }
+        });
+
+        gameWs.on('error', () =&gt; {});
+      } catch (e) {
+        console.log(`[PROXY] Could not connect to port ${port}: ${e.message}`);
+      }
+    });
+  }
+
   // Handle messages from dashboard
-  dashboardWs.on('message', (data) => {
+  dashboardWs.on('message', (data) =&gt; {
     try {
       const cmd = JSON.parse(data.toString());
       if (cmd.type === 'forward' &amp;&amp; msquaredWs.readyState === WebSocket.OPEN) {
         msquaredWs.send(cmd.payload);
+        capturePacket('OUT', cmd.payload, 'dashboard');
       } else if (cmd.type === 'get_tokens') {
         dashboardWs.send(JSON.stringify({
           type: 'tokens',
           tokens: capturedTokens
         }));
+      } else if (cmd.type === 'get_packets') {
+        dashboardWs.send(JSON.stringify({
+          type: 'packets',
+          packets: capturedPackets.slice(-100)
+        }));
+      } else if (cmd.type === 'clear_tokens') {
+        capturedTokens.length = 0;
+        dashboardWs.send(JSON.stringify({ type: 'tokens_cleared' }));
+      } else if (cmd.type === 'redetect') {
+        autoDetectGameProcess();
       }
     } catch (e) {
       console.error('[PROXY] Parse error:', e.message);
     }
   });
 
-  dashboardWs.on('close', () => {
+  dashboardWs.on('close', () =&gt; {
     console.log('[PROXY] Dashboard disconnected');
-    msquaredWs.close();
+    dashboardClients.delete(dashboardWs);
+    activeConnections.forEach((ws, key) =&gt; {
+      if (key === 'msquared') ws.close();
+    });
+    activeConnections.delete('msquared');
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`[PROXY] Listening on ws://localhost:${PORT}`);
-  console.log(`[PROXY] Status: http://localhost:${PORT}/status`);
-  console.log(`[PROXY] Tokens: http://localhost:${PORT}/tokens`);
-});</div>
+// ---- Startup ----
+apiServer.listen(API_PORT, () =&gt; {
+  console.log(`[PROXY] REST API listening on http://localhost:${API_PORT}`);
+  console.log(`[PROXY]   GET  /status     - proxy health &amp; stats`);
+  console.log(`[PROXY]   GET  /tokens     - all captured tokens`);
+  console.log(`[PROXY]   GET  /tokens/:type - tokens by type`);
+  console.log(`[PROXY]   GET  /packets    - captured packets`);
+  console.log(`[PROXY]   GET  /detection  - game process detection`);
+  console.log(`[PROXY]   DELETE /tokens   - clear tokens`);
+  console.log(`[PROXY]   DELETE /packets  - clear packets`);
+  console.log(`[PROXY]   POST /detect     - re-run detection`);
+});
+
+console.log(`[PROXY] WebSocket proxy listening on ws://localhost:${PORT}`);
+console.log(`[PROXY] Running auto-detection of game process...`);
+autoDetectGameProcess();</div>
+                </div>
+            </div>
+
+            <!-- Game Connection Status Panel -->
+            <div class="card">
+                <h3>🔗 Game Connection Status <span class="badge badge-green">Live</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    Real-time status of your local proxy connection, captured tokens, and network packets.
+                </p>
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;">
+                    <div style="background:#0a0a1a;border:1px solid #1a1a2a;border-radius:8px;padding:12px;text-align:center;">
+                        <div style="font-size:11px;color:#888;margin-bottom:6px;">Proxy Status</div>
+                        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
+                            <span class="conn-dot red" id="gameStatusDot"></span>
+                            <span id="gameStatusText" style="font-size:13px;font-weight:600;">Disconnected</span>
+                        </div>
+                    </div>
+                    <div style="background:#0a0a1a;border:1px solid #1a1a2a;border-radius:8px;padding:12px;text-align:center;">
+                        <div style="font-size:11px;color:#888;margin-bottom:6px;">Captured Tokens</div>
+                        <div id="gameTokenCount" style="font-size:20px;font-weight:700;color:#a78bfa;">0</div>
+                    </div>
+                    <div style="background:#0a0a1a;border:1px solid #1a1a2a;border-radius:8px;padding:12px;text-align:center;">
+                        <div style="font-size:11px;color:#888;margin-bottom:6px;">Captured Packets</div>
+                        <div id="gamePacketCount" style="font-size:20px;font-weight:700;color:#60a5fa;">0</div>
+                    </div>
+                    <div style="background:#0a0a1a;border:1px solid #1a1a2a;border-radius:8px;padding:12px;text-align:center;">
+                        <div style="font-size:11px;color:#888;margin-bottom:6px;">Connection Uptime</div>
+                        <div id="gameUptime" style="font-size:20px;font-weight:700;color:#34d399;">0s</div>
+                    </div>
+                </div>
+                <div id="gameDetectedPorts" style="display:none;margin-bottom:12px;">
+                    <div style="font-size:11px;color:#888;margin-bottom:6px;">Detected Game Ports:</div>
+                    <div id="gamePortsList" style="font-size:12px;color:#93c5fd;font-family:monospace;"></div>
+                </div>
+            </div>
+
+            <!-- Captured Tokens Table -->
+            <div class="card">
+                <h3>🔑 Captured Tokens <span class="badge badge-purple">Proxy</span></h3>
+                <p style="color:#888;font-size:12px;margin-bottom:12px;">
+                    Tokens captured by the local proxy in real-time. Firebase JWTs, Privy tokens, ApeChain transactions, and more.
+                </p>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                        <thead>
+                            <tr style="border-bottom:1px solid #2a2a3a;">
+                                <th style="padding:8px 12px;text-align:left;color:#888;">#</th>
+                                <th style="padding:8px 12px;text-align:left;color:#888;">Type</th>
+                                <th style="padding:8px 12px;text-align:left;color:#888;">Value (Preview)</th>
+                                <th style="padding:8px 12px;text-align:left;color:#888;">Source</th>
+                                <th style="padding:8px 12px;text-align:left;color:#888;">Timestamp</th>
+                                <th style="padding:8px 12px;text-align:left;color:#888;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="capturedTokensTableBody">
+                            <tr><td colspan="6" style="padding:20px;text-align:center;color:#555;">No tokens captured yet. Connect to the local proxy to start capturing.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Quick Actions Row -->
+            <div class="card">
+                <h3>⚡ Quick Actions <span class="badge badge-blue">Tools</span></h3>
+                <div class="btn-row" style="flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="refreshGameConnection()">🔄 Refresh Connection</button>
+                    <button class="btn btn-outline" onclick="exportCapturedTokens()">📋 Export Captured Tokens</button>
+                    <button class="btn btn-outline" style="border-color:#ef4444;color:#ef4444;" onclick="clearCapturedData()">🗑️ Clear Captured Data</button>
+                    <button class="btn btn-cyan" onclick="injectTokenToPhase1()">⚡ Inject Token to Phase 1</button>
+                </div>
+                <div class="console" id="quickActionsLog" style="max-height:150px;margin-top:12px;">
+                    <div class="log-info">[QUICK-ACTIONS] Ready. Use buttons above to manage captured proxy data.</div>
                 </div>
             </div>
 
@@ -4083,18 +4445,25 @@ class CustomPixelStreamingClient {
                 localProxyWS = new WebSocket(url);
 
                 localProxyWS.onopen = () => {
-                    log(cId, '✅ CONNECTED to local proxy!', 'success');
+                    log(cId, '✅ CONNECTED to local proxy! (v2.0 Enhanced)', 'success');
                     setProxyStatus('connected');
                     stats.sessions++;
                     updateStats();
+                    proxyStartTime = Date.now();
+
+                    // Update Game Connection panel
+                    updateGameConnectionPanel('connected', 0, 0, 0);
 
                     // Request any captured tokens
                     localProxyWS.send(JSON.stringify({ type: 'get_tokens' }));
 
+                    // Also trigger REST API refresh
+                    refreshGameConnection();
+
                     saveToOthersideDB({
                         os_attack_phase: 'native_local_proxy',
                         os_ws_endpoint: url,
-                        os_research_notes: `Connected to local proxy at ${url}`,
+                        os_research_notes: `Connected to enhanced local proxy at ${url}`,
                         os_vuln_severity: 'info'
                     });
                 };
@@ -4104,6 +4473,37 @@ class CustomPixelStreamingClient {
                         const msg = JSON.parse(event.data);
                         if (msg.type === 'proxy_status') {
                             log(cId, `Proxy status: ${msg.status}`, 'success');
+                            // Update Game Connection panel with proxy stats
+                            if (msg.capturedTokens !== undefined) {
+                                updateGameConnectionPanel('connected', msg.capturedTokens, msg.capturedPackets, msg.uptime);
+                            }
+                        } else if (msg.type === 'token_captured') {
+                            // Real-time token push from enhanced proxy
+                            const t = msg.token;
+                            log(cId, `🔑 Token captured: ${t.type} from ${t.source} - ${t.preview || t.value.substring(0, 50)}...`, 'critical');
+                            addTokenToTable(t);
+                            stats.tokens++;
+                            if (t.type === 'firebase_jwt' || t.type === 'bearer') {
+                                capturedFirebaseToken = t.value;
+                            }
+                        } else if (msg.type === 'game_detection') {
+                            // Game process auto-detection results
+                            log(cId, `🔍 Game detection: found ${msg.detected.length} endpoints`, 'success');
+                            msg.detected.forEach(d => {
+                                log(cId, `  → Port ${d.port} (${d.name}): ${d.status}`, 'info');
+                            });
+                            // Update detected ports display
+                            const portsDiv = document.getElementById('gameDetectedPorts');
+                            const portsList = document.getElementById('gamePortsList');
+                            if (portsDiv && portsList && msg.detected.length > 0) {
+                                portsDiv.style.display = 'block';
+                                portsList.textContent = msg.detected.map(p => `${p.port} (${p.name}: ${p.status})`).join(' | ');
+                            }
+                        } else if (msg.type === 'game_message') {
+                            log(cId, `[IN from game:${msg.port}] ${msg.data.substring(0, 200)}`, 'data');
+                            stats.packets++;
+                        } else if (msg.type === 'game_connected') {
+                            log(cId, `🎮 Connected to game process on port ${msg.port} (${msg.name})`, 'success');
                         } else if (msg.type === 'server_message') {
                             const preview = msg.data.substring(0, 300);
                             log(cId, `[IN from MSquared] ${preview}`, 'data');
@@ -4112,20 +4512,44 @@ class CustomPixelStreamingClient {
                             // Check for JWT tokens in the message
                             const tokenMatch = msg.data.match(/eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+/);
                             if (tokenMatch) {
+                                const token = {
+                                    type: 'firebase_jwt',
+                                    value: tokenMatch[0],
+                                    source: 'msquared_ws',
+                                    timestamp: new Date().toISOString(),
+                                    preview: tokenMatch[0].substring(0, 60)
+                                };
                                 capturedFirebaseToken = tokenMatch[0];
                                 log(cId, `🔑 Token captured from game traffic: ${tokenMatch[0].substring(0, 50)}...`, 'critical');
                                 stats.tokens++;
+                                addTokenToTable(token);
                             }
+
+                            // Update packet count in Game Connection panel
+                            const packetEl = document.getElementById('gamePacketCount');
+                            if (packetEl) packetEl.textContent = stats.packets;
                         } else if (msg.type === 'tokens') {
                             if (msg.tokens && msg.tokens.length > 0) {
                                 msg.tokens.forEach((t, i) => {
-                                    log(cId, `Captured token #${i + 1}: ${t.token.substring(0, 50)}... (source: ${t.source})`, 'critical');
+                                    const token = {
+                                        type: t.type || 'firebase_jwt',
+                                        value: t.token || t.value,
+                                        source: t.source || 'proxy',
+                                        timestamp: t.timestamp || new Date().toISOString(),
+                                        preview: (t.token || t.value || '').substring(0, 60)
+                                    };
+                                    log(cId, `Captured token #${i + 1}: ${token.preview}... (source: ${token.source}, type: ${token.type})`, 'critical');
+                                    addTokenToTable(token);
                                 });
-                                capturedFirebaseToken = msg.tokens[0].token;
+                                capturedFirebaseToken = msg.tokens[0].token || msg.tokens[0].value;
                                 stats.tokens += msg.tokens.length;
                             } else {
                                 log(cId, 'No tokens captured yet by the proxy.', 'info');
                             }
+                        } else if (msg.type === 'tokens_cleared') {
+                            proxyCapturedTokens = [];
+                            const tbody = document.getElementById('capturedTokensTableBody');
+                            if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="padding:20px;text-align:center;color:#555;">Tokens cleared.</td></tr>';
                         }
                         updateStats();
                     } catch (e) {
@@ -4136,11 +4560,14 @@ class CustomPixelStreamingClient {
                 localProxyWS.onerror = (err) => {
                     log(cId, '❌ Connection error. Is the proxy running?', 'error');
                     setProxyStatus('disconnected');
+                    updateGameConnectionPanel('disconnected', 0, 0, 0);
                 };
 
                 localProxyWS.onclose = (event) => {
                     log(cId, `Proxy connection closed: code=${event.code}`, 'warning');
                     setProxyStatus('disconnected');
+                    updateGameConnectionPanel('disconnected', 0, 0, 0);
+                    stopGameStatusPolling();
                 };
             } catch (e) {
                 log(cId, `Connection failed: ${e.message}`, 'error');
@@ -4187,9 +4614,274 @@ class CustomPixelStreamingClient {
             URL.revokeObjectURL(url);
 
             const cId = 'localProxyLog';
-            log(cId, '📥 Proxy script downloaded! Run it with: node otherside-proxy.js', 'success');
+            log(cId, '📥 Enhanced proxy script downloaded! Run it with: node otherside-proxy.js', 'success');
+            log(cId, 'v2.0 features: auto-detect game ports, REST API on 8766, Firebase/Privy/ApeChain token capture', 'info');
             log(cId, 'After the proxy is running, click "Connect to Local Proxy" to connect this dashboard.', 'info');
         }
+
+        // ===================================================================
+        // GAME CONNECTION STATUS & CAPTURED TOKENS (Enhanced Proxy)
+        // ===================================================================
+        let proxyCapturedTokens = [];
+        let proxyPacketCount = 0;
+        let proxyUptimeInterval = null;
+        let proxyStartTime = null;
+        let gameStatusPollInterval = null;
+
+        function updateGameConnectionPanel(status, tokens, packets, uptime) {
+            const dot = document.getElementById('gameStatusDot');
+            const text = document.getElementById('gameStatusText');
+            const tokenCountEl = document.getElementById('gameTokenCount');
+            const packetCountEl = document.getElementById('gamePacketCount');
+            const uptimeEl = document.getElementById('gameUptime');
+
+            if (status === 'connected') {
+                dot.className = 'conn-dot green';
+                text.textContent = 'Connected';
+                text.style.color = '#34d399';
+            } else if (status === 'connecting') {
+                dot.className = 'conn-dot yellow';
+                text.textContent = 'Connecting...';
+                text.style.color = '#fbbf24';
+            } else {
+                dot.className = 'conn-dot red';
+                text.textContent = 'Disconnected';
+                text.style.color = '#ef4444';
+            }
+
+            if (tokenCountEl) tokenCountEl.textContent = tokens || 0;
+            if (packetCountEl) packetCountEl.textContent = packets || 0;
+            if (uptimeEl) uptimeEl.textContent = formatUptime(uptime || 0);
+        }
+
+        function formatUptime(seconds) {
+            if (seconds < 60) return seconds + 's';
+            if (seconds < 3600) return Math.floor(seconds / 60) + 'm ' + (seconds % 60) + 's';
+            return Math.floor(seconds / 3600) + 'h ' + Math.floor((seconds % 3600) / 60) + 'm';
+        }
+
+        function addTokenToTable(token) {
+            proxyCapturedTokens.push(token);
+            const tbody = document.getElementById('capturedTokensTableBody');
+            if (!tbody) return;
+
+            // Remove the "no tokens" placeholder
+            if (proxyCapturedTokens.length === 1) {
+                tbody.innerHTML = '';
+            }
+
+            const idx = proxyCapturedTokens.length;
+            const typeColors = {
+                firebase_jwt: '#a78bfa',
+                firebase_refresh: '#818cf8',
+                privy_token: '#f472b6',
+                privy_access: '#ec4899',
+                apechain_tx: '#fbbf24',
+                wallet_addr: '#34d399',
+                api_key: '#60a5fa',
+                session_id: '#fb923c',
+                bearer: '#c084fc'
+            };
+            const color = typeColors[token.type] || '#93c5fd';
+
+            const row = document.createElement('tr');
+            row.style.borderBottom = '1px solid #1a1a2a';
+            row.innerHTML = `
+                <td style="padding:8px 12px;color:#888;">${idx}</td>
+                <td style="padding:8px 12px;color:${color};font-weight:600;">${token.type}</td>
+                <td style="padding:8px 12px;color:#93c5fd;font-family:monospace;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${token.preview || (token.value || '').substring(0, 60)}</td>
+                <td style="padding:8px 12px;color:#60a5fa;font-size:11px;">${token.source || 'unknown'}</td>
+                <td style="padding:8px 12px;color:#888;font-size:11px;">${new Date(token.timestamp).toLocaleTimeString()}</td>
+                <td style="padding:8px 12px;">
+                    <button onclick="copyTokenValue(${idx - 1})" style="background:none;border:1px solid #333;color:#60a5fa;padding:2px 8px;border-radius:4px;font-size:10px;cursor:pointer;">Copy</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+
+            // Update token count in status panel
+            const tokenCountEl = document.getElementById('gameTokenCount');
+            if (tokenCountEl) tokenCountEl.textContent = proxyCapturedTokens.length;
+        }
+
+        function copyTokenValue(index) {
+            if (proxyCapturedTokens[index]) {
+                navigator.clipboard.writeText(proxyCapturedTokens[index].value).then(() => {
+                    const cId = 'quickActionsLog';
+                    log(cId, `📋 Token #${index + 1} (${proxyCapturedTokens[index].type}) copied to clipboard`, 'success');
+                });
+            }
+        }
+
+        function refreshGameConnection() {
+            const cId = 'quickActionsLog';
+            log(cId, '🔄 Refreshing game connection...', 'info');
+
+            const apiPort = document.getElementById('localProxyPort')?.value || '8766';
+
+            // Try to fetch status from the REST API
+            fetch(`http://localhost:${apiPort}/status`, { signal: AbortSignal.timeout(3000) })
+                .then(r => r.json())
+                .then(data => {
+                    updateGameConnectionPanel('connected', data.capturedTokens, data.capturedPackets, data.uptime);
+                    log(cId, `✅ Proxy is running. Tokens: ${data.capturedTokens}, Packets: ${data.capturedPackets}, Uptime: ${formatUptime(data.uptime)}`, 'success');
+
+                    // Also fetch and display tokens
+                    if (data.capturedTokens > 0) {
+                        fetch(`http://localhost:${apiPort}/tokens`)
+                            .then(r => r.json())
+                            .then(tokens => {
+                                // Rebuild table
+                                const tbody = document.getElementById('capturedTokensTableBody');
+                                if (tbody) tbody.innerHTML = '';
+                                proxyCapturedTokens = [];
+                                tokens.forEach(t => addTokenToTable(t));
+                                log(cId, `📋 Loaded ${tokens.length} captured tokens`, 'success');
+                            })
+                            .catch(() => {});
+                    }
+
+                    // Show detected ports
+                    if (data.gameProcessDetected && data.gameProcessDetected.length > 0) {
+                        const portsDiv = document.getElementById('gameDetectedPorts');
+                        const portsList = document.getElementById('gamePortsList');
+                        if (portsDiv && portsList) {
+                            portsDiv.style.display = 'block';
+                            portsList.textContent = data.gameProcessDetected.map(p => `${p.port} (${p.name}: ${p.status})`).join(' | ');
+                        }
+                    }
+
+                    // Start polling for updates
+                    startGameStatusPolling(apiPort);
+                })
+                .catch(e => {
+                    updateGameConnectionPanel('disconnected', 0, 0, 0);
+                    log(cId, `❌ Could not reach proxy REST API on port ${apiPort}. Is the enhanced proxy running?`, 'error');
+                    log(cId, '💡 Run: node otherside-proxy.js (the v2.0 script with REST API on port 8766)', 'info');
+                    stopGameStatusPolling();
+                });
+        }
+
+        function startGameStatusPolling(apiPort) {
+            stopGameStatusPolling();
+            gameStatusPollInterval = setInterval(() => {
+                fetch(`http://localhost:${apiPort}/status`, { signal: AbortSignal.timeout(2000) })
+                    .then(r => r.json())
+                    .then(data => {
+                        updateGameConnectionPanel('connected', data.capturedTokens, data.capturedPackets, data.uptime);
+                        const packetCountEl = document.getElementById('gamePacketCount');
+                        if (packetCountEl) packetCountEl.textContent = data.capturedPackets;
+                        const uptimeEl = document.getElementById('gameUptime');
+                        if (uptimeEl) uptimeEl.textContent = formatUptime(data.uptime);
+                    })
+                    .catch(() => {
+                        updateGameConnectionPanel('disconnected', 0, 0, 0);
+                        stopGameStatusPolling();
+                    });
+            }, 5000);
+        }
+
+        function stopGameStatusPolling() {
+            if (gameStatusPollInterval) {
+                clearInterval(gameStatusPollInterval);
+                gameStatusPollInterval = null;
+            }
+        }
+
+        function exportCapturedTokens() {
+            const cId = 'quickActionsLog';
+            if (proxyCapturedTokens.length === 0) {
+                log(cId, '⚠️ No tokens to export. Connect to the proxy first.', 'warning');
+                return;
+            }
+            const data = JSON.stringify(proxyCapturedTokens, null, 2);
+            navigator.clipboard.writeText(data).then(() => {
+                log(cId, `📋 Exported ${proxyCapturedTokens.length} captured tokens to clipboard as JSON`, 'success');
+            }).catch(() => {
+                // Fallback: download as file
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'captured-tokens.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                log(cId, `📥 Downloaded ${proxyCapturedTokens.length} captured tokens as captured-tokens.json`, 'success');
+            });
+        }
+
+        function clearCapturedData() {
+            const cId = 'quickActionsLog';
+            const apiPort = document.getElementById('localProxyPort')?.value || '8766';
+
+            // Clear local data
+            proxyCapturedTokens = [];
+            proxyPacketCount = 0;
+            const tbody = document.getElementById('capturedTokensTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="padding:20px;text-align:center;color:#555;">No tokens captured yet. Connect to the local proxy to start capturing.</td></tr>';
+            updateGameConnectionPanel(localProxyWS ? 'connected' : 'disconnected', 0, 0, 0);
+
+            // Also clear on the proxy via REST API
+            fetch(`http://localhost:${apiPort}/tokens`, { method: 'DELETE', signal: AbortSignal.timeout(2000) })
+                .then(r => r.json())
+                .then(() => log(cId, '🗑️ Cleared tokens on proxy server', 'info'))
+                .catch(() => {});
+
+            fetch(`http://localhost:${apiPort}/packets`, { method: 'DELETE', signal: AbortSignal.timeout(2000) })
+                .then(r => r.json())
+                .then(() => log(cId, '🗑️ Cleared packets on proxy server', 'info'))
+                .catch(() => {});
+
+            log(cId, '🗑️ All captured data cleared locally', 'warning');
+        }
+
+        function injectTokenToPhase1() {
+            const cId = 'quickActionsLog';
+            if (proxyCapturedTokens.length === 0) {
+                log(cId, '⚠️ No tokens to inject. Capture tokens from the proxy first.', 'warning');
+                return;
+            }
+
+            // Find the best token (prefer Firebase JWT, then Privy, then any)
+            let bestToken = proxyCapturedTokens.find(t => t.type === 'firebase_jwt') ||
+                           proxyCapturedTokens.find(t => t.type === 'bearer') ||
+                           proxyCapturedTokens.find(t => t.type === 'privy_token') ||
+                           proxyCapturedTokens[0];
+
+            // Try to inject into the Glyph Auth input field
+            const target = document.getElementById('firebaseTokenInput') ||
+                          document.getElementById('customTokenInput') ||
+                          document.querySelector('input[placeholder*="token"]') ||
+                          document.querySelector('input[placeholder*="JWT"]');
+
+            if (target) {
+                target.value = bestToken.value;
+                target.dispatchEvent(new Event('input', { bubbles: true }));
+                target.dispatchEvent(new Event('change', { bubbles: true }));
+                log(cId, `⚡ Injected ${bestToken.type} token into Phase 1 Glyph Auth field`, 'success');
+                log(cId, `Token preview: ${bestToken.preview || bestToken.value.substring(0, 50)}...`, 'data');
+
+                // Save to DB
+                saveToOthersideDB({
+                    os_attack_phase: 'token_injection',
+                    os_captured_token: bestToken.value.substring(0, 200),
+                    os_captured_token_type: bestToken.type,
+                    os_source_domain: bestToken.source,
+                    os_notes: `Token injected from proxy capture. Type: ${bestToken.type}`
+                });
+            } else {
+                // Fallback: copy to clipboard
+                navigator.clipboard.writeText(bestToken.value).then(() => {
+                    log(cId, `⚡ No Phase 1 input field found. Token ${bestToken.type} copied to clipboard instead.`, 'warning');
+                    log(cId, `Paste it manually into the Glyph Auth field.`, 'info');
+                });
+            }
+        }
+
+        // Note: connectToLocalProxy has been enhanced directly to update
+        // the Game Connection panel and handle new message types from the
+        // v2.0 enhanced proxy (token_captured, game_detection, etc.)
 
         // ===================================================================
         // INIT
