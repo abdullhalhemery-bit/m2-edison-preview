@@ -16,7 +16,8 @@
       }
     },
     { "src": "/otherside-native-attack", "dest": "/otherside-native-attack.html" },
-    { "src": "/otherside-native-attack.html", "dest": "/otherside-native-attack.html" },
-    { "src": "/", "dest": "/index.html" }
+    { "src": "/custom-token-attack", "dest": "/custom-token-attack.html" },
+    { "src": "/", "dest": "/index.html" },
+    { "src": "/(.+)", "dest": "/$1.html" }
   ]
 }
