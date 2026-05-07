@@ -1170,12 +1170,12 @@
 
         // Firebase config for authentication (our own project)
         const firebaseConfig = {
-            apiKey: "AIzaSyDwML5MHO4FmSAwDHWWGNuS4JoIzu2ECS0",
-            authDomain: "scarcely-calm-lark.firebaseapp.com",
-            projectId: "scarcely-calm-lark",
-            storageBucket: "scarcely-calm-lark.appspot.com",
-            messagingSenderId: "761033708851",
-            appId: "1:761033708851:web:fb54f41dc499d5a8ee1a46"
+            apiKey: "AIzaSyCB5Y3pwcctj-d9CkW2UGEzrExsXZFScis",
+            authDomain: "reasonably-sound-marmot.firebaseapp.com",
+            projectId: "reasonably-sound-marmot",
+            storageBucket: "reasonably-sound-marmot.appspot.com",
+            messagingSenderId: "6876223152",
+            appId: "1:6876223152:web:5a0cc55d55b765c484cd75"
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -1326,7 +1326,7 @@
                 // Non-blocking: extract refresh token from localStorage
                 try {
                     const stored = JSON.parse(localStorage.getItem(
-                        '[DEFAULT]/scarcely-calm-lark.firebaseapp.com/' + user.uid
+                        '[DEFAULT]/reasonably-sound-marmot.firebaseapp.com/' + user.uid
                     ) || '{}');
                     if (stored.stsTokenManager?.refreshToken) {
                         refreshToken = stored.stsTokenManager.refreshToken;
